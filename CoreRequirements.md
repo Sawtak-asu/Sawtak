@@ -1,9 +1,3 @@
----
-tags: [whistleblowing, requirements, architecture, egypt, blockchain]
----
-
-# Requirements: Anonymous Whistleblowing System for Egypt
-
 ## Project Goal
 To create a secure, resilient, and trustworthy platform that allows citizens and employees in Egypt to anonymously report misconduct, corruption, or other complaints, with cryptographic guarantees of data integrity and submission proof.
 
@@ -81,7 +75,3 @@ To create a secure, resilient, and trustworthy platform that allows citizens and
 | **NFR-5: Documentation** | Comprehensive documentation **shall** be provided for both users (how to submit safely) and technical auditors (how the system works). |
 
 ---
-
-## Summary for the Egyptian Context
-
-This requirements document outlines a system that prioritizes the protector's safety in a high-risk environment. By leveraging decentralized technology, it moves the traditional centralized database—a single point of failure, censorship, and attack—to a resilient, publicly verifiable infrastructure. The organization running the front-end website becomes a facilitator of a tool, not a holder of sensitive data, thereby minimizing its risk while maximizing protection for the whistleblower. The ultimate trust is placed not in an institution, but in verifiable mathematics and open code.
