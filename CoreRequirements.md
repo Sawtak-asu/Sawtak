@@ -70,8 +70,7 @@ To create a secure, resilient, and trustworthy platform that allows citizens and
 |----|-------------|
 | **NFR-1: Usability** | The user interface **must** be simple, intuitive, and available in Arabic and English. It should mask the underlying cryptographic complexity. |
 | **NFR-2: Accessibility** | The web application **shall** be accessible via the Tor network to protect users from network-level surveillance and blocking. |
-| **NFR-3: Legal Defense** | The system's architecture **should be** legally defensible. Since the hosting organization does not possess the raw complaint data (it's decentralized and encrypted) or the identity of submitters, its liability and ability to comply with coercive requests is significantly reduced. |
-| **NFR-4: Open Source** | The entire codebase for the web application and smart contracts **shall** be open-source to build trust, enable audits, and allow the community to verify its security claims. |
-| **NFR-5: Documentation** | Comprehensive documentation **shall** be provided for both users (how to submit safely) and technical auditors (how the system works). |
+| **NFR-3: Open Source** | The entire codebase for the web application and smart contracts **shall** be open-source to build trust, enable audits, and allow the community to verify its security claims. |
+| **NFR-4: Documentation** | Comprehensive documentation **shall** be provided for both users (how to submit safely) and technical auditors (how the system works). |
 
 ---
