@@ -14,6 +14,7 @@ Dual-mode whistleblowing platform:
 ### 1.3 Technology Stack
 
 Frontend:
+```
 ├── Web: React 19, TailwindCSS, TypeScript
 ├── State: React Query (TanStack), 
 └── Mobile: Expo / React Native
@@ -51,6 +52,7 @@ Redis Usage:
 ├── Session storage (JWT refresh tokens)
 ├── Rate limiting counters
 ├── Bull queue for background jobs (HCS indexer ...)
+```
 
 ### 1.4 File Structure (Not Final)
 
