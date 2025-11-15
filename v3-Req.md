@@ -50,11 +50,11 @@ Background Jobs:
 Redis Usage:
 ├── Session storage (JWT refresh tokens)
 ├── Rate limiting counters
-├── Bull queue for background jobs (HCS indexer, analytics)
-└── Cache for analytics and public stats
+├── Bull queue for background jobs (HCS indexer ...)
 
 ### 1.4 File Structure (Not Final)
 
+```
 project-root/
 ├── frontend/
 │   ├── app/
@@ -70,11 +70,9 @@ project-root/
 │   │   ├── admin/
 │   │   │   ├── anonymous/
 │   │   │   ├── identified/
-│   │   │   └── analytics/
 │   │   ├── public/
 │   │   │   ├── browse/              # Public complaint browsing
 │   │   │   ├── complaint/[hash]/
-│   │   │   └── stats/
 │   │   └── layout.tsx
 │   ├── components/
 │   │   ├── ui/
@@ -103,13 +101,13 @@ project-root/
 │   │   │   └── rateLimit.middleware.ts
 │   │   ├── jobs/
 │   │   │   ├── hcs-indexer.job.ts
-│   │   │   └── analytics.job.ts
 │   │   └── server.ts
 │   ├── prisma/
 │   │   └── schema.prisma
 │   └── package.json
 │
 └── README.md
+```
 
 ---
 
@@ -215,11 +213,11 @@ Submission Process:
 1. User clicks Submit
 2. Frontend validates all fields
 3. If files attached:
-   - Upload to IPFS via Web3.Storage
-   - Show upload progress
-   - Collect CID for each file
+    - Upload to IPFS via Web3.Storage
+    - Show upload progress
+    - Collect CID for each file
 4. Backend builds HCS message:
-```json
+   ```json
    {
      "submittedBy": "anon_a3f9c2e1d4",
      "text": "complaint text",
@@ -230,7 +228,7 @@ Submission Process:
      ],
      "timestamp": 1699564800
    }
-```
+   ```
 5. Submit to Hedera HCS Topic 1 (backend operator wallet pays fee)
 6. Store in complaints_anonymous_tracking:
    - user_id (encrypted)
@@ -466,9 +464,8 @@ Admin Authentication:
 Admin Roles:
 - Viewer: read-only access
 - Moderator: update complaint status, add notes
-- Investigator: reveal anonymous identities (with approval)
 - Admin: full access to all complaints and users
-- Super Admin: system configuration, manage other admins
+- Super Admin: system configuration, manage other admins, access to anonid/wallet->user db
 
 Anonymous Complaints Dashboard (/admin/anonymous):
 - List all anonymous complaints
@@ -497,8 +494,7 @@ Complaint Detail View (Admin):
 - Admin Actions panel:
   - Update Status button
   - Add Internal Note (not visible to public)
-  - Reveal Identity button (if investigator+)
-  - Flag as inappropriate
+  - Flag as inappropriate / delete / ban submitter temporarily
 
 Update Status (Anonymous):
 - Modal with form:
@@ -509,7 +505,7 @@ Update Status (Anonymous):
   - Submit button
 - On submit:
   - Build HCS Topic 2 message:
-  ```json
+    ```json
     {
       "complaintHash": "abc123...",
       "oldStatus": "submitted",
@@ -518,49 +514,9 @@ Update Status (Anonymous):
       "adminId": "admin_xyz",
       "timestamp": 1699564900
     }
-  ```
+    ```
   - Submit to HCS Topic 2
-  - Log action to audit_logs
   - Show success message
-
-Reveal Identity (Anonymous):
-- Button available only to investigator+ role
-- Click opens multi-step modal:
-  
-  Step 1: Request Access
-  - Reason textarea (required): "Court order #12345, fraud investigation"
-  - Upload supporting documents (court order PDF)
-  - Submit request
-  
-  Step 2: Approval Required
-  - Request sent to 2-3 designated approvers
-  - Approvers notified (internal system notification)
-  - Show pending status to requester
-  
-  Step 3: Approvers Review
-  - Each approver sees:
-    - Reason
-    - Supporting documents
-    - Complaint details (anonymous view)
-  - Approve or Reject with digital signature
-  - Requires quorum (e.g., 2 of 3 approvals)
-  
-  Step 4: Identity Revealed (if approved)
-  - Show decrypted user info:
-    - Email
-    - Name
-    - Phone
-    - All other complaints by this user (anonymous + identified)
-  - Access time-limited: 5 minute session
-  - All actions logged to identity_access_log:
-    - user_id
-    - accessed_by (admin_id)
-    - reason
-    - court_order_url
-    - approver_signatures
-    - timestamp
-    - fields_accessed
-  - User optionally notified via email (configurable)
 
 Identified Complaints Dashboard (/admin/identified):
 - List all identified complaints
@@ -603,33 +559,7 @@ Update Status (Identified):
 - On submit:
   - Update complaints_identified.status
   - Insert into status_updates table
-  - Log to audit_logs
   - No blockchain submission
-
-Analytics Dashboard (/admin/analytics):
-- Cards with metrics:
-  - Total complaints (anonymous + identified)
-  - Complaints this month
-  - Average resolution time
-  - Complaints by status (pie chart)
-  - Complaints by category (bar chart)
-  - Complaints by area (list)
-  - Time series chart (last 90 days)
-  - Admin performance metrics
-- Cached: refresh every 15 minutes
-- Export options: PDF, CSV
-
-Audit Logs (/admin/audit):
-- Super admin only
-- Table of all logged actions:
-  - Timestamp
-  - User/Admin
-  - Action type
-  - Details (JSON)
-  - IP address
-- Search by: user, admin, action type, date range
-- Export as CSV
-- Cannot edit or delete logs (immutable)
 
 ---
 
@@ -645,7 +575,7 @@ HCS Topic Setup:
 Backend Operator Account:
 - Hedera account (e.g., 0.0.12345)
 - Private key in environment variable
-- Pays all transaction fees (~$0.0001 per message)
+- Pays all transaction fees 
 - Users never interact with blockchain directly
 - Platform subsidizes all costs
 
@@ -668,7 +598,7 @@ Submit to Topic 2 (Status Updates):
   2. Same process as Topic 1
   3. Message format:
   
-  ```json
+     ```json
      {
        "complaintHash": "abc123...",
        "oldStatus": "submitted",
@@ -677,7 +607,7 @@ Submit to Topic 2 (Status Updates):
        "adminId": "admin_xyz",
        "timestamp": 1699564900
      }
-```
+     ```
 
 HCS Indexer (Background Job):
 - Runs every 2 seconds
@@ -717,7 +647,6 @@ Why Indexer Needed:
   - Fast search/filter
   - Pagination
   - Full-text search
-  - Aggregations for analytics
 - Public API and admin dashboard query indexed table, not blockchain
 - Blockchain serves as source of truth / verification
 
@@ -781,7 +710,7 @@ Audit Logging:
 - Log all significant actions to audit_logs table:
   - Authentication: login, logout, signup, email verification, password reset, 2FA
   - Complaints: submit, edit, delete, status update
-  - Admin actions: identity reveal request/approval, status updates, notes
+  - Admin actions: status updates, notes
   - Include:
     - user_id or admin_id
     - action type
@@ -797,20 +726,6 @@ Audit Logging:
 - Retention: 2 years minimum
 - Hash chain (optional): each log entry includes hash of previous for tamper detection
 
-Identity Access Logging (Separate Table):
-- identity_access_log for all anonymous identity reveals:
-  - user_id (whose identity revealed)
-  - accessed_by (admin_id)
-  - reason (text)
-  - court_order_url (supporting document)
-  - approver_ids (array)
-  - approver_signatures (JSONB)
-  - fields_accessed (array: email, name, phone)
-  - timestamp
-  - session_duration
-- Never deleted
-- Reviewed quarterly by super admins
-- User optionally notified when accessed
 
 Rate Limiting:
 - Implemented via Redis counters
@@ -851,8 +766,9 @@ Session Management:
 
 ---
 
-## API ENDPOINTS
+## 3. API ENDPOINTS
 
+```
 Authentication:
 POST   /api/auth/signup
 POST   /api/auth/login
@@ -883,27 +799,19 @@ POST   /api/admin/complaints/anonymous/:hash/status
 PUT    /api/admin/complaints/identified/:id/status
 POST   /api/admin/identity/request-access
 POST   /api/admin/identity/approve-access
-POST   /api/admin/identity/reveal
-GET    /api/admin/analytics
-GET    /api/admin/audit-logs
 
 Public:
 GET    /api/public/complaints
 GET    /api/public/complaint/:hash
-POST   /api/public/search
-GET    /api/public/stats
-GET    /api/public/categories
-GET    /api/public/areas
 
 File Upload:
 POST   /api/upload/ipfs
 POST   /api/upload/supabase
+```
 
 ---
 
 ## 4. FUTURE ADDITIONS
-
-
 
 Mobile App:
 - React Native (iOS + Android)
