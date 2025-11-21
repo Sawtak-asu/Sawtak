@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  password             String?  // Optional for OAuth users
+  anonymous_identifier String   @unique
+  role                 String   @default("user") // user, admin, moderator
+  
+  // OAuth / Future Identity Provider fields
+  auth_provider        String   @default("email") // email, google, github, civil_id
+  auth_provider_id     String?  // The ID from the external provider
+
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  complaints_identified IdentifiedComplaint[]
+  admin_audits          AdminAudit[]
+}
+
+model IdentifiedComplaint {
+  id            String   @id @default(uuid())
+  user_id       String
+  title         String
+  text          String
+  category      String
+  area          String
+  incident_date DateTime @default(now())
+  status        String   @default("submitted")
+  visibility    String   @default("private") // private, public
+  evidence_urls Json?    // Array of URLs
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  deleted_at    DateTime?
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+
+model IndexedComplaint {
+  hcs_hash             String   @id
+  anonymous_identifier String
+  title                String
+  complaint_text       String
+  category             String
+  area                 String
+  severity             String
+  incident_date        DateTime
+  evidence_cids        Json?
+  status               String
+  consensus_timestamp  DateTime
+  indexed_at           DateTime @default(now())
+
+  @@index([anonymous_identifier])
+  @@index([category])
+  @@index([area])
+  @@index([status])
+}
+
+model IndexedStatusUpdate {
+  hcs_hash            String   @id
+  complaint_hash      String
+  old_status          String
+  new_status          String
+  public_notes        String?
+  admin_id            String
+  consensus_timestamp DateTime
+  sequence_number     BigInt
+  indexed_at          DateTime @default(now())
+
+  @@index([complaint_hash])
+}
+
+model AdminAudit {
+  id          String   @id @default(uuid())
+  admin_id    String
+  action_type String   // "BAN_USER" or "DELETE_COMPLAINT"
+  target_id   String   // Complaint ID that was acted upon
+  reason      String?  // Optional reason for the action
+  timestamp   DateTime @default(now())
+
+  admin User @relation(fields: [admin_id], references: [id])
+}
