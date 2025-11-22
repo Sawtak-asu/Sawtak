@@ -1,0 +1,31 @@
+{
+  "name": "sawtak-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "test": "bun test",
+    "build": "bun build src/server.ts --outdir dist",
+    "start": "bun run src/server.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "latest",
+    "@elysiajs/jwt": "^1.4.0",
+    "@elysiajs/swagger": "latest",
+    "@hashgraph/sdk": "latest",
+    "@prisma/client": "latest",
+    "@supabase/supabase-js": "latest",
+    "bcryptjs": "latest",
+    "bull": "latest",
+    "date-fns": "latest",
+    "elysia": "latest",
+    "google-auth-library": "^10.5.0",
+    "ioredis": "latest",
+    "web3.storage": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "prisma": "latest",
+    "tsx": "^4.20.6"
+  }
+}
