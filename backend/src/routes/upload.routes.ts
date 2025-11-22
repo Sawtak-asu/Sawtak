@@ -1,9 +1,11 @@
 import { Elysia } from "elysia";
 import { PublicEvidenceStorageService } from "../services/public-evidence-storage.service";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const storageService = new PublicEvidenceStorageService();
 
 export const uploadRoutes = new Elysia({ prefix: "/api/upload" })
+  .use(authMiddleware) // 🔒 Only authenticated users can upload files
   .post("/", async ({ body, set }: any) => {
     const files = body.files;
 
