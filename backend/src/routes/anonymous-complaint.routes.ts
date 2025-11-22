@@ -1,9 +1,11 @@
 import { Elysia } from "elysia";
 import { AnonymousSubmissionService } from "../services/anonymous-submission.service";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const anonymousService = new AnonymousSubmissionService();
 
 export const anonymousComplaintRoutes = new Elysia({ prefix: "/api/complaints/anonymous" })
+  .use(authMiddleware)
   /**
    * POST /api/complaints/anonymous/submit
    * Submit an anonymous complaint to the blockchain

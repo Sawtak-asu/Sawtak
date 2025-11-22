@@ -1,7 +1,9 @@
 import { Elysia } from "elysia";
 import { prisma } from "../db";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 export const identifiedComplaintRoutes = new Elysia({ prefix: "/api/complaints/identified" })
+  .use(authMiddleware)
   /**
    * POST /api/complaints/identified/submit
    * Submit an identified (public) complaint to the database
