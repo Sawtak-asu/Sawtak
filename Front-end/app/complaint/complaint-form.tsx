@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -57,11 +58,13 @@ const formSchema = z.object({
 
 type ComplaintFormData = z.infer<typeof formSchema>;
 
-async function submitComplaint(data: unknown) {
-  const response = await fetch("/api/complaints/anonymous/submit", {
+async function submitComplaint(data: unknown, token: string | null) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const response = await fetch(`${apiUrl}/api/complaints/anonymous/submit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` }),
     },
     body: JSON.stringify(data),
   });
@@ -75,8 +78,7 @@ async function submitComplaint(data: unknown) {
 }
 
 export function ComplaintForm() {
-  const [userId] = useState("user-id-123"); // Hardcoded for now
-  const [anonymousIdentifier] = useState("anon_xyz789"); // Hardcoded for now
+  const { user, token } = useAuth();
 
   const form = useForm<ComplaintFormData>({
     resolver: zodResolver(formSchema),
@@ -89,7 +91,7 @@ export function ComplaintForm() {
   });
 
   const mutation = useMutation({
-    mutationFn: submitComplaint,
+    mutationFn: (data: unknown) => submitComplaint(data, token),
     onSuccess: (data) => {
       toast.success("Complaint submitted successfully!");
       console.log("Submission successful:", data);
@@ -102,9 +104,14 @@ export function ComplaintForm() {
   });
 
   function onSubmit(values: ComplaintFormData) {
+    if (!user) {
+      toast.error("You must be logged in to submit a complaint.");
+      return;
+    }
+
     const complaintData = {
-      userId,
-      anonymousIdentifier,
+      userId: user.id,
+      anonymousIdentifier: user.anonymousIdentifier,
       title: values.title,
       text: values.mainText,
       category: values.category,
