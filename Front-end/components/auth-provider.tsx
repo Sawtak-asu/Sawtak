@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { GoogleOAuthProvider, useGoogleLogin, TokenResponse } from "@react-oauth/google";
+import Cookies from "js-cookie";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
@@ -31,14 +32,21 @@ function AuthProviderContent({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const checkSession = async () => {
             try {
-                // Here you would typically check for a stored token or hit a 'me' endpoint
-                // For now, we'll simulate a check or check localStorage
+                // Check for auth token in cookies
+                const token = Cookies.get("auth_token");
                 const storedUser = localStorage.getItem("user_data");
-                if (storedUser) {
+
+                if (token && storedUser) {
                     setUser(JSON.parse(storedUser));
+                } else {
+                    // If no token, clear any stale user data
+                    setUser(null);
+                    localStorage.removeItem("user_data");
+                    Cookies.remove("auth_token");
                 }
             } catch (error) {
                 console.error("Session check failed", error);
+                setUser(null);
             } finally {
                 setIsLoading(false);
             }
@@ -64,9 +72,19 @@ function AuthProviderContent({ children }: { children: React.ReactNode }) {
                     throw new Error("Backend authentication failed");
                 }
                 const userData = await response.json();
+
                 // Update state
                 setUser(userData);
                 localStorage.setItem("user_data", JSON.stringify(userData));
+
+                // Store the token in a cookie
+                // Assuming the backend returns an 'access_token' or similar field
+                // Adjust 'access_token' to match your actual backend response structure
+                if (userData.access_token) {
+                    Cookies.set("auth_token", userData.access_token, { expires: 7, secure: true, sameSite: 'strict' });
+                } else if (userData.token) {
+                    Cookies.set("auth_token", userData.token, { expires: 7, secure: true, sameSite: 'strict' });
+                }
             } catch (error) {
                 console.error("Failed to authenticate with backend:", error);
                 // Handle error (e.g., show toast)
@@ -83,6 +101,7 @@ function AuthProviderContent({ children }: { children: React.ReactNode }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem("user_data");
+        Cookies.remove("auth_token");
         // Optionally call backend logout endpoint
     };
 
