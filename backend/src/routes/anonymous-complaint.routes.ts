@@ -1,8 +1,9 @@
 import { Elysia } from "elysia";
-import { AnonymousSubmissionService } from "../services/anonymous-submission.service";
+import { AnonymousComplaintController } from "../controllers/anonymous-complaint.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
-const anonymousService = new AnonymousSubmissionService();
+// Initialize controller
+const controller = new AnonymousComplaintController();
 
 export const anonymousComplaintRoutes = new Elysia({ prefix: "/api/complaints/anonymous" })
   .use(authMiddleware)
@@ -22,54 +23,6 @@ export const anonymousComplaintRoutes = new Elysia({ prefix: "/api/complaints/an
    *   "evidenceCids": ["Qm...", "xdxd..."]       // optional, IPFS CIDs
    * }
    */
-
-
   .post("/submit", async ({ body, set }: any) => {
-    try {
-      const {
-        userId,
-        anonymousIdentifier,
-        title,
-        text,
-        category,
-        area,
-        incidentDate,
-        evidenceCids
-      } = body;
-
-      // Validate required fields
-      if (!userId || !anonymousIdentifier || !title || !text || !category) {
-        set.status = 400;
-        return {
-          success: false,
-          error: "Missing required fields"
-        };
-      }
-
-      // Submit to blockchain
-      const result = await anonymousService.submitAnonymousComplaint({
-        userId,
-        anonymousIdentifier,
-        title,
-        text,
-        category,
-        area,
-        incidentDate: incidentDate ? new Date(incidentDate) : undefined,
-        evidenceCids: evidenceCids || []
-      });
-
-      return {
-        success: true,
-        message: "Anon complaint submitted successfully",
-        transactionId: result.transactionId,
-        status: result.status
-      };
-    } catch (error: any) {
-      console.error("Submission error:", error);
-      set.status = 500;
-      return {
-        success: false,
-        error: error.message || "Failed to submit"
-      };
-    }
+    return controller.submitComplaint(body, set);
   });
