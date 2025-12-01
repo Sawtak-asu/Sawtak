@@ -125,6 +125,15 @@ export const HeroHeader = () => {
                 <Button
                   asChild
                   size="sm"
+                  variant="ghost"
+                  className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
+                  <Link href="/feed">
+                    <span>Feed</span>
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="sm"
                   className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
                   <Link href="/complaint">
                     <span>Get Started</span>
