@@ -3,7 +3,7 @@ import { generateAnonymousId } from "../../utils/crypto.utils";
 import { IAuthProvider } from "../../interfaces/auth-provider.interface";
 import { GoogleAuthProvider } from "./google.provider";
 
-export type AuthProviderType = "google" | "github" | "apple"; // Add more here later
+export type AuthProviderType = "google" | "github" | "apple"; // future : heweya
 
 export class AuthService {
   private providers: Record<string, IAuthProvider>;

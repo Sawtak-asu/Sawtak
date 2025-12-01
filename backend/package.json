@@ -8,6 +8,7 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
     "@elysiajs/cors": "latest",
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/swagger": "latest",
