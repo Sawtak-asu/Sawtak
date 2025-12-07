@@ -1,6 +1,9 @@
 import { Elysia } from "elysia";
-import { prisma } from "../db";
+import { IdentifiedComplaintController } from "../controllers/identified-complaint.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+
+// Initialize controller
+const controller = new IdentifiedComplaintController();
 
 export const identifiedComplaintRoutes = new Elysia({ prefix: "/api/complaints/identified" })
   .use(authMiddleware)
@@ -20,56 +23,12 @@ export const identifiedComplaintRoutes = new Elysia({ prefix: "/api/complaints/i
    * }
    */
   .post("/submit", async ({ body, set }: any) => {
-    try {
-      const {
-        userId,
-        title,
-        text,
-        category,
-        area,
-        incidentDate,
-        evidenceUrls
-      } = body;
-
-      // Validate required fields
-      if (!userId || !title || !text || !category) {
-        set.status = 400;
-        return {
-          success: false,
-          error: "Missing required fields: userId, title, text, category"
-        };
-      }
-
-      // Save to db
-      const complaint = await prisma.identifiedComplaint.create({
-        data: {
-          user_id: userId,
-          title,
-          text,
-          category,
-          area,
-          incident_date: incidentDate ? new Date(incidentDate) : new Date(),
-          evidence_urls: evidenceUrls || [],
-          status: "submitted",
-          visibility: "private" // Default to private
-        }
-      });
-
-      return {
-        success: true,
-        message: "Identified complaint submitted successfully",
-        complaint: {
-          id: complaint.id,
-          status: complaint.status,
-          createdAt: complaint.created_at
-        }
-      };
-    } catch (error: any) {
-      console.error("Identified submission error:", error);
-      set.status = 500;
-      return {
-        success: false,
-        error: error.message || "Failed to submit identified complaint"
-      };
-    }
+    return controller.submitComplaint(body, set);
+  })
+  /**
+   * GET /api/complaints/identified/user/:userId
+   * Get all complaints for a specific user
+   */
+  .get("/user/:userId", async ({ params, set }: any) => {
+    return controller.getUserComplaints(params.userId, set);
   });

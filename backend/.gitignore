@@ -2,6 +2,7 @@
 node_modules
 .bun
 dist
+*.lock
 
 # Environment variables
 .env
@@ -29,3 +30,5 @@ logs
 # OS generated files
 .DS_Store
 Thumbs.db
+
+ignore

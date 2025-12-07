@@ -1,0 +1,4 @@
+export const HEDERA_CONFIG = {
+  TOPIC_ID_COMPLAINTS: process.env.HEDERA_TOPIC_ID_COMPLAINTS || process.env.HEDERA_TOPIC_COMPLAINTS || "",
+  TOPIC_ID_STATUS: process.env.HEDERA_TOPIC_ID_STATUS || process.env.HEDERA_TOPIC_STATUS || "",
+};

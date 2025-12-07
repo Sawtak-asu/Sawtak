@@ -1,122 +1,68 @@
-import { 
-    Client, 
-    TopicMessageSubmitTransaction, 
-    AccountId, 
-    PrivateKey 
-  } from "@hiero-ledger/sdk"; 
+import { encrypt } from "../utils/crypto.utils";
+import { IBlockchainService } from "../interfaces/blockchain.interface";
+import { HederaService } from "./hedera.service";
+import { HEDERA_CONFIG } from "../config/hedera.config";
+import { ComplaintStatusService } from "./complaint-status.service";
 
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
-export class AnonymousSubmissionService {
-  private client: Client;
-  private topicId: string;
-
-  constructor() {
-    const network = process.env.HEDERA_NETWORK || "mainnet";
-    const operatorId = process.env.HEDERA_OPERATOR_ID;
-    const operatorKey = process.env.HEDERA_OPERATOR_KEY;
-    this.topicId = process.env.HEDERA_TOPIC_COMPLAINTS!;
-
-    if (!operatorId || !operatorKey || !this.topicId) {
-      throw new Error("Missing required Hedera environment variables (ID, KEY, or TOPIC).");
-    }
-
-    this.client = Client.forName(network);
-    this.client.setOperator(
-      AccountId.fromString(operatorId),
-      PrivateKey.fromString(operatorKey)
-    );
-  }
-
-  /**
-   * Submit an anonymous complaint to the Hedera network.
-   * * @param data - The complaint data
-   * @returns The transaction receipt and status
-   */
-  async submitAnonymousComplaint(data: {
-    userId: string; // internal tracking only NOT sent to HCS
-    anonymousIdentifier: string;
-    title: string;
-    text: string;
-    category: string;
-    area?: string;
-    incidentDate?: Date;
-    evidenceCids: string[];
-  }) {
-    try {
-      const publicPayload = {
-        type: "COMPLAINT_SUBMISSION",
-        version: "1.0",
-        timestamp: new Date().toISOString(),
-        data: {
-          id: data.anonymousIdentifier, 
-          title: data.title,
-          description: data.text,
-          category: data.category,
-          location: data.area || null,
-          incidentDate: data.incidentDate ? data.incidentDate.toISOString() : null,
-          evidence: data.evidenceCids, 
-        }
-      };
-
-      const transaction = new TopicMessageSubmitTransaction()
-        .setTopicId(this.topicId)
-        .setMessage(JSON.stringify(publicPayload));
-
-      const txResponse = await transaction.execute(this.client);
-
-      const receipt = await txResponse.getReceipt(this.client);
-
-      return {
-        transactionId: txResponse.transactionId.toString(),
-        topicSequenceNumber: receipt.topicSequenceNumber!.toString(),
-        status: receipt.status.toString(),
-        success: true
-      };
-
-    } catch (error: any) {
-      console.error("Hedera Submission Failed:", error);
-      throw new Error(`Failed to write complaint to Hedera: ${error.message}`);
-    }
-  }
+interface AnonymousSubmission {
+  userId: string;
+  anonymousIdentifier: string;
+  title: string;
+  text: string;
+  category: string;
+  area?: string;
+  incidentDate?: Date;
+  evidenceCids?: string[];
 }
-
-
 
 /**
- * TEST RUNNER
+ * Handles anonymous complaint submissions to the blockchain.
+ * Encrypts user identity before submitting to ensure privacy.
  */
-async function main() {
-  console.log("Starting Sawtak Submission Test...");
+export class AnonymousSubmissionService {
+  private blockchain: IBlockchainService;
+  private statusService: ComplaintStatusService;
 
-  try {
-      const service = new AnonymousSubmissionService();
-
-      // Mock Data
-      const mockComplaint = {
-          userId: "internal-user-123", // This won't be sent to Hedera
-          anonymousIdentifier: "anon_test_user_001",
-          title: "Test Complaint from Script",
-          text: "This is a test complaint submitted via the manual test script to verify HCS integration.",
-          category: "corruption",
-          area: "Maadi, Cairo",
-          incidentDate: new Date(),
-          evidenceCids: ["QmHash123", "QmHash456"]
-      };
-
-      const result = await service.submitAnonymousComplaint(mockComplaint);
-
-      console.log("\n--- RESULT ---");
-      console.log(JSON.stringify(result, null, 2));
-      
-      // Link to explorer (hashscan)
-      console.log(`\n🔎 Verify on HashScan: https://hashscan.io/testnet/transaction/${result.transactionId}`);
-
-  } catch (e) {
-      console.error("Test failed to run:", e);
+  constructor(blockchain?: IBlockchainService) {
+    // Defaults to hedera (for now)
+    this.blockchain = blockchain || new HederaService();
+    this.statusService = new ComplaintStatusService(this.blockchain);
   }
-  
-  process.exit(0);
-}
 
-main();
+  async submitAnonymousComplaint(payload: AnonymousSubmission) {
+    if (!HEDERA_CONFIG.TOPIC_ID_COMPLAINTS) {
+      throw new Error("HEDERA_TOPIC_ID_COMPLAINTS is not configured");
+    }
+
+    // Encrypting anonID/wallet
+    const encryptedAnonId = encrypt(payload.anonymousIdentifier);
+
+    // Public Payload (Blockchain)
+    const publicPayload = {
+      type: "COMPLAINT_SUBMISSION",
+      anon_id: encryptedAnonId,
+      title: payload.title,
+      text: payload.text,
+      category: payload.category,
+      area: payload.area || null,
+      incident_date: payload.incidentDate ? payload.incidentDate.toISOString() : null,
+      evidence: payload.evidenceCids || [],
+      timestamp: new Date().toISOString(),
+    };
+
+    // Submit complaint to blockchain
+    const complaintResponse = await this.blockchain.submitMessage(
+      HEDERA_CONFIG.TOPIC_ID_COMPLAINTS,
+      publicPayload
+    );
+
+    // Create initial status using the status service
+    const complaintHash = complaintResponse.transactionId;
+    await this.statusService.createInitialStatus(complaintHash);
+
+    return {
+      status: "submitted",
+      transactionId: complaintHash
+    };
+  }
+}
