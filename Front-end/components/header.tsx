@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
-
+import { useAuth } from "@/components/auth-provider";
+import haweya from '@/public/haweya.webp'
+import Image from 'next/image'
 // const menuItems = [];
 
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const { login, logout, user, isLoggedIn } = useAuth();
 
   React.useEffect(() => {
     const handleScroll = () => {
