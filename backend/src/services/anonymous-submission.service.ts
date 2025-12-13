@@ -3,6 +3,7 @@ import { IBlockchainService } from "../interfaces/blockchain.interface";
 import { HederaService } from "./hedera.service";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 import { ComplaintStatusService } from "./complaint-status.service";
+import crypto from "crypto";
 
 interface AnonymousSubmission {
   userId: string;
@@ -13,6 +14,19 @@ interface AnonymousSubmission {
   area?: string;
   incidentDate?: Date;
   evidenceCids?: string[];
+}
+
+/**
+ * Generates a user-friendly tracking code
+ * Format: SAWTAK-XXXXXXXX (where X is alphanumeric)
+ */
+function generateTrackingCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluding similar chars (0, O, 1, I)
+  let code = "SAWTAK-";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
 /**
@@ -34,13 +48,24 @@ export class AnonymousSubmissionService {
       throw new Error("HEDERA_TOPIC_ID_COMPLAINTS is not configured");
     }
 
+    // Generate a tracking code for the user
+    const trackingCode = generateTrackingCode();
+
     // Encrypting anonID/wallet
     const encryptedAnonId = encrypt(payload.anonymousIdentifier);
+
+    // Create a lookup hash from tracking code (so we can find this complaint later)
+    const trackingHash = crypto
+      .createHash("sha256")
+      .update(trackingCode)
+      .digest("hex")
+      .substring(0, 16);
 
     // Public Payload (Blockchain)
     const publicPayload = {
       type: "COMPLAINT_SUBMISSION",
       anon_id: encryptedAnonId,
+      tracking_hash: trackingHash, // Hashed tracking code for lookup
       title: payload.title,
       text: payload.text,
       category: payload.category,
@@ -62,7 +87,9 @@ export class AnonymousSubmissionService {
 
     return {
       status: "submitted",
-      transactionId: complaintHash
+      transactionId: complaintHash,
+      trackingCode: trackingCode, // Return tracking code to user (they must save this!)
     };
   }
 }
+

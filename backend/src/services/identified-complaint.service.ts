@@ -36,13 +36,32 @@ export class IdentifiedComplaintService {
      * Get all complaints for a specific user
      */
     async getUserComplaints(userId: string) {
-        return await prisma.identifiedComplaint.findMany({
+        const complaints = await prisma.identifiedComplaint.findMany({
             where: {
                 user_id: userId,
                 deleted_at: null
             },
-            orderBy: { created_at: "desc" }
+            orderBy: { created_at: "desc" },
+            select: {
+                id: true,
+                title: true,
+                category: true,
+                status: true,
+                visibility: true,
+                created_at: true,
+            }
         });
+
+        return {
+            complaints: complaints.map((c: typeof complaints[0]) => ({
+                id: c.id,
+                title: c.title,
+                category: c.category,
+                status: c.status,
+                visibility: c.visibility,
+                createdAt: c.created_at.toISOString(),
+            }))
+        };
     }
 
     /**

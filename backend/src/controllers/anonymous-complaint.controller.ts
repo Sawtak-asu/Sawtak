@@ -51,7 +51,8 @@ export class AnonymousComplaintController {
         message: "Anonymous complaint submitted successfully",
         data: {
           transactionId: result.transactionId,
-          status: result.status
+          status: result.status,
+          trackingCode: result.trackingCode // Include tracking code for user to save
         }
       };
     } catch (error: any) {

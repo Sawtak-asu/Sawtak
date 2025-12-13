@@ -8,8 +8,9 @@ import { ComplaintFilters } from "@/components/complaint-filters";
 import { Pagination } from "@/components/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, FileText, Shield, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -81,7 +82,7 @@ export default function FeedPage() {
                 page,
                 limit: ITEMS_PER_PAGE,
             }),
-        staleTime: 30000, // 30 seconds
+        staleTime: 30000,
     });
 
     const complaints = data?.data?.complaints || [];
@@ -89,19 +90,24 @@ export default function FeedPage() {
     const totalPages = pagination?.totalPages || 1;
 
     return (
-        <div className="min-h-screen bg-muted/20">
+        <div className="min-h-screen bg-background">
             <Navbar />
-            <div className="overflow-y-auto h-[calc(100vh-5rem)] w-screen">
-                <main className="container py-6 max-w-2xl mx-auto">
-                    <div className="space-y-4">
-                        {/* Header */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-semibold">Public Complaints Feed</h1>
-                                <p className="text-sm text-muted-foreground">
-                                    Browse {pagination?.total || 0} complaints from the community
-                                </p>
+            
+            {/* Header Section */}
+            <div className="border-b border-border bg-muted/30">
+                <div className="container max-w-6xl mx-auto px-6 py-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Eye className="h-5 w-5 text-primary" />
+                                <h1 className="text-2xl font-semibold">Public Feed</h1>
                             </div>
+                            <p className="text-muted-foreground">
+                                Browse {pagination?.total || 0} public complaints from the community. 
+                                All information displayed respects user privacy settings.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -111,33 +117,74 @@ export default function FeedPage() {
                                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
+                            <Button asChild size="sm">
+                                <Link href="/file-complaint">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    File Complaint
+                                </Link>
+                            </Button>
                         </div>
+                    </div>
 
-                        {/* Filters */}
-                        <ComplaintFilters
-                            search={search}
-                            setSearch={(val) => { setSearch(val); setPage(1); }}
-                            category={category}
-                            setCategory={(val) => { setCategory(val); setPage(1); }}
-                            dateFrom={dateFrom}
-                            setDateFrom={(val) => { setDateFrom(val); setPage(1); }}
-                            dateTo={dateTo}
-                            setDateTo={(val) => { setDateTo(val); setPage(1); }}
-                            location={location}
-                            setLocation={(val) => { setLocation(val); setPage(1); }}
-                            sort={sort}
-                            setSort={setSort}
-                        />
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
+                        <div className="text-center">
+                            <p className="text-2xl font-semibold">{pagination?.total || 0}</p>
+                            <p className="text-xs text-muted-foreground">Total Complaints</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-semibold">
+                                {complaints.filter(c => c.submissionMode === "anonymous").length || 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Anonymous</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-semibold">
+                                {complaints.filter(c => c.submissionMode === "public").length || 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Identified</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        {/* Content */}
+            {/* Main Content */}
+            <div className="container max-w-6xl mx-auto px-6 py-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Sidebar Filters */}
+                    <aside className="lg:col-span-1">
+                        <div className="sticky top-6 space-y-4">
+                            <div className="rounded-xl border border-border bg-card p-4">
+                                <h3 className="font-medium mb-4 flex items-center gap-2">
+                                    <Shield className="h-4 w-4" />
+                                    Filters
+                                </h3>
+                                <ComplaintFilters
+                                    search={search}
+                                    setSearch={(val) => { setSearch(val); setPage(1); }}
+                                    category={category}
+                                    setCategory={(val) => { setCategory(val); setPage(1); }}
+                                    dateFrom={dateFrom}
+                                    setDateFrom={(val) => { setDateFrom(val); setPage(1); }}
+                                    dateTo={dateTo}
+                                    setDateTo={(val) => { setDateTo(val); setPage(1); }}
+                                    location={location}
+                                    setLocation={(val) => { setLocation(val); setPage(1); }}
+                                />
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* Complaints List */}
+                    <main className="lg:col-span-3">
                         {isLoading ? (
                             <div className="space-y-4">
                                 {Array.from({ length: 3 }).map((_, i) => (
-                                    <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
+                                    <Skeleton key={i} className="h-[180px] w-full rounded-xl" />
                                 ))}
                             </div>
                         ) : isError ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card">
                                 <AlertCircle className="h-12 w-12 text-destructive mb-4" />
                                 <h3 className="text-lg font-medium">Failed to load complaints</h3>
                                 <p className="text-sm text-muted-foreground mb-4">
@@ -148,16 +195,19 @@ export default function FeedPage() {
                                 </Button>
                             </div>
                         ) : complaints.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card">
                                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                                    <AlertCircle className="h-8 w-8 text-muted-foreground" />
+                                    <FileText className="h-8 w-8 text-muted-foreground" />
                                 </div>
                                 <h3 className="text-lg font-medium">No complaints found</h3>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground mb-4">
                                     {search || category !== "all" || location
                                         ? "Try adjusting your filters."
                                         : "Be the first to file a complaint!"}
                                 </p>
+                                <Button asChild>
+                                    <Link href="/file-complaint">File a Complaint</Link>
+                                </Button>
                             </div>
                         ) : (
                             <>
@@ -168,7 +218,7 @@ export default function FeedPage() {
                                 </div>
                                 
                                 {totalPages > 1 && (
-                                    <div className="flex justify-center pt-4 pb-8">
+                                    <div className="flex justify-center pt-6 pb-4">
                                         <Pagination
                                             currentPage={page}
                                             totalPages={totalPages}
@@ -178,8 +228,8 @@ export default function FeedPage() {
                                 )}
                             </>
                         )}
-                    </div>
-                </main>
+                    </main>
+                </div>
             </div>
         </div>
     );

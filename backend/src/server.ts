@@ -7,6 +7,8 @@ import { anonymousComplaintRoutes } from "./routes/anonymous-complaint.routes";
 import { identifiedComplaintRoutes } from "./routes/identified-complaint.routes";
 import { feedRoutes } from "./routes/feed.routes";
 import { indexerRoutes } from "./routes/indexer.routes";
+import { adminRoutes } from "./routes/admin.routes";
+import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
 
@@ -18,6 +20,8 @@ const app = new Elysia()
   .use(identifiedComplaintRoutes)
   .use(feedRoutes)
   .use(indexerRoutes)
+  .use(adminRoutes)
+  .use(trackingRoutes)
   .use(uploadRoutes)
   .get("/", () => "Sawtak backend :p")
   .listen(process.env.PORT || 8000);

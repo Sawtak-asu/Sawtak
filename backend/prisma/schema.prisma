@@ -50,6 +50,7 @@ model IdentifiedComplaint {
 model IndexedComplaint {
   hcs_hash             String   @id
   anonymous_identifier String
+  tracking_hash        String?  // Hashed tracking code for user lookup
   title                String
   complaint_text       String
   category             String
@@ -62,6 +63,7 @@ model IndexedComplaint {
   indexed_at           DateTime @default(now())
 
   @@index([anonymous_identifier])
+  @@index([tracking_hash])
   @@index([category])
   @@index([area])
   @@index([status])
