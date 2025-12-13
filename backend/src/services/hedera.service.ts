@@ -6,13 +6,38 @@ export class HederaService implements IBlockchainService {
 
   constructor() {
     const accountId = process.env.HEDERA_ACCOUNT_ID || process.env.HEDERA_OPERATOR_ID;
-    const privateKeyString = process.env.HEDERA_PRIVATE_KEY || process.env.HEDERA_OPERATOR_KEY;
+    let privateKeyString = process.env.HEDERA_PRIVATE_KEY || process.env.HEDERA_OPERATOR_KEY;
 
     if (!accountId || !privateKeyString) {
       throw new Error("HEDERA_ACCOUNT_ID (or HEDERA_OPERATOR_ID) and HEDERA_PRIVATE_KEY (or HEDERA_OPERATOR_KEY) must be set in environment variables");
     }
 
-    const privateKey = PrivateKey.fromString(privateKeyString);
+    // Handle different key formats
+    let privateKey: PrivateKey;
+    try {
+      // Remove 0x prefix if present for ECDSA keys
+      if (privateKeyString.startsWith("0x")) {
+        privateKeyString = privateKeyString.slice(2);
+        privateKey = PrivateKey.fromStringECDSA(privateKeyString);
+        console.log("[HederaService] Using ECDSA key format");
+      } else if (privateKeyString.length === 64) {
+        // Raw 32-byte hex without prefix - try ECDSA first
+        try {
+          privateKey = PrivateKey.fromStringECDSA(privateKeyString);
+          console.log("[HederaService] Using raw ECDSA key");
+        } catch {
+          privateKey = PrivateKey.fromStringED25519(privateKeyString);
+          console.log("[HederaService] Using raw ED25519 key");
+        }
+      } else {
+        // Standard format (DER encoded)
+        privateKey = PrivateKey.fromString(privateKeyString);
+        console.log("[HederaService] Using standard key format");
+      }
+    } catch (error: any) {
+      console.error("[HederaService] Failed to parse private key:", error.message);
+      throw new Error(`Invalid Hedera private key format: ${error.message}`);
+    }
 
     // Default to Testnet with timeout configuration
     this.client = Client.forTestnet();
@@ -20,6 +45,8 @@ export class HederaService implements IBlockchainService {
 
     // Set request timeout to 30 seconds to prevent hanging
     this.client.setRequestTimeout(30000);
+    
+    console.log(`[HederaService] Initialized for account ${accountId} on testnet`);
   }
 
   async submitMessage(topicId: string, message: any): Promise<{ transactionId: string; consensusTimestamp: string }> {

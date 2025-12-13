@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { IdentifiedComplaintService } from "../services/identified-complaint.service";
 import { validateIdentifiedComplaint, sanitizeString } from "../validators/complaint.validator";
 
 /**
@@ -6,6 +6,12 @@ import { validateIdentifiedComplaint, sanitizeString } from "../validators/compl
  * Separates HTTP handling from business logic.
  */
 export class IdentifiedComplaintController {
+  private complaintService: IdentifiedComplaintService;
+
+  constructor() {
+    this.complaintService = new IdentifiedComplaintService();
+  }
+
   /**
    * Handle identified complaint submission
    */
@@ -28,22 +34,20 @@ export class IdentifiedComplaintController {
         category,
         area,
         incidentDate,
-        evidenceUrls
+        evidenceUrls,
+        visibility
       } = body;
 
-      // Save to database
-      const complaint = await prisma.identifiedComplaint.create({
-        data: {
-          user_id: userId,
-          title,
-          text,
-          category,
-          area,
-          incident_date: incidentDate ? new Date(incidentDate) : new Date(),
-          evidence_urls: evidenceUrls || [],
-          status: "submitted",
-          visibility: "private" // Default to private
-        }
+      // Save to database via service
+      const complaint = await this.complaintService.createComplaint({
+        userId,
+        title,
+        text,
+        category,
+        area,
+        incidentDate: incidentDate ? new Date(incidentDate) : undefined,
+        evidenceUrls: evidenceUrls || [],
+        visibility: visibility || "public" // Default to public for identified complaints
       });
 
       return {
@@ -78,10 +82,7 @@ export class IdentifiedComplaintController {
         };
       }
 
-      const complaints = await prisma.identifiedComplaint.findMany({
-        where: { user_id: userId },
-        orderBy: { created_at: "desc" }
-      });
+      const complaints = await this.complaintService.getUserComplaints(userId);
 
       return {
         success: true,

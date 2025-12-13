@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/lib/auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +18,6 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sawtak",
-  description: "",
   keywords: ["Sawtak", "Anonimous Complaints", "Complaint System", "Complaints"],
   authors: [{ name: "Sawtak" }],
   openGraph: {
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   themeColor: "#fff",
+  title: "Sawtak - Anonymous Whistleblowing Platform",
+  description: "A secure, resilient, and trustworthy platform for anonymous reporting",
 };
-
-import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
   children,
@@ -42,17 +42,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="referrer" content="origin-when-cross-origin" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </body>
     </html>

@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -11,6 +12,8 @@ model User {
   id                   String   @id @default(uuid())
   email                String   @unique
   password             String?  // Optional for OAuth users
+  name                 String?  // User's display name (from OAuth)
+  picture              String?  // Profile picture URL (from OAuth)
   anonymous_identifier String   @unique
   role                 String   @default("user") // user, admin, moderator
   
