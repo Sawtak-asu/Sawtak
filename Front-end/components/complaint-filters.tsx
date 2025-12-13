@@ -31,8 +31,8 @@ interface ComplaintFiltersProps {
     setDateTo: (date: Date | undefined) => void;
     location: string;
     setLocation: (value: string) => void;
-    sort: string;
-    setSort: (value: string) => void;
+    submissionMode: string;
+    setSubmissionMode: (value: string) => void;
 }
 
 export function ComplaintFilters({
@@ -46,8 +46,8 @@ export function ComplaintFilters({
     setDateTo,
     location,
     setLocation,
-    sort,
-    setSort,
+    submissionMode,
+    setSubmissionMode,
 }: ComplaintFiltersProps) {
     return (
         <div className="flex flex-col gap-4">
@@ -99,6 +99,19 @@ export function ComplaintFilters({
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
                                     />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="mode">Submission Type</Label>
+                                    <Select value={submissionMode} onValueChange={setSubmissionMode}>
+                                        <SelectTrigger id="mode">
+                                            <SelectValue placeholder="All types" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Types</SelectItem>
+                                            <SelectItem value="anonymous">Anonymous</SelectItem>
+                                            <SelectItem value="public">Identified</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Date Range</Label>
@@ -158,6 +171,7 @@ export function ComplaintFilters({
                                     setLocation("");
                                     setDateFrom(undefined);
                                     setDateTo(undefined);
+                                    setSubmissionMode("all");
                                 }}
                             >
                                 Clear Filters
@@ -166,15 +180,6 @@ export function ComplaintFilters({
                         </PopoverContent>
                     </Popover>
 
-                    <Select value={sort} onValueChange={setSort}>
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Sort by" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="newest">Newest</SelectItem>
-                            <SelectItem value="oldest">Oldest</SelectItem>
-                        </SelectContent>
-                    </Select>
                 </div>
             </div>
         </div>

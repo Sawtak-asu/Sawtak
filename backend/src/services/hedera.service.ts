@@ -46,6 +46,12 @@ export class HederaService implements IBlockchainService {
     // Set request timeout to 30 seconds to prevent hanging
     this.client.setRequestTimeout(30000);
     
+    // Set max attempts for transaction retries
+    this.client.setMaxAttempts(5);
+    
+    // Set max node attempts to try different nodes on failure
+    this.client.setMaxNodeAttempts(3);
+    
     console.log(`[HederaService] Initialized for account ${accountId} on testnet`);
   }
 
@@ -53,19 +59,20 @@ export class HederaService implements IBlockchainService {
     try {
       const messageString = typeof message === 'string' ? message : JSON.stringify(message);
 
+      // Create and execute the transaction
+      // The SDK will automatically handle transaction timing
       const transaction = new TopicMessageSubmitTransaction()
         .setTopicId(topicId)
         .setMessage(messageString);
 
+      // Execute with automatic retry on different nodes
       const txResponse = await transaction.execute(this.client);
 
       // Get receipt to ensure the transaction reached consensus
-      await txResponse.getReceipt(this.client);
+      const receipt = await txResponse.getReceipt(this.client);
 
       return {
         transactionId: txResponse.transactionId.toString(),
-        // We return local time here. The authoritative consensus timestamp 
-        // will be picked up by the Indexer from the Mirror Node.
         consensusTimestamp: new Date().toISOString()
       };
     } catch (error: any) {

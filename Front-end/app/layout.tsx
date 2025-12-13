@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  themeColor: "#fff",
   title: "Sawtak - Anonymous Whistleblowing Platform",
   description: "A secure, resilient, and trustworthy platform for anonymous reporting",
 };

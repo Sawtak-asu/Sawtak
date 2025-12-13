@@ -7,12 +7,15 @@ const storageService = new PublicEvidenceStorageService();
 export const uploadRoutes = new Elysia({ prefix: "/api/upload" })
   .use(authMiddleware) // 🔒 Only authenticated users can upload files
   .post("/", async ({ body, set }: any) => {
-    const files = body.files;
+    const rawFiles = body.files;
 
-    if (!files || files.length === 0) {
+    if (!rawFiles) {
       set.status = 400;
       return { error: "No files provided" };
     }
+
+    // Ensure we work with an array even if only one file is uploaded
+    const files = Array.isArray(rawFiles) ? rawFiles : [rawFiles];
 
     try {
       // Handle multiple files concurrently

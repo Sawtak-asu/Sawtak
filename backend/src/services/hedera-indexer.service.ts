@@ -32,6 +32,7 @@ interface MirrorNodeResponse {
 interface ComplaintMessage {
   type?: string; // "COMPLAINT_SUBMISSION"
   anon_id: string; // encrypted anonymous identifier
+  tracking_hash?: string; // hashed tracking code for user lookup
   title: string;
   text: string;
   category: string;
@@ -176,6 +177,7 @@ export class HederaIndexerService {
       const complaint: ComplaintMessage = {
         type: rawMessage.type,
         anon_id: rawMessage.anon_id,
+        tracking_hash: rawMessage.tracking_hash,
         title: rawMessage.title,
         text: rawMessage.text,
         category: rawMessage.category,
@@ -211,6 +213,7 @@ export class HederaIndexerService {
         data: {
           hcs_hash: msg.running_hash,
           anonymous_identifier: complaint.anon_id,
+          tracking_hash: complaint.tracking_hash || null,
           title: complaint.title,
           complaint_text: complaint.text,
           category: complaint.category,

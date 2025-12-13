@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -37,7 +38,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CalendarIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CalendarIcon, Copy, Check, Shield, Eye, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -64,6 +73,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export function ComplaintForm() {
   const { user, isLoggedIn, token } = useAuth();
+  const [trackingCode, setTrackingCode] = useState<string | null>(null);
+  const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const form = useForm<ComplaintFormData>({
     resolver: zodResolver(formSchema),
@@ -76,6 +88,14 @@ export function ComplaintForm() {
       visibility: "public",
     },
   });
+
+  const copyToClipboard = async () => {
+    if (trackingCode) {
+      await navigator.clipboard.writeText(trackingCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: { payload: any; mode: string }) => {
@@ -107,11 +127,18 @@ export function ComplaintForm() {
 
       return response.json();
     },
-    onSuccess: (data) => {
-      const message = data.data?.transactionId 
-        ? `Complaint submitted! Transaction ID: ${data.data.transactionId}`
-        : "Complaint submitted successfully!";
-      toast.success(message);
+    onSuccess: (data, variables) => {
+      // For anonymous submissions, show the tracking code prominently
+      if (variables.mode === "anonymous" && data.data?.trackingCode) {
+        setTrackingCode(data.data.trackingCode);
+        setShowTrackingDialog(true);
+        toast.success("Anonymous complaint submitted successfully!");
+      } else {
+        const message = data.data?.transactionId 
+          ? `Complaint submitted! ID: ${data.data.transactionId.substring(0, 16)}...`
+          : "Complaint submitted successfully!";
+        toast.success(message);
+      }
       console.log("Submission successful:", data);
       form.reset();
     },
@@ -121,13 +148,48 @@ export function ComplaintForm() {
     },
   });
 
-  function onSubmit(values: ComplaintFormData) {
+
+
+  async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
       toast.error("You must be logged in to submit a complaint.");
       return;
     }
 
     const isPublic = values.submissionMode === "public";
+    let evidenceUrls: string[] = [];
+
+    // Handle file upload for identified complaints
+    if (isPublic && values.evidence && values.evidence.length > 0) {
+      try {
+        const formData = new FormData();
+        Array.from(values.evidence as FileList).forEach((file) => {
+          formData.append("files", file as File);
+        });
+
+        const uploadResponse = await fetch(`${API_URL}/api/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to upload evidence files.");
+        }
+
+        const data = await uploadResponse.json();
+        if (data.urls) {
+          evidenceUrls = data.urls;
+        }
+      } catch (error: any) {
+        console.error("Upload error:", error);
+        toast.error(error.message || "Failed to upload evidence files. Please try again.");
+        return;
+      }
+    }
     
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
@@ -137,7 +199,7 @@ export function ComplaintForm() {
       category: values.category,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
-      evidenceUrls: [], // To be handled with file upload later
+      evidenceUrls: evidenceUrls, 
       visibility: values.visibility, // public = visible in feed, private = admin only
     } : {
       // Anonymous complaint payload - matches anonymous-complaint.controller.ts
@@ -180,36 +242,39 @@ export function ComplaintForm() {
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-col space-y-2"
+                      className="grid grid-cols-1 md:grid-cols-2 gap-4"
                     >
-                      <FormItem className="flex items-start space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="anonymous" disabled={!isLoggedIn} className="mt-1" />
+                          <RadioGroupItem value="anonymous" className="peer sr-only" disabled={!isLoggedIn} />
                         </FormControl>
-                        <div className="space-y-1">
-                          <FormLabel className="font-medium">
-                            🔒 Anonymous (Blockchain)
-                          </FormLabel>
-                          <p className="text-xs text-muted-foreground">
-                            Stored on Hedera blockchain. Immutable and publicly verifiable. 
-                            Your identity is encrypted and hidden.
+                        <FormLabel className="group flex flex-col items-start justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 hover:border-purple-500/50 peer-data-[state=checked]:border-purple-500 peer-data-[state=checked]:bg-purple-500/5 [&:has([data-state=checked])]:border-purple-500 cursor-pointer h-full transition-all duration-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-200">
+                              <Shield className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-base">Anonymous</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Stored on blockchain. Identity encrypted & hidden. You'll get a tracking code.
                           </p>
-                        </div>
+                        </FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-start space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="public" disabled={!isLoggedIn} className="mt-1" />
+                          <RadioGroupItem value="public" className="peer sr-only" disabled={!isLoggedIn} />
                         </FormControl>
-                        <div className="space-y-1">
-                          <FormLabel className="font-medium">
-                            👤 Identified (Database)
-                          </FormLabel>
-                          <p className="text-xs text-muted-foreground">
-                            Stored in database. Admin can see your identity. 
-                            Can be edited or deleted.
-                            {isLoggedIn && ` Submitting as ${user?.name || user?.email}.`}
+                        <FormLabel className="group flex flex-col items-start justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 hover:border-blue-500/50 peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-blue-500/5 [&:has([data-state=checked])]:border-blue-500 cursor-pointer h-full transition-all duration-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-200">
+                              <Check className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-base">Identified</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Stored in database. Linked to your account. Admin can see who you are.
                           </p>
-                        </div>
+                        </FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -224,35 +289,41 @@ export function ComplaintForm() {
                 control={form.control}
                 name="visibility"
                 render={({ field }) => (
-                  <FormItem className="space-y-3 pl-4 border-l-2 border-muted ml-2">
-                    <FormLabel>Visibility</FormLabel>
+                  <FormItem className="space-y-3 bg-muted/30 p-4 rounded-xl border">
+                    <FormLabel>Visibility Setting</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        className="flex flex-col space-y-2"
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormItem>
                           <FormControl>
-                            <RadioGroupItem value="public" />
+                            <RadioGroupItem value="public" className="peer sr-only" />
                           </FormControl>
-                          <div>
-                            <FormLabel className="font-medium">🌐 Public</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Visible on the public feed for everyone to see.
-                            </p>
-                          </div>
+                          <FormLabel className="group flex flex-row items-center gap-3 rounded-xl border border-muted bg-background p-3 hover:bg-accent/50 hover:border-green-500/50 peer-data-[state=checked]:border-green-500 peer-data-[state=checked]:bg-green-500/5 cursor-pointer transition-all duration-200">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                              <Eye className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold block text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Public</span>
+                              <span className="text-xs text-muted-foreground">Visible in community feed</span>
+                            </div>
+                          </FormLabel>
                         </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormItem>
                           <FormControl>
-                            <RadioGroupItem value="private" />
+                            <RadioGroupItem value="private" className="peer sr-only" />
                           </FormControl>
-                          <div>
-                            <FormLabel className="font-medium">🔐 Private</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Only visible to administrators. Not shown in public feed.
-                            </p>
-                          </div>
+                          <FormLabel className="group flex flex-row items-center gap-3 rounded-xl border border-muted bg-background p-3 hover:bg-accent/50 hover:border-amber-500/50 peer-data-[state=checked]:border-amber-500 peer-data-[state=checked]:bg-amber-500/5 cursor-pointer transition-all duration-200">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                              <Lock className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold block text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Private</span>
+                              <span className="text-xs text-muted-foreground">Only admin can view</span>
+                            </div>
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -415,10 +486,64 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Submitting..." : "Submit Complaint"}
+        <Button type="submit" disabled={mutation.isPending || form.formState.isSubmitting}>
+          {mutation.isPending || form.formState.isSubmitting ? "Submitting..." : "Submit Complaint"}
         </Button>
       </form>
+
+      {/* Tracking Code Dialog - shown after successful anonymous submission */}
+      <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Save Your Tracking Code
+            </DialogTitle>
+            <DialogDescription>
+              This is the only way to track your anonymous complaint. 
+              Please save it somewhere safe - we cannot recover it for you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center py-4">
+            <div className="bg-muted rounded-lg p-4 w-full text-center mb-4">
+              <p className="text-2xl font-mono font-bold tracking-wider">
+                {trackingCode}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={copyToClipboard}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy to Clipboard
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm">
+            <p className="text-amber-600 dark:text-amber-400 font-medium">
+              ⚠️ Important: Write this down!
+            </p>
+            <p className="text-muted-foreground mt-1">
+              You can use this code at /track to check your complaint status.
+              Your identity is not linked to this code.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowTrackingDialog(false)}>
+              I've Saved My Code
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 }

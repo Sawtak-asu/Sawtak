@@ -1,186 +1,197 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Shield, Lock, Eye, FileCheck, Users, BarChart3, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { TextEffect } from "@/components/ui/text-effect";
-import { AnimatedGroup } from "@/components/ui/animated-group";
-import { HeroHeader } from "./header";
-import HeroImage from "../public/hero.png";
-const transitionVariants = {
-  item: {
-    hidden: {
-      opacity: 0,
-      filter: "blur(12px)",
-      y: 12,
-    },
-    visible: {
-      opacity: 1,
-      filter: "blur(0px)",
-      y: 0,
-      transition: {
-        type: "spring",
-        bounce: 0.3,
-        duration: 1.5,
-      },
-    },
-  },
-} as const;
+import { HeroHeader } from "./navbar";
+import { GridBackground } from "@/components/grid-background";
 
 export default function HeroSection() {
   return (
-    <>
+    <GridBackground>
       <HeroHeader />
-      <main className="overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 isolate hidden opacity-65 contain-strict lg:block">
-          <div className="w-140 h-320 -translate-y-87.5 absolute left-0 top-0 -rotate-45 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,hsla(0,0%,85%,.08)_0,hsla(0,0%,55%,.02)_50%,hsla(0,0%,45%,0)_80%)]" />
-          <div className="h-320 absolute left-0 top-0 w-60 -rotate-45 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.06)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)] [translate:5%_-50%]" />
-          <div className="h-320 -translate-y-87.5 absolute left-0 top-0 w-60 -rotate-45 bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.04)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)]" />
-        </div>
-        <section>
-          <div className="relative pt-24 md:pt-36">
-            <AnimatedGroup
-              variants={{
-                container: {
-                  visible: {
-                    transition: {
-                      delayChildren: 1,
-                    },
-                  },
-                },
-                item: {
-                  hidden: {
-                    opacity: 0,
-                    y: 20,
-                  },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                      type: "spring",
-                      bounce: 0.3,
-                      duration: 2,
-                    },
-                  },
-                },
-              }}
-              className="mask-b-from-35% mask-b-to-90% absolute inset-0 top-56 -z-20 lg:top-32">
-              <Image
-                src="https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?q=80&w=2830&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="background"
-                className="hidden size-full dark:block"
-                width="3276"
-                height="4095"
-              />
-            </AnimatedGroup>
+      <main className="overflow-hidden relative">
+        <section className="relative pt-24 md:pt-36 pb-16 md:pb-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="text-center">
+              {/* Badge with subtle animation */}
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/50 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground shadow-sm hover:border-primary/30 transition-colors">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Blockchain-Secured Reporting</span>
+                <Sparkles className="h-3 w-3 text-primary/60" />
+              </div>
 
-            <div
-              aria-hidden
-              className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--color-background)_75%)]"
-            />
+              {/* Main Heading with highlight */}
+              <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                <span className="relative">
+                  Speak Up.
+                  <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/20" viewBox="0 0 200 10" preserveAspectRatio="none">
+                    <path d="M0 5 Q50 0 100 5 T200 5" fill="none" stroke="currentColor" strokeWidth="3" />
+                  </svg>
+                </span>{" "}
+                <span className="text-muted-foreground">Stay Safe.</span>
+              </h1>
 
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
-                <AnimatedGroup variants={transitionVariants}>
-                  <Link
-                    href="#link"
-                    className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-zinc-950/5 transition-colors duration-300 dark:border-t-white/5 dark:shadow-zinc-950">
-                    <span className="text-foreground text-sm">
-                      Secure and Anonymous Reporting
-                    </span>
-                    <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700"></span>
+              {/* Subheading */}
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl leading-relaxed">
+                A secure whistleblowing platform with <span className="text-foreground font-medium">blockchain-backed integrity</span>. 
+                Report misconduct anonymously with cryptographic proof of your submission.
+              </p>
 
-                    <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
-                      <div className="flex w-12 -translate-x-1/2 duration-500 ease-in-out group-hover:translate-x-0">
-                        <span className="flex size-6">
-                          <ArrowRight className="m-auto size-3" />
-                        </span>
-                        <span className="flex size-6">
-                          <ArrowRight className="m-auto size-3" />
-                        </span>
-                      </div>
-                    </div>
+              {/* CTA Buttons */}
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
+                  <Link href="/file-complaint">
+                    File a Complaint
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
-                </AnimatedGroup>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80">
+                  <Link href="/feed">
+                    View Public Feed
+                  </Link>
+                </Button>
+              </div>
 
-                <TextEffect
-                  preset="fade-in-blur"
-                  speedSegment={0.3}
-                  as="h1"
-                  className="mx-auto mt-8 max-w-4xl text-balance text-5xl max-md:font-semibold md:text-7xl lg:mt-16 xl:text-[5.25rem]">
-                  Sawtak - Anonymous Whistleblowing Platform
-                </TextEffect>
-                <TextEffect
-                  per="line"
-                  preset="fade-in-blur"
-                  speedSegment={0.3}
-                  delay={0.5}
-                  as="p"
-                  className="mx-auto mt-8 max-w-2xl text-balance text-lg">
-                  A secure, resilient, and trustworthy platform that allows
-                  citizens to anonymously report misconduct, corruption, or
-                  other complaints with cryptographic guarantees of data
-                  integrity and submission proof.
-                </TextEffect>
-
-                <AnimatedGroup
-                  variants={{
-                    container: {
-                      visible: {
-                        transition: {
-                          staggerChildren: 0.05,
-                          delayChildren: 0.75,
-                        },
-                      },
-                    },
-                    ...transitionVariants,
-                  }}
-                  className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
-                  <div
-                    key={1}
-                    className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="rounded-xl px-5 text-base">
-                      <Link href="/file-complaint">
-                        <span className="text-nowrap">File a Complaint</span>
-                      </Link>
-                    </Button>
-                  </div>
-                </AnimatedGroup>
+              {/* Trust indicators */}
+              <div className="mt-12 flex items-center justify-center gap-8 text-sm text-muted-foreground">
+                <Link href="/docs#security" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse group-hover/indicator:scale-125 transition-transform" />
+                  <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-green-500">256-bit Encrypted</span>
+                </Link>
+                <div className="hidden sm:block h-4 w-px bg-border" />
+                <Link href="/docs#blockchain" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                  <div className="h-2 w-2 rounded-full bg-blue-500 group-hover/indicator:scale-125 transition-transform" />
+                  <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">Hedera Blockchain</span>
+                </Link>
+                <div className="hidden sm:block h-4 w-px bg-border" />
+                <Link href="/docs#overview" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                  <div className="h-2 w-2 rounded-full bg-purple-500 group-hover/indicator:scale-125 transition-transform" />
+                  <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-purple-500">Anonymous</span>
+                </Link>
               </div>
             </div>
+          </div>
+        </section>
 
-            <AnimatedGroup
-              variants={{
-                container: {
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.05,
-                      delayChildren: 0.75,
-                    },
-                  },
-                },
-                ...transitionVariants,
-              }}>
-              <div className="mask-b-from-55% relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
-                <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
-                  <Image
-                    className="bg-background aspect-15/8 relative rounded-2xl"
-                    src={HeroImage}
-                    alt="app screen"
-                    width="2700"
-                    height="1440"
-                  />
+        {/* Stats Section with cards */}
+        <section className="border-y border-border/50 py-12 relative bg-background/30 backdrop-blur-sm">
+          <div className="relative mx-auto max-w-7xl px-6">
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {[
+                { value: "100%", label: "Anonymous", icon: Lock },
+                { value: "256-bit", label: "Encryption", icon: Shield },
+                { value: "Hedera", label: "Blockchain", icon: BarChart3 },
+                { value: "24/7", label: "Available", icon: Eye },
+              ].map((stat, i) => (
+                <div 
+                  key={stat.label} 
+                  className="group relative bg-background/40 backdrop-blur-md rounded-xl border border-border/50 p-4 text-center hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                >
+                  <stat.icon className="h-5 w-5 mx-auto mb-2 text-primary/60 group-hover:text-primary transition-colors" />
+                  <p className="text-2xl font-semibold md:text-3xl">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.label}</p>
                 </div>
-              </div>
-            </AnimatedGroup>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid */}
+        <section className="py-16 md:py-24 relative">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-semibold md:text-4xl">
+                Why Choose <span className="text-primary">Sawtak</span>?
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+                Built with privacy and transparency at its core
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: Lock,
+                  title: "End-to-End Encryption",
+                  description: "Your identity is encrypted with AES-256 before being stored. Only authorized personnel can access sensitive information.",
+                },
+                {
+                  icon: Shield,
+                  title: "Blockchain Immutability",
+                  description: "Anonymous complaints are recorded on Hedera's distributed ledger, creating an immutable and tamper-proof audit trail.",
+                },
+                {
+                  icon: Eye,
+                  title: "Public Transparency",
+                  description: "Browse the public feed to see reported complaints and their status. Full transparency without compromising anonymity.",
+                },
+                {
+                  icon: FileCheck,
+                  title: "Dual Submission Modes",
+                  description: "Choose anonymous blockchain submission for maximum privacy, or identified submission for direct follow-up capability.",
+                },
+                {
+                  icon: Users,
+                  title: "Secure Administration",
+                  description: "Authorized administrators can investigate and manage complaints through a secure, role-based access portal.",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Track Your Complaint",
+                  description: "Use your unique tracking code to monitor the status of your anonymous complaint without revealing your identity.",
+                },
+              ].map((feature, i) => (
+                <div 
+                  key={feature.title}
+                  className="group relative rounded-xl border border-border/50 bg-background/40 backdrop-blur-sm p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1"
+                >
+                  {/* Corner accent */}
+                  <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-primary/10 rounded-tr-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-medium">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="border-t border-border/50 py-16 md:py-24 relative overflow-hidden bg-background/30 backdrop-blur-sm">
+          <div className="relative mx-auto max-w-7xl px-6 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 rotate-3 hover:rotate-0 transition-transform shadow-lg">
+              <Shield className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-3xl font-semibold md:text-4xl">
+              Ready to Make a Difference?
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+              Your voice matters. Report misconduct safely and help build a more 
+              transparent and accountable society.
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
+                <Link href="/file-complaint">
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 hover:bg-background/80">
+                <Link href="/track">
+                  Track a Complaint
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
-    </>
+    </GridBackground>
   );
 }

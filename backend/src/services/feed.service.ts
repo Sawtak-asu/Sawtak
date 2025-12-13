@@ -12,8 +12,11 @@ export interface FeedComplaint {
   submissionMode: "anonymous" | "public";
   user?: {
     name: string | null;
+    picture?: string | null;
   };
   transactionId?: string; // For anonymous complaints from blockchain
+  evidenceUrls?: string[]; // Evidence URLs for identified complaints
+  evidenceCids?: string[]; // Evidence CIDs for anonymous complaints (IPFS)
 }
 
 export interface FeedFilters {
@@ -108,6 +111,7 @@ export class FeedService {
             user: {
               select: {
                 name: true,
+                picture: true,
               },
             },
           },
@@ -136,7 +140,8 @@ export class FeedService {
       createdAt: c.created_at.toISOString(),
       status: c.status,
       submissionMode: "public" as const,
-      user: c.user ? { name: c.user.name } : undefined,
+      user: c.user ? { name: c.user.name, picture: c.user.picture } : undefined,
+      evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
     }));
 
     const anonymousFormatted: FeedComplaint[] = anonymousComplaints.map((c) => ({
@@ -150,6 +155,7 @@ export class FeedService {
       status: c.status,
       submissionMode: "anonymous" as const,
       transactionId: c.hcs_hash,
+      evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
     }));
 
     // Merge and sort
