@@ -9,12 +9,15 @@ interface User {
   role: string;
   anonymousIdentifier: string;
   provider: string;
+  name?: string;
+  picture?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isLoggedIn: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
   verifyToken: () => Promise<boolean>;
@@ -107,9 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const isLoggedIn = !!user;
+
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, login, logout, verifyToken }}
+      value={{ user, token, isLoading, isLoggedIn, login, logout, verifyToken }}
     >
       {children}
     </AuthContext.Provider>

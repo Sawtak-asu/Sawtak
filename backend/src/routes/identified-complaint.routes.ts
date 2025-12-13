@@ -9,7 +9,7 @@ export const identifiedComplaintRoutes = new Elysia({ prefix: "/api/complaints/i
   .use(authMiddleware)
   /**
    * POST /api/complaints/identified/submit
-   * Submit an identified (public) complaint to the database
+   * Submit an identified complaint to the database
    * 
    * Body:
    * {
@@ -19,7 +19,8 @@ export const identifiedComplaintRoutes = new Elysia({ prefix: "/api/complaints/i
    *   "category": "corruption",
    *   "area": "ministry_of_health",
    *   "incidentDate": "2025-11-20",  // optional
-   *   "evidenceUrls": ["https://..."] // optional, public URLs from Supabase
+   *   "evidenceUrls": ["https://..."], // optional, public URLs from storage
+   *   "visibility": "public" | "private" // optional, defaults to "public"
    * }
    */
   .post("/submit", async ({ body, set }: any) => {

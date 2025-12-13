@@ -13,7 +13,7 @@
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/swagger": "latest",
     "@hashgraph/sdk": "latest",
-    "@prisma/client": "latest",
+    "@prisma/client": "5.22.0",
     "@supabase/supabase-js": "latest",
     "bcryptjs": "latest",
     "bull": "latest",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "bun-types": "latest",
     "dotenv": "^17.2.3",
-    "prisma": "latest",
+    "prisma": "5.22.0",
     "tsx": "^4.20.6"
   }
 }

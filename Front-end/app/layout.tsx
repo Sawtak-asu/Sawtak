@@ -18,8 +18,6 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sawtak",
-  description: "",
   keywords: ["Sawtak", "Anonimous Complaints", "Complaint System", "Complaints"],
   authors: [{ name: "Sawtak" }],
   openGraph: {
@@ -60,16 +58,6 @@ export default function RootLayout({
               <Toaster />
             </ThemeProvider>
           </AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange>
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
-          </ThemeProvider>
         </QueryClientProvider>
       </body>
     </html>

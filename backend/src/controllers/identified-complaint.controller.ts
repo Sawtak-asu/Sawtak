@@ -34,7 +34,8 @@ export class IdentifiedComplaintController {
         category,
         area,
         incidentDate,
-        evidenceUrls
+        evidenceUrls,
+        visibility
       } = body;
 
       // Save to database via service
@@ -46,7 +47,7 @@ export class IdentifiedComplaintController {
         area,
         incidentDate: incidentDate ? new Date(incidentDate) : undefined,
         evidenceUrls: evidenceUrls || [],
-        visibility: "private" // Default to private
+        visibility: visibility || "public" // Default to public for identified complaints
       });
 
       return {

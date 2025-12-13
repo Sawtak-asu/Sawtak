@@ -8,7 +8,7 @@ export interface ValidationResult {
 
 /**
  * Validate anonymous complaint payload
- */
+**/
 export function validateAnonymousComplaint(data: any): ValidationResult {
   const required = ["userId", "anonymousIdentifier", "title", "text", "category"];
 

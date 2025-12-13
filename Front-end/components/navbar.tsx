@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
 export function Navbar() {
-    const { login, logout, user, isLoggedIn } = useAuth();
+    const { logout, user, isLoggedIn } = useAuth();
     const pathname = usePathname();
+    const router = useRouter();
 
     return (
         <header className="sticky top-0 flex items-center justify-center z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -29,10 +31,10 @@ export function Navbar() {
                         Feed
                     </Link>
                     <Link
-                        href="/fill-complaint"
+                        href="/file-complaint"
                         className={cn(
                             "transition-colors hover:text-foreground/80",
-                            pathname === "/fill-complaint" ? "text-foreground" : "text-foreground/60"
+                            pathname === "/file-complaint" ? "text-foreground" : "text-foreground/60"
                         )}
                     >
                         File Complaint
@@ -51,7 +53,7 @@ export function Navbar() {
                                 </Button>
                             </div>
                         ) : (
-                            <Button variant="ghost" size="sm" onClick={() => login()}>
+                            <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
                                 Login
                             </Button>
                         )}

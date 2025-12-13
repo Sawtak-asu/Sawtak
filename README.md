@@ -75,7 +75,7 @@ A secure, resilient, and trustworthy platform that allows citizens  to anonymous
 - **ORM**: Prisma
 - **File Storage**: 
   - IPFS (Web3.Storage) for anonymous evidence
-  - Supabase Storage for identified evidence
+  - Cloudflare R2 Storage for identified evidence
 
 ### Blockchain
 - **Network**: Hedera Mainnet

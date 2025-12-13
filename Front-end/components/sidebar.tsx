@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/lib/auth-context";
 import { Separator } from "@/components/ui/separator";
 import { Bookmark, SquareActivity } from "lucide-react";
 

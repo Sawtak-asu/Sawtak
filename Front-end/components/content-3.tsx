@@ -25,7 +25,7 @@ export default function ContentSection2() {
                             variant="secondary"
                             size="sm"
                             className="gap-1 pr-1.5">
-                            <Link href="/complaint">
+                            <Link href="/file-complaint">
                                 <span>File a Complaint</span>
                                 <ChevronRight className="size-2" />
                             </Link>

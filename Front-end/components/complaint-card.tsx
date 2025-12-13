@@ -21,8 +21,9 @@ export interface Complaint {
     createdAt: string;
     status?: string;
     submissionMode: "anonymous" | "public";
+    transactionId?: string; // For blockchain complaints
     user?: {
-        name: string;
+        name: string | null;
         picture?: string;
     };
 }

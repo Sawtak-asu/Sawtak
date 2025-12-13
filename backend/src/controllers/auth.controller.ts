@@ -40,6 +40,8 @@ export class AuthController {
           user: {
             id: user.id,
             email: user.email,
+            name: user.name,
+            picture: user.picture,
             role: user.role,
             anonymousIdentifier: user.anonymous_identifier,
             provider: user.auth_provider
@@ -95,6 +97,8 @@ export class AuthController {
           user: {
             id: user.id,
             email: user.email,
+            name: user.name,
+            picture: user.picture,
             role: user.role,
             anonymousIdentifier: user.anonymous_identifier,
             provider: user.auth_provider

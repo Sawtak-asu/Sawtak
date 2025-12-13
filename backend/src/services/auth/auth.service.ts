@@ -34,10 +34,14 @@ export class AuthService {
       update: {
         auth_provider: providerName,
         auth_provider_id: authUser.providerId,
+        name: authUser.name || undefined,
+        picture: authUser.picture || undefined,
       },
       create: {
         email: authUser.email,
         password: null, // OAuth users don't have passwords
+        name: authUser.name || null,
+        picture: authUser.picture || null,
         auth_provider: providerName,
         auth_provider_id: authUser.providerId,
         anonymous_identifier: generateAnonymousId(authUser.providerId),
@@ -54,6 +58,8 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        name: true,
+        picture: true,
         role: true,
         anonymous_identifier: true,
         auth_provider: true,
@@ -61,3 +67,4 @@ export class AuthService {
     });
   }
 }
+

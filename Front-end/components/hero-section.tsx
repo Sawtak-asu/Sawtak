@@ -145,7 +145,7 @@ export default function HeroSection() {
                       asChild
                       size="lg"
                       className="rounded-xl px-5 text-base">
-                      <Link href="/complaint">
+                      <Link href="/file-complaint">
                         <span className="text-nowrap">File a Complaint</span>
                       </Link>
                     </Button>

@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 
@@ -42,7 +41,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/lib/auth-context";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -56,30 +55,15 @@ const formSchema = z.object({
   date: z.date().optional(),
   evidence: z.any().optional(),
   submissionMode: z.enum(["anonymous", "public"]),
+  visibility: z.enum(["public", "private"]),
 });
 
 type ComplaintFormData = z.infer<typeof formSchema>;
 
-async function submitComplaint(data: unknown) {
-  const response = await fetch("/api/complaints/anonymous/submit", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to submit complaint.");
-  }
-
-  return response.json();
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export function ComplaintForm() {
-  const { user, isLoggedIn } = useAuth();
-  const [anonymousIdentifier] = useState("anon_" + Math.random().toString(36).substr(2, 9));
+  const { user, isLoggedIn, token } = useAuth();
 
   const form = useForm<ComplaintFormData>({
     resolver: zodResolver(formSchema),
@@ -89,13 +73,45 @@ export function ComplaintForm() {
       area: "",
       category: "",
       submissionMode: "anonymous",
+      visibility: "public",
     },
   });
 
   const mutation = useMutation({
-    mutationFn: submitComplaint,
+    mutationFn: async (data: { payload: any; mode: string }) => {
+      // Both routes require authentication per backend middleware
+      if (!token) {
+        throw new Error("You must be logged in to submit a complaint.");
+      }
+
+      // Correct endpoints: /api/complaints/{type}/submit
+      const endpoint = data.mode === "public" 
+        ? `${API_URL}/api/complaints/identified/submit`
+        : `${API_URL}/api/complaints/anonymous/submit`;
+      
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data.payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit complaint.");
+      }
+
+      return response.json();
+    },
     onSuccess: (data) => {
-      toast.success("Complaint submitted successfully!");
+      const message = data.data?.transactionId 
+        ? `Complaint submitted! Transaction ID: ${data.data.transactionId}`
+        : "Complaint submitted successfully!";
+      toast.success(message);
       console.log("Submission successful:", data);
       form.reset();
     },
@@ -106,18 +122,36 @@ export function ComplaintForm() {
   });
 
   function onSubmit(values: ComplaintFormData) {
-    const complaintData = {
-      userId: values.submissionMode === "public" ? user?.id : undefined,
-      anonymousIdentifier: values.submissionMode === "anonymous" ? anonymousIdentifier : undefined,
+    if (!isLoggedIn || !user) {
+      toast.error("You must be logged in to submit a complaint.");
+      return;
+    }
+
+    const isPublic = values.submissionMode === "public";
+    
+    const payload = isPublic ? {
+      // Identified complaint payload - matches identified-complaint.controller.ts
+      userId: user.id,
       title: values.title,
       text: values.mainText,
       category: values.category,
-      area: values.area,
+      area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
-      evidenceCids: [], // For now, evidence is not handled
-      submissionMode: values.submissionMode,
+      evidenceUrls: [], // To be handled with file upload later
+      visibility: values.visibility, // public = visible in feed, private = admin only
+    } : {
+      // Anonymous complaint payload - matches anonymous-complaint.controller.ts
+      userId: user.id,
+      anonymousIdentifier: user.anonymousIdentifier,
+      title: values.title,
+      text: values.mainText,
+      category: values.category,
+      area: values.area || undefined,
+      incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
+      evidenceCids: [], // IPFS CIDs to be handled later
     };
-    mutation.mutate(complaintData);
+    
+    mutation.mutate({ payload, mode: values.submissionMode });
   }
 
   return (
@@ -137,27 +171,45 @@ export function ComplaintForm() {
               render={({ field }) => (
                 <FormItem className="space-y-3">
                   <FormLabel>Submission Mode</FormLabel>
+                  {!isLoggedIn && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Please log in to submit a complaint.
+                    </p>
+                  )}
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-col space-y-1"
+                      className="flex flex-col space-y-2"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-start space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="anonymous" />
+                          <RadioGroupItem value="anonymous" disabled={!isLoggedIn} className="mt-1" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Submit Anonymously
-                        </FormLabel>
+                        <div className="space-y-1">
+                          <FormLabel className="font-medium">
+                            🔒 Anonymous (Blockchain)
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Stored on Hedera blockchain. Immutable and publicly verifiable. 
+                            Your identity is encrypted and hidden.
+                          </p>
+                        </div>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-start space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="public" disabled={!isLoggedIn} />
+                          <RadioGroupItem value="public" disabled={!isLoggedIn} className="mt-1" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Submit Publicly {isLoggedIn ? `(as ${user?.name || user?.email})` : "(Login required)"}
-                        </FormLabel>
+                        <div className="space-y-1">
+                          <FormLabel className="font-medium">
+                            👤 Identified (Database)
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Stored in database. Admin can see your identity. 
+                            Can be edited or deleted.
+                            {isLoggedIn && ` Submitting as ${user?.name || user?.email}.`}
+                          </p>
+                        </div>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -165,6 +217,50 @@ export function ComplaintForm() {
                 </FormItem>
               )}
             />
+
+            {/* Visibility option - only shown for identified complaints */}
+            {form.watch("submissionMode") === "public" && (
+              <FormField
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <FormItem className="space-y-3 pl-4 border-l-2 border-muted ml-2">
+                    <FormLabel>Visibility</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-2"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="public" />
+                          </FormControl>
+                          <div>
+                            <FormLabel className="font-medium">🌐 Public</FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              Visible on the public feed for everyone to see.
+                            </p>
+                          </div>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="private" />
+                          </FormControl>
+                          <div>
+                            <FormLabel className="font-medium">🔐 Private</FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              Only visible to administrators. Not shown in public feed.
+                            </p>
+                          </div>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="title"

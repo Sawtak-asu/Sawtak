@@ -1,20 +1,25 @@
 "use client";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useAuth } from "@/components/auth-provider";
-import haweya from '@/public/haweya.webp'
-import Image from 'next/image'
-// const menuItems = [];
+import { useAuth } from "@/lib/auth-context";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { login, logout, user, isLoggedIn } = useAuth();
+  const { logout, user, isLoggedIn, isLoading } = useAuth();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +28,7 @@ export const HeroHeader = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   return (
     <header>
       <nav
@@ -54,58 +60,108 @@ export const HeroHeader = () => {
 
             <div className="absolute inset-0 m-auto hidden size-fit lg:block">
               <ul className="flex gap-8 text-sm">
-                {/* {menuItems.map((item, index) => (
-                                    <li key={index}>
-                                        <Link
-                                            href={item.href}
-                                            className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                            <span>{item.name}</span>
-                                        </Link>
-                                    </li>
-                                ))} */}
+                <li>
+                  <Link
+                    href="/feed"
+                    className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                    <span>Feed</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/file-complaint"
+                    className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                    <span>File Complaint</span>
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
               <div className="lg:hidden">
                 <ul className="space-y-6 text-base">
-                  {/* {menuItems.map((item, index) => (
-                                        <li key={index}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                                <span>{item.name}</span>
-                                            </Link>
-                                        </li>
-                                    ))} */}
+                  <li>
+                    <Link
+                      href="/feed"
+                      className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                      <span>Feed</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/file-complaint"
+                      className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                      <span>File Complaint</span>
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className={cn(isScrolled && "lg:hidden")}>
-                  <Link href="/login">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  className={cn(isScrolled && "lg:hidden")}>
-                  <Link href="/signup">
-                    <span>Sign Up</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
-                  <Link href="/complaint">
-                    <span>Get Started</span>
-                  </Link>
-                </Button>
+                {isLoading ? (
+                  <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
+                ) : isLoggedIn ? (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs">
+                              {user?.name?.[0] || user?.email?.[0] || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="hidden sm:inline">{user?.name || user?.email}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="flex flex-col items-start">
+                          <span className="font-medium">{user?.name || "User"}</span>
+                          <span className="text-xs text-muted-foreground">{user?.email}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={logout} className="text-red-600">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Sign Out
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
+                      <Link href="/file-complaint">
+                        <span>File Complaint</span>
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className={cn(isScrolled && "lg:hidden")}>
+                      <Link href="/login">
+                        <span>Login</span>
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={cn(isScrolled && "lg:hidden")}>
+                      <Link href="/signup">
+                        <span>Sign Up</span>
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
+                      <Link href="/file-complaint">
+                        <span>Get Started</span>
+                      </Link>
+                    </Button>
+                  </>
+                )}
                 <ModeToggle />
               </div>
             </div>
@@ -115,3 +171,4 @@ export const HeroHeader = () => {
     </header>
   );
 };
+
