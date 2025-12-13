@@ -6,7 +6,6 @@ import { z } from "zod";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +41,8 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAuth } from "@/components/auth-provider";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -54,17 +55,16 @@ const formSchema = z.object({
   area: z.string().optional(),
   date: z.date().optional(),
   evidence: z.any().optional(),
+  submissionMode: z.enum(["anonymous", "public"]),
 });
 
 type ComplaintFormData = z.infer<typeof formSchema>;
 
-async function submitComplaint(data: unknown, token: string | null) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const response = await fetch(`${apiUrl}/api/complaints/anonymous/submit`, {
+async function submitComplaint(data: unknown) {
+  const response = await fetch("/api/complaints/anonymous/submit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { "Authorization": `Bearer ${token}` }),
     },
     body: JSON.stringify(data),
   });
@@ -78,7 +78,8 @@ async function submitComplaint(data: unknown, token: string | null) {
 }
 
 export function ComplaintForm() {
-  const { user, token } = useAuth();
+  const { user, isLoggedIn } = useAuth();
+  const [anonymousIdentifier] = useState("anon_" + Math.random().toString(36).substr(2, 9));
 
   const form = useForm<ComplaintFormData>({
     resolver: zodResolver(formSchema),
@@ -86,12 +87,13 @@ export function ComplaintForm() {
       title: "",
       mainText: "",
       area: "",
-      category: "", // Ensure category has a default value if it's required
+      category: "",
+      submissionMode: "anonymous",
     },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: unknown) => submitComplaint(data, token),
+    mutationFn: submitComplaint,
     onSuccess: (data) => {
       toast.success("Complaint submitted successfully!");
       console.log("Submission successful:", data);
@@ -104,20 +106,16 @@ export function ComplaintForm() {
   });
 
   function onSubmit(values: ComplaintFormData) {
-    if (!user) {
-      toast.error("You must be logged in to submit a complaint.");
-      return;
-    }
-
     const complaintData = {
-      userId: user.id,
-      anonymousIdentifier: user.anonymousIdentifier,
+      userId: values.submissionMode === "public" ? user?.id : undefined,
+      anonymousIdentifier: values.submissionMode === "anonymous" ? anonymousIdentifier : undefined,
       title: values.title,
       text: values.mainText,
       category: values.category,
       area: values.area,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
       evidenceCids: [], // For now, evidence is not handled
+      submissionMode: values.submissionMode,
     };
     mutation.mutate(complaintData);
   }
@@ -133,6 +131,40 @@ export function ComplaintForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="submissionMode"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Submission Mode</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="anonymous" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Submit Anonymously
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="public" disabled={!isLoggedIn} />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Submit Publicly {isLoggedIn ? `(as ${user?.name || user?.email})` : "(Login required)"}
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="title"

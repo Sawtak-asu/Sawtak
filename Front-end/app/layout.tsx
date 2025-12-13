@@ -18,6 +18,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  title: "Sawtak",
+  description: "",
+  keywords: ["Sawtak", "Anonimous Complaints", "Complaint System", "Complaints"],
+  authors: [{ name: "Sawtak" }],
+  openGraph: {
+    title: "Sawtak",
+    description: "",
+    type: "website",
+    locale: "en",
+    siteName: "Sawtak",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
+  themeColor: "#fff",
   title: "Sawtak - Anonymous Whistleblowing Platform",
   description: "A secure, resilient, and trustworthy platform for anonymous reporting",
 };
@@ -35,6 +50,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </AuthProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
