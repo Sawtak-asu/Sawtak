@@ -3,28 +3,28 @@ import Link from 'next/link'
 
 const links = [
     {
-        title: 'Features',
-        href: '#',
+        title: 'Home',
+        href: '/',
     },
     {
-        title: 'Solution',
-        href: '#',
+        title: 'File Complaint',
+        href: '/file-complaint',
     },
     {
-        title: 'Customers',
-        href: '#',
+        title: 'Track Status',
+        href: '/track',
     },
     {
-        title: 'Pricing',
-        href: '#',
+        title: 'Public Feed',
+        href: '/feed',
     },
     {
-        title: 'Help',
-        href: '#',
+        title: 'Documentation',
+        href: '/docs',
     },
     {
-        title: 'About',
-        href: '#',
+        title: 'Privacy Policy',
+        href: '/docs#security',
     },
 ]
 

@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { GridBackground } from "@/components/grid-background";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -94,19 +95,19 @@ export default function TrackPage() {
     const status = result?.complaint?.status ? statusConfig[result.complaint.status] : null;
 
     return (
-        <div className="min-h-screen bg-background">
+        <GridBackground>
             <Navbar />
 
             {/* Header */}
-            <div className="border-b border-border bg-muted/30">
+            <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm">
                 <div className="container max-w-4xl mx-auto px-6 py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 backdrop-blur-md shadow-sm mb-6">
                         <Search className="h-8 w-8 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-semibold md:text-4xl">
+                    <h1 className="text-3xl font-semibold md:text-4xl tracking-tight">
                         Track Your Complaint
                     </h1>
-                    <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+                    <p className="mt-4 text-base md:text-md text-muted-foreground font-mono max-w-xl mx-auto leading-relaxed">
                         Enter your tracking code to check the status of your complaint. 
                         Your identity remains protected - we only show the status.
                     </p>
@@ -115,7 +116,7 @@ export default function TrackPage() {
 
             <div className="container max-w-4xl mx-auto px-6 py-12">
                 {/* Search Form */}
-                <Card className="mb-8">
+                <Card className="mb-8 border-muted/50 shadow-sm">
                     <CardContent className="pt-6">
                         <form onSubmit={handleSubmit} className="flex gap-3">
                             <div className="relative flex-1">
@@ -124,13 +125,13 @@ export default function TrackPage() {
                                     placeholder="Enter your tracking code (e.g., SAWTAK-A7B3C9D2)"
                                     value={trackingCode}
                                     onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
-                                    className="pl-11 h-12 text-lg font-mono"
+                                    className="pl-11 h-12 text-lg font-mono bg-background/50"
                                 />
                             </div>
                             <Button 
                                 type="submit" 
                                 size="lg"
-                                className="h-12 px-8"
+                                className="h-12 px-8 shadow-sm"
                                 disabled={trackingCode.length < 8 || trackMutation.isPending}
                             >
                                 {trackMutation.isPending ? (
@@ -155,7 +156,7 @@ export default function TrackPage() {
                         {result.found && result.complaint ? (
                             <>
                                 {/* Status Card */}
-                                <Card className={`border-2 ${status?.color || ''}`}>
+                                <Card className={`border-2 ${status?.color || ''} shadow-sm bg-background/80 backdrop-blur-sm`}>
                                     <CardContent className="pt-6">
                                         <div className="flex items-center gap-4">
                                             <div className={`p-3 rounded-full ${status?.color || ''}`}>
@@ -173,7 +174,7 @@ export default function TrackPage() {
                                 </Card>
 
                                 {/* Complaint Details */}
-                                <Card>
+                                <Card className="shadow-sm border-muted/50 bg-background/80 backdrop-blur-sm">
                                     <CardHeader>
                                         <CardTitle className="text-lg">{result.complaint.title}</CardTitle>
                                         <CardDescription>
@@ -212,7 +213,7 @@ export default function TrackPage() {
                                 </Card>
 
                                 {/* Privacy Notice */}
-                                <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+                                <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3 border border-border/50">
                                     <Shield className="h-5 w-5 text-primary mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium">Your Privacy is Protected</p>
@@ -224,7 +225,7 @@ export default function TrackPage() {
                                 </div>
                             </>
                         ) : (
-                            <Card>
+                            <Card className="shadow-sm border-muted/50 bg-background/80 backdrop-blur-sm">
                                 <CardContent className="pt-6">
                                     <div className="text-center py-8">
                                         <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -246,7 +247,7 @@ export default function TrackPage() {
                 {/* Help Section */}
                 {!result && (
                     <div className="mt-12 grid gap-6 md:grid-cols-2">
-                        <Card>
+                        <Card className="border-muted/50 bg-background/50">
                             <CardHeader>
                                 <CardTitle className="text-base">Where do I find my tracking code?</CardTitle>
                             </CardHeader>
@@ -257,7 +258,7 @@ export default function TrackPage() {
                                 </p>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-muted/50 bg-background/50">
                             <CardHeader>
                                 <CardTitle className="text-base">Lost your tracking code?</CardTitle>
                             </CardHeader>
@@ -275,7 +276,7 @@ export default function TrackPage() {
                 {/* CTA */}
                 <div className="mt-12 text-center">
                     <p className="text-muted-foreground mb-4">Need to file a new complaint?</p>
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" className="shadow-sm bg-background/50">
                         <Link href="/file-complaint">
                             File a Complaint
                             <ArrowRight className="ml-2 h-4 w-4" />
@@ -283,6 +284,6 @@ export default function TrackPage() {
                     </Button>
                 </div>
             </div>
-        </div>
+        </GridBackground>
     );
 }

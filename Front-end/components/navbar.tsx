@@ -41,6 +41,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
     { href: "/feed", label: "Feed" },
     { href: "/file-complaint", label: "File Complaint" },
     { href: "/track", label: "Track" },
+    { href: "/docs", label: "Docs" },
   ];
 
   if (isFloating) {
@@ -146,14 +147,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Button
-                        asChild
-                        size="sm"
-                        className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
-                        <Link href="/file-complaint">
-                          <span>File Complaint</span>
-                        </Link>
-                      </Button>
+
                     </>
                   ) : (
                     <>
@@ -172,14 +166,6 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                         className={cn(isScrolled && "lg:hidden")}>
                         <Link href="/signup">
                           <span>Sign Up</span>
-                        </Link>
-                      </Button>
-                      <Button
-                        asChild
-                        size="sm"
-                        className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
-                        <Link href="/file-complaint">
-                          <span>Get Started</span>
                         </Link>
                       </Button>
                     </>

@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AlertCircle, RefreshCw, FileText, Shield, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { GridBackground } from "@/components/grid-background";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -90,19 +91,21 @@ export default function FeedPage() {
     const totalPages = pagination?.totalPages || 1;
 
     return (
-        <div className="min-h-screen bg-background">
+        <GridBackground>
             <Navbar />
             
             {/* Header Section */}
-            <div className="border-b border-border bg-muted/30">
+            <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm">
                 <div className="container max-w-6xl mx-auto px-6 py-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <Eye className="h-5 w-5 text-primary" />
-                                <h1 className="text-2xl font-semibold">Public Feed</h1>
+                                <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-md shadow-sm">
+                                    <Eye className="h-5 w-5 text-primary" />
+                                </div>
+                                <h1 className="text-2xl font-semibold tracking-tight">Public Feed</h1>
                             </div>
-                            <p className="text-muted-foreground">
+                            <p className="mt-2 text-base md:text-md text-muted-foreground font-mono leading-relaxed">
                                 Browse {pagination?.total || 0} public complaints from the community. 
                                 All information displayed respects user privacy settings.
                             </p>
@@ -113,11 +116,12 @@ export default function FeedPage() {
                                 size="sm"
                                 onClick={() => refetch()}
                                 disabled={isLoading}
+                                className="shadow-sm bg-background/50"
                             >
                                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
-                            <Button asChild size="sm">
+                            <Button asChild size="sm" className="shadow-sm">
                                 <Link href="/file-complaint">
                                     <FileText className="h-4 w-4 mr-2" />
                                     File Complaint
@@ -127,22 +131,22 @@ export default function FeedPage() {
                     </div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
+                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border/50">
                         <div className="text-center">
                             <p className="text-2xl font-semibold">{pagination?.total || 0}</p>
-                            <p className="text-xs text-muted-foreground">Total Complaints</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Complaints</p>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-semibold">
                                 {complaints.filter(c => c.submissionMode === "anonymous").length || 0}
                             </p>
-                            <p className="text-xs text-muted-foreground">Anonymous</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Anonymous</p>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-semibold">
                                 {complaints.filter(c => c.submissionMode === "public").length || 0}
                             </p>
-                            <p className="text-xs text-muted-foreground">Identified</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Identified</p>
                         </div>
                     </div>
                 </div>
@@ -231,6 +235,6 @@ export default function FeedPage() {
                     </main>
                 </div>
             </div>
-        </div>
+        </GridBackground>
     );
 }

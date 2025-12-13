@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GridBackground } from "@/components/grid-background";
 import { Shield, Lock, FileText, CheckCircle } from "lucide-react";
 
 export default function ComplaintPage() {
@@ -20,7 +21,7 @@ export default function ComplaintPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <GridBackground>
         <Navbar />
         <div className="container max-w-6xl mx-auto px-6 py-12">
           <Skeleton className="h-8 w-64 mb-4" />
@@ -30,7 +31,7 @@ export default function ComplaintPage() {
             <Skeleton className="h-96" />
           </div>
         </div>
-      </div>
+      </GridBackground>
     );
   }
 
@@ -39,51 +40,42 @@ export default function ComplaintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <GridBackground>
       <Navbar />
       
       {/* Header */}
-      <div className="border-b border-border bg-muted/30">
+      <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm">
         <div className="container max-w-6xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-primary/10">
+            <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-md shadow-sm">
               <FileText className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-2xl font-semibold">File a Complaint</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">File a Complaint</h1>
           </div>
-          <p className="text-muted-foreground max-w-2xl">
-            Your voice matters. Submit a complaint securely and help build a more 
-            transparent and accountable society.
+          <p className="mt-4 text-md text-muted-foreground font-mono leading-relaxed">
+            Your voice matters. Submit a complaint securely and help build a more transparent and accountable society.
           </p>
         </div>
       </div>
 
       <div className="container max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Main Info */}
+          <div className="lg:col-span-1 space-y-6">
             <div className="rounded-xl border bg-card p-6">
-              <h2 className="font-semibold mb-4">What to include:</h2>
+              <h2 className="font-semibold mb-4">What to include</h2>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
-                  A clear and concise title
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                  <span>Clear description of the incident</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
-                  Detailed description of the incident
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                  <span>Date and location details</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
-                  Category that best fits your complaint
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
-                  Approximate date and location
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
-                  Any supporting evidence
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                  <span>Supporting evidence if available</span>
                 </li>
               </ul>
             </div>
@@ -94,8 +86,8 @@ export default function ComplaintPage() {
                 <h2 className="font-semibold">Our Commitment</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                We are committed to a fair and thorough investigation of every
-                complaint. Your submission will be reviewed by our team.
+                Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable. 
+                Whether you choose to be anonymous or identified, your voice is protected.
               </p>
             </div>
 
@@ -123,6 +115,6 @@ export default function ComplaintPage() {
           </div>
         </div>
       </div>
-    </div>
+    </GridBackground>
   );
 }

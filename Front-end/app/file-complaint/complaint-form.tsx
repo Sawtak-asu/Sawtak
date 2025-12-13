@@ -213,9 +213,11 @@ export function ComplaintForm() {
                         <FormControl>
                           <RadioGroupItem value="anonymous" className="peer sr-only" disabled={!isLoggedIn} />
                         </FormControl>
-                        <FormLabel className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full transition-all">
+                        <FormLabel className="group flex flex-col items-start justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 hover:border-purple-500/50 peer-data-[state=checked]:border-purple-500 peer-data-[state=checked]:bg-purple-500/5 [&:has([data-state=checked])]:border-purple-500 cursor-pointer h-full transition-all duration-200">
                           <div className="flex items-center gap-2 mb-2">
-                            <Shield className="h-5 w-5 text-primary" />
+                            <div className="p-2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-200">
+                              <Shield className="h-5 w-5" />
+                            </div>
                             <span className="font-semibold text-base">Anonymous</span>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -227,9 +229,11 @@ export function ComplaintForm() {
                         <FormControl>
                           <RadioGroupItem value="public" className="peer sr-only" disabled={!isLoggedIn} />
                         </FormControl>
-                        <FormLabel className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full transition-all">
+                        <FormLabel className="group flex flex-col items-start justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 hover:border-blue-500/50 peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-blue-500/5 [&:has([data-state=checked])]:border-blue-500 cursor-pointer h-full transition-all duration-200">
                           <div className="flex items-center gap-2 mb-2">
-                            <Check className="h-5 w-5 text-primary" />
+                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-200">
+                              <Check className="h-5 w-5" />
+                            </div>
                             <span className="font-semibold text-base">Identified</span>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -262,12 +266,12 @@ export function ComplaintForm() {
                           <FormControl>
                             <RadioGroupItem value="public" className="peer sr-only" />
                           </FormControl>
-                          <FormLabel className="flex flex-row items-center gap-3 rounded-md border border-muted bg-background p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer transition-all">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                              <Eye className="w-4 h-4" />
+                          <FormLabel className="group flex flex-row items-center gap-3 rounded-xl border border-muted bg-background p-3 hover:bg-accent/50 hover:border-green-500/50 peer-data-[state=checked]:border-green-500 peer-data-[state=checked]:bg-green-500/5 cursor-pointer transition-all duration-200">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                              <Eye className="w-5 h-5" />
                             </div>
                             <div className="flex-1">
-                              <span className="font-medium block">Public</span>
+                              <span className="font-semibold block text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Public</span>
                               <span className="text-xs text-muted-foreground">Visible in community feed</span>
                             </div>
                           </FormLabel>
@@ -276,12 +280,12 @@ export function ComplaintForm() {
                           <FormControl>
                             <RadioGroupItem value="private" className="peer sr-only" />
                           </FormControl>
-                          <FormLabel className="flex flex-row items-center gap-3 rounded-md border border-muted bg-background p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer transition-all">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                              <Lock className="w-4 h-4" />
+                          <FormLabel className="group flex flex-row items-center gap-3 rounded-xl border border-muted bg-background p-3 hover:bg-accent/50 hover:border-amber-500/50 peer-data-[state=checked]:border-amber-500 peer-data-[state=checked]:bg-amber-500/5 cursor-pointer transition-all duration-200">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                              <Lock className="w-5 h-5" />
                             </div>
                             <div className="flex-1">
-                              <span className="font-medium block">Private</span>
+                              <span className="font-semibold block text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Private</span>
                               <span className="text-xs text-muted-foreground">Only admin can view</span>
                             </div>
                           </FormLabel>
