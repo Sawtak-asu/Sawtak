@@ -31,25 +31,25 @@ A secure, resilient, and trustworthy platform that allows citizens  to anonymous
 ## 🏗️ Architecture
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         SAWTAK                               │
+│                         SAWTAK                              │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  Frontend (Next.js 14)              Backend (Bun + Elysia)   │
-│  ├── User Dashboard                 ├── REST API             │
-│  ├── Admin Portal                   ├── Hedera Integration   │
-│  └── Public Browse                  ├── IPFS/Supabase        │
-│                                     └── Background Jobs      │
-│                                                               │
-│  Database (PostgreSQL)              Blockchain (Hedera)      │
-│  ├── Users & Profiles               ├── HCS Topic 1          │
-│  ├── Identified Complaints          │   (Complaints)         │
-│  ├── Tracking & Audit               └── HCS Topic 2          │
-│  └── Indexed Complaints                 (Status Updates)     │
-│                                                               │
-│  Cache (Redis)                      Storage                  │
-│  ├── Sessions                       ├── IPFS (Anonymous)     │
-│  ├── Rate Limiting                  └── Supabase (Identified)│
-│  └── Job Queue                                               │
+│                                                             │
+│  Frontend (Next.js 14)             Backend (Bun + Elysia)   │
+│  ├── User Dashboard                ├── REST API             │
+│  ├── Admin Portal                  ├── Hedera Integration   │
+│  └── Public Browse                 ├── IPFS/Supabase        │
+│                                    └── Background Jobs      │
+│                                                             │
+│  Database (PostgreSQL)             Blockchain (Hedera)      │
+│  ├── Users & Profiles              ├── HCS Topic 1          │
+│  ├── Identified Complaints         │   (Complaints)         │
+│  ├── Tracking & Audit              └── HCS Topic 2          │
+│  └── Indexed Complaints                (Status Updates)     │
+│                                                             │
+│  Cache (Redis)                     Storage                  │
+│  ├── Sessions                      ├── IPFS (Anonymous)     │
+│  ├── Rate Limiting                 └── Supabase (Identified)│
+│  └── Job Queue                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
