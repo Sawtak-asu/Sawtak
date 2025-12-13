@@ -95,7 +95,6 @@ project-root/
 │   │   ├── services/
 │   │   │   ├── hedera.service.ts
 │   │   │   ├── ipfs.service.ts
-│   │   │   ├── supabase.service.ts
 │   │   │   └── indexer.service.ts
 │   │   ├── middleware/
 │   │   │   ├── auth.middleware.ts

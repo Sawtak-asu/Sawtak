@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { prisma } from "../db";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { HEDERA_CONFIG } from "../config/hedera.config";
 
 export const adminRoutes = new Elysia({ prefix: "/api/admin" })
   .use(authMiddleware)
@@ -63,6 +64,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
               select: {
                 name: true,
                 email: true,
+                picture: true,
               },
             },
           },
@@ -89,22 +91,35 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         submissionMode: "public" as const,
         createdAt: c.created_at.toISOString(),
         incidentDate: c.incident_date?.toISOString(),
-        user: c.user ? { name: c.user.name, email: c.user.email } : undefined,
+        user: c.user ? { name: c.user.name, email: c.user.email, picture: c.user.picture } : undefined,
+        evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
       }));
 
-      const anonymousFormatted = anonymous.map((c) => ({
-        id: c.hcs_hash,
-        title: c.title,
-        text: c.complaint_text,
-        category: c.category,
-        area: c.area,
-        status: c.status,
-        visibility: "public" as const, // Anonymous are always public
-        submissionMode: "anonymous" as const,
-        createdAt: c.consensus_timestamp.toISOString(),
-        incidentDate: c.incident_date?.toISOString(),
-        transactionId: c.hcs_hash,
-      }));
+      const anonymousFormatted = anonymous.map((c) => {
+        const formatted = {
+          id: c.hcs_hash,
+          title: c.title,
+          text: c.complaint_text,
+          category: c.category,
+          area: c.area,
+          status: c.status,
+          visibility: "public" as const, // Anonymous are always public
+          submissionMode: "anonymous" as const,
+          createdAt: c.consensus_timestamp.toISOString(),
+          incidentDate: c.incident_date?.toISOString(),
+          transactionId: c.hcs_hash,
+          encryptedAnonId: c.anonymous_identifier,
+          trackingHash: c.tracking_hash || undefined,
+          topicId: HEDERA_CONFIG.TOPIC_ID_COMPLAINTS,
+          evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
+        };
+        console.log('[AdminRoutes] Anonymous complaint formatted:', {
+          id: formatted.id,
+          encryptedAnonId: formatted.encryptedAnonId,
+          hasAnonId: !!c.anonymous_identifier
+        });
+        return formatted;
+      });
 
       // Merge and sort
       let allComplaints = [...identifiedFormatted, ...anonymousFormatted];

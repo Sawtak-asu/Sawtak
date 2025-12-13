@@ -16,6 +16,13 @@ export class PublicEvidenceStorageService {
     this.bucketName = config.BUCKET_NAME;
     this.publicUrl = config.PUBLIC_URL;
 
+    console.log(`[R2] Initializing storage service for bucket: ${this.bucketName}`);
+    console.log(`[R2] Endpoint: https://${config.ACCOUNT_ID}.r2.cloudflarestorage.com`);
+    
+    if (!config.ACCOUNT_ID || config.ACCOUNT_ID.length !== 32) {
+      console.warn(`[R2] WARNING: R2_ACCOUNT_ID '${config.ACCOUNT_ID}' appears to be invalid (length ${config.ACCOUNT_ID?.length || 0}). expected 32 characters.`);
+    }
+
     this.s3 = new S3Client({
       region: "auto",
       endpoint: `https://${config.ACCOUNT_ID}.r2.cloudflarestorage.com`,

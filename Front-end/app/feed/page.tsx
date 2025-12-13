@@ -42,6 +42,7 @@ async function fetchFeed(params: {
     sort?: string;
     page?: number;
     limit?: number;
+    submissionMode?: string;
 }): Promise<FeedResponse> {
     const searchParams = new URLSearchParams();
     
@@ -53,6 +54,8 @@ async function fetchFeed(params: {
     if (params.sort) searchParams.set("sort", params.sort);
     if (params.page) searchParams.set("page", params.page.toString());
     if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.submissionMode && params.submissionMode !== "all") searchParams.set("submissionMode", params.submissionMode);
+
 
     const response = await fetch(`${API_URL}/api/feed?${searchParams.toString()}`);
     return response.json();
@@ -62,6 +65,7 @@ export default function FeedPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("all");
+    const [submissionMode, setSubmissionMode] = useState("all");
     const [dateFrom, setDateFrom] = useState<Date | undefined>();
     const [dateTo, setDateTo] = useState<Date | undefined>();
     const [location, setLocation] = useState("");
@@ -71,11 +75,12 @@ export default function FeedPage() {
     const ITEMS_PER_PAGE = 10;
 
     const { data, isLoading, isError, error, refetch } = useQuery({
-        queryKey: ["feed", { search, category, location, dateFrom, dateTo, sort, page }],
+        queryKey: ["feed", { search, category, submissionMode, location, dateFrom, dateTo, sort, page }],
         queryFn: () =>
             fetchFeed({
                 search: search || undefined,
                 category: category !== "all" ? category : undefined,
+                submissionMode: submissionMode !== "all" ? submissionMode : undefined,
                 area: location || undefined,
                 dateFrom: dateFrom?.toISOString(),
                 dateTo: dateTo?.toISOString(),
@@ -174,6 +179,8 @@ export default function FeedPage() {
                                     setDateTo={(val) => { setDateTo(val); setPage(1); }}
                                     location={location}
                                     setLocation={(val) => { setLocation(val); setPage(1); }}
+                                    submissionMode={submissionMode}
+                                    setSubmissionMode={(val) => { setSubmissionMode(val); setPage(1); }}
                                 />
                             </div>
                         </div>

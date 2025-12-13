@@ -148,13 +148,48 @@ export function ComplaintForm() {
     },
   });
 
-  function onSubmit(values: ComplaintFormData) {
+
+
+  async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
       toast.error("You must be logged in to submit a complaint.");
       return;
     }
 
     const isPublic = values.submissionMode === "public";
+    let evidenceUrls: string[] = [];
+
+    // Handle file upload for identified complaints
+    if (isPublic && values.evidence && values.evidence.length > 0) {
+      try {
+        const formData = new FormData();
+        Array.from(values.evidence as FileList).forEach((file) => {
+          formData.append("files", file as File);
+        });
+
+        const uploadResponse = await fetch(`${API_URL}/api/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to upload evidence files.");
+        }
+
+        const data = await uploadResponse.json();
+        if (data.urls) {
+          evidenceUrls = data.urls;
+        }
+      } catch (error: any) {
+        console.error("Upload error:", error);
+        toast.error(error.message || "Failed to upload evidence files. Please try again.");
+        return;
+      }
+    }
     
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
@@ -164,7 +199,7 @@ export function ComplaintForm() {
       category: values.category,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
-      evidenceUrls: [], // To be handled with file upload later
+      evidenceUrls: evidenceUrls, 
       visibility: values.visibility, // public = visible in feed, private = admin only
     } : {
       // Anonymous complaint payload - matches anonymous-complaint.controller.ts
@@ -451,8 +486,8 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Submitting..." : "Submit Complaint"}
+        <Button type="submit" disabled={mutation.isPending || form.formState.isSubmitting}>
+          {mutation.isPending || form.formState.isSubmitting ? "Submitting..." : "Submit Complaint"}
         </Button>
       </form>
 
