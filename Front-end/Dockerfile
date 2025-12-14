@@ -1,9 +1,9 @@
 # ============================================
-# Sawtak Frontend - Next.js 16 Dockerfile
+# Sawtak Frontend - Optimized Dockerfile
 # ============================================
 
-# Dependencies stage
-FROM oven/bun:latest AS deps
+# Stage 1: Install dependencies
+FROM oven/bun:1-alpine AS deps
 
 WORKDIR /app
 
@@ -11,12 +11,10 @@ WORKDIR /app
 COPY package.json bun.lock* ./
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile 2>/dev/null || bun install
 
-# ============================================
-# Build stage
-# ============================================
-FROM oven/bun:latest AS builder
+# Stage 2: Build the application
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
@@ -35,10 +33,8 @@ ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
-# ============================================
-# Production stage
-# ============================================
-FROM oven/bun:latest AS production
+# Stage 3: Production image
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -52,7 +48,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Copy built application
+# Copy built application (standalone output)
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -67,5 +63,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 # Switch to non-root user
 USER nextjs
 
-# Start command
-CMD ["bun", "server.js"]
+# Start the server (using node since standalone uses node)
+CMD ["node", "server.js"]

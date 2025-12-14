@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
 
 interface GoogleSignInButtonProps {
   className?: string;
@@ -18,115 +12,97 @@ interface GoogleSignInButtonProps {
 export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    // Check if script already loaded
-    if (window.google) {
-      initializeGoogle();
-      return;
-    }
-
-    // Load Google Sign-In script
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      initializeGoogle();
-    };
-    script.onerror = () => {
-      console.error("Failed to load Google Sign-In script");
-      toast.error("Failed to load Google Sign-In");
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, []);
-
-  const initializeGoogle = () => {
+  const handleGoogleLogin = async () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
+      toast.error("Google Sign-In is not configured");
       console.error("Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID");
       return;
     }
 
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleResponse,
-      });
-      setIsReady(true);
-    }
-  };
-
-  const handleGoogleResponse = async (response: any) => {
     setIsLoading(true);
+
     try {
-      const idToken = response.credential;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      // Build the Google OAuth URL
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
+      const scope = "email profile openid";
+      const state = crypto.randomUUID(); // CSRF protection
+      
+      // Store state for verification after redirect
+      sessionStorage.setItem("google_oauth_state", state);
 
-      const res = await fetch(`${apiUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: "google",
-          token: idToken,
-        }),
-      });
+      const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      googleAuthUrl.searchParams.set("client_id", clientId);
+      googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      googleAuthUrl.searchParams.set("response_type", "code");
+      googleAuthUrl.searchParams.set("scope", scope);
+      googleAuthUrl.searchParams.set("state", state);
+      googleAuthUrl.searchParams.set("access_type", "offline");
+      googleAuthUrl.searchParams.set("prompt", "select_account");
 
-      const data = await res.json();
+      // Open popup window
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-      if (data.success) {
-        login(data.data.token, data.data.user);
-        toast.success(`Welcome, ${data.data.user.name || data.data.user.email}!`);
-      } else {
-        console.error("Login failed:", data.error);
-        toast.error(data.error || "Login failed");
+      const popup = window.open(
+        googleAuthUrl.toString(),
+        "google-signin",
+        `width=${width},height=${height},left=${left},top=${top},popup=yes`
+      );
+
+      if (!popup) {
+        toast.error("Popup blocked. Please allow popups for this site.");
+        setIsLoading(false);
+        return;
       }
+
+      // Listen for the OAuth callback
+      const handleMessage = async (event: MessageEvent) => {
+        // Verify origin
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data.type === "google-oauth-success") {
+          window.removeEventListener("message", handleMessage);
+          
+          const { token, user } = event.data;
+          login(token, user);
+          toast.success(`Welcome, ${user.name || user.email}!`);
+          setIsLoading(false);
+        } else if (event.data.type === "google-oauth-error") {
+          window.removeEventListener("message", handleMessage);
+          toast.error(event.data.error || "Google sign-in failed");
+          setIsLoading(false);
+        }
+      };
+
+      window.addEventListener("message", handleMessage);
+
+      // Check if popup was closed without completing auth
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener("message", handleMessage);
+          setIsLoading(false);
+        }
+      }, 500);
+
     } catch (error) {
       console.error("Google sign-in error:", error);
-      toast.error("An error occurred during sign-in.");
-    } finally {
+      toast.error("An error occurred during sign-in");
       setIsLoading(false);
     }
   };
 
-  const handleClick = () => {
-    if (!isReady || !window.google) {
-      toast.error("Google Sign-In is not ready yet");
-      return;
-    }
-
-    // Trigger Google Sign-In prompt
-    window.google.accounts.id.prompt((notification: any) => {
-      if (notification.isNotDisplayed()) {
-        // Fallback: use popup if One Tap is blocked
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        if (clientId) {
-          window.google.accounts.oauth2.initCodeClient({
-            client_id: clientId,
-            scope: 'email profile',
-            callback: handleGoogleResponse,
-          });
-        }
-      }
-    });
-  };
-
   return (
     <Button
-      ref={buttonRef}
       type="button"
       variant="outline"
       className={`w-full h-11 justify-center gap-3 font-medium ${className || ''}`}
-      onClick={handleClick}
-      disabled={isLoading || !isReady}
+      onClick={handleGoogleLogin}
+      disabled={isLoading}
     >
       {isLoading ? (
         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />

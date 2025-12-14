@@ -22,6 +22,20 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   })
 
   /**
+   * POST /api/auth/google/callback
+   * Exchange OAuth authorization code for tokens
+   * 
+   * Body:
+   * {
+   *   "code": "authorization-code",
+   *   "redirect_uri": "http://localhost:3000/api/auth/google/callback"
+   * }
+   */
+  .post("/google/callback", async ({ body, jwt, set }: any) => {
+    return controller.handleGoogleCallback(body, jwt, set);
+  })
+
+  /**
    * GET /api/auth/verify
    * Verify JWT token and get user data
    * 
@@ -31,3 +45,4 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .get("/verify", async ({ jwt, set, headers }: any) => {
     return controller.verifyToken(jwt, set, headers);
   });
+

@@ -1,17 +1,26 @@
 # ============================================
-# Sawtak Backend - Bun + Elysia.js Dockerfile
+# Sawtak Backend - Optimized Dockerfile
 # ============================================
 
-# Build stage
-FROM oven/bun:latest AS builder
+# Stage 1: Install ALL dependencies (including dev) for building
+FROM oven/bun:1-alpine AS deps
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json bun.lock* ./
 
-# Install dependencies
-RUN bun install
+# Clear cache and install dependencies with retry
+RUN rm -rf ~/.bun/install/cache && \
+    bun install --no-cache || bun install --no-cache
+
+# Stage 2: Build the application
+FROM oven/bun:1-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy prisma schema for client generation
 COPY prisma ./prisma/
@@ -22,28 +31,40 @@ RUN bunx prisma generate
 # Copy source code
 COPY . .
 
-# Build the application
-RUN bun build src/server.ts --outdir dist --target bun
+# Build the application  
+RUN bun build src/server.ts --outdir dist --target bun --minify
 
-# ============================================
-# Production stage
-# ============================================
-FROM oven/bun:latest AS production
+# Stage 3: Production dependencies only
+FROM oven/bun:1-alpine AS prod-deps
 
 WORKDIR /app
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+COPY package.json bun.lock* ./
+
+# Install ONLY production dependencies
+RUN rm -rf ~/.bun/install/cache && \
+    bun install --production --no-cache --ignore-scripts || \
+    bun install --production --no-cache --ignore-scripts
+
+# Stage 4: Final production image
+FROM oven/bun:1-alpine AS production
+
+WORKDIR /app
+
+# Install OpenSSL for Prisma (Alpine)
+RUN apk add --no-cache openssl libc6-compat
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S sawtak -u 1001 -G nodejs
 
-# Copy built application
+# Copy only what's needed for production
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY package.json ./
 
 # Set environment
 ENV NODE_ENV=production

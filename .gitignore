@@ -37,3 +37,5 @@ redis_data/
 # Ignore secrets
 *.pem
 *.key
+
+/docs

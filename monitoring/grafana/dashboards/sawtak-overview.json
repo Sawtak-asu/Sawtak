@@ -12,7 +12,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -44,6 +44,7 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_uptime_seconds",
           "refId": "A"
         }
@@ -54,7 +55,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -85,7 +86,8 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
-          "expr": "sum(sawtak_http_requests_total)",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum(sawtak_http_requests_total) or vector(0)",
           "refId": "A"
         }
       ],
@@ -95,7 +97,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -127,6 +129,7 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_errors_total",
           "refId": "A"
         }
@@ -137,7 +140,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -168,6 +171,7 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sum(sawtak_complaints_total)",
           "refId": "A"
         }
@@ -178,7 +182,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -219,11 +223,13 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_memory_bytes{type=\"heapUsed\"}",
           "legendFormat": "Heap Used",
           "refId": "A"
         },
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_memory_bytes{type=\"rss\"}",
           "legendFormat": "RSS",
           "refId": "B"
@@ -235,7 +241,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -275,11 +281,13 @@
       "pluginVersion": "10.2.0",
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_complaints_total{type=\"anonymous\"}",
           "legendFormat": "Anonymous",
           "refId": "A"
         },
         {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "expr": "sawtak_complaints_total{type=\"identified\"}",
           "legendFormat": "Identified",
           "refId": "B"
@@ -293,7 +301,27 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": ["sawtak"],
-  "templating": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "",
