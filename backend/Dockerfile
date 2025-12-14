@@ -3,15 +3,15 @@
 # ============================================
 
 # Build stage
-FROM oven/bun:1.1-alpine AS builder
+FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lock ./
+COPY package.json bun.lock* ./
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy prisma schema for client generation
 COPY prisma ./prisma/
@@ -28,7 +28,7 @@ RUN bun build src/server.ts --outdir dist --target bun
 # ============================================
 # Production stage
 # ============================================
-FROM oven/bun:1.1-alpine AS production
+FROM oven/bun:latest AS production
 
 WORKDIR /app
 
