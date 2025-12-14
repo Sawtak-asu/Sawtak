@@ -1,2 +1,39 @@
+# Dependencies
 node_modules/
+
+# Lock files (optional - you may want to keep these)
 *.lock
+bun.lockb
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build outputs
+dist/
+.next/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker volumes (if using bind mounts)
+postgres_data/
+redis_data/
+
+# Ignore secrets
+*.pem
+*.key
