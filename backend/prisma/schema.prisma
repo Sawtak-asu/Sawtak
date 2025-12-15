@@ -26,6 +26,7 @@ model User {
 
   complaints_identified IdentifiedComplaint[]
   admin_audits          AdminAudit[]
+  votes                 ComplaintVote[]
 }
 
 model IdentifiedComplaint {
@@ -43,7 +44,8 @@ model IdentifiedComplaint {
   updated_at    DateTime @updatedAt
   deleted_at    DateTime?
 
-  user User @relation(fields: [user_id], references: [id])
+  user  User            @relation(fields: [user_id], references: [id])
+  votes ComplaintVote[]
 }
 
 
@@ -92,4 +94,20 @@ model AdminAudit {
   timestamp   DateTime @default(now())
 
   admin User @relation(fields: [admin_id], references: [id])
+}
+
+// Track upvotes for public identified complaints only
+// Anonymous complaints cannot be upvoted, and users must be logged in to vote
+model ComplaintVote {
+  id           String   @id @default(uuid())
+  complaint_id String   // ID of the IdentifiedComplaint
+  voter_id     String   // User ID (required - must be logged in)
+  created_at   DateTime @default(now())
+
+  // Relations
+  complaint IdentifiedComplaint @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
+  voter     User                @relation(fields: [voter_id], references: [id], onDelete: Cascade)
+
+  @@unique([complaint_id, voter_id]) // One vote per user per complaint
+  @@index([complaint_id])
 }
