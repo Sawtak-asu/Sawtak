@@ -36,7 +36,6 @@ model IdentifiedComplaint {
   text          String
   category      String
   area          String
-  directed_to   Json?    // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
   incident_date DateTime @default(now())
   status        String   @default("submitted")
   visibility    String   @default("private") // private, public
@@ -47,9 +46,6 @@ model IdentifiedComplaint {
 
   user  User            @relation(fields: [user_id], references: [id])
   votes ComplaintVote[]
-
-  @@index([directed_to]) // For admin filtering
-  @@index([category])
 }
 
 
@@ -61,7 +57,6 @@ model IndexedComplaint {
   complaint_text       String
   category             String
   area                 String
-  directed_to          Json?    // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
   severity             String
   incident_date        DateTime
   evidence_cids        Json?
@@ -74,7 +69,6 @@ model IndexedComplaint {
   @@index([category])
   @@index([area])
   @@index([status])
-  @@index([directed_to])
 }
 
 model IndexedStatusUpdate {
