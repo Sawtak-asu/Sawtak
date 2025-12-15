@@ -140,6 +140,60 @@ export const voteRoutes = new Elysia({ prefix: "/api/vote" })
   )
 
   /**
+   * GET /api/vote/status?complaintId=xxx
+   * Get vote status for a specific complaint (query param version for easier frontend use)
+   */
+  .get(
+    "/status",
+    async ({ query, request }) => {
+      try {
+        const complaintId = query.complaintId;
+        if (!complaintId) {
+          return {
+            success: false,
+            error: "complaintId query parameter required",
+          };
+        }
+
+        const voteCount = await voteService.getVoteCount(complaintId);
+
+        // Check if current user has voted (if authenticated)
+        let hasVoted = false;
+        const authHeader = request.headers.get("authorization");
+        if (authHeader?.startsWith("Bearer ")) {
+          try {
+            const token = authHeader.substring(7);
+            const payload = JSON.parse(
+              Buffer.from(token.split(".")[1], "base64").toString()
+            );
+            const userId = payload.userId;
+            if (userId) {
+              const votedSet = await voteService.checkUserVotes([complaintId], userId);
+              hasVoted = votedSet.has(complaintId);
+            }
+          } catch {
+            // Not authenticated or invalid token, that's fine
+          }
+        }
+
+        return {
+          success: true,
+          data: {
+            voteCount,
+            hasVoted,
+          },
+        };
+      } catch (error: any) {
+        console.error("[VoteRoutes] Error getting vote status:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to get vote status",
+        };
+      }
+    }
+  )
+
+  /**
    * POST /api/vote/batch
    * Get vote counts for multiple complaints
    */

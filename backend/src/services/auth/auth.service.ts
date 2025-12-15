@@ -2,8 +2,9 @@ import { prisma } from "../../db";
 import { generateAnonymousId } from "../../utils/crypto.utils";
 import { IAuthProvider } from "../../interfaces/auth-provider.interface";
 import { GoogleAuthProvider } from "./google.provider";
+import { HaweyaAuthProvider } from "./haweya.provider";
 
-export type AuthProviderType = "google" | "github" | "apple"; // future : heweya
+export type AuthProviderType = "google" | "github" | "apple" | "haweya";
 
 export class AuthService {
   private providers: Record<string, IAuthProvider>;
@@ -12,6 +13,7 @@ export class AuthService {
     // Register providers here
     this.providers = {
       google: new GoogleAuthProvider(),
+      haweya: new HaweyaAuthProvider(),
       // github: new GithubAuthProvider(),
     };
   }

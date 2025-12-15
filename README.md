@@ -1,7 +1,6 @@
 # 🗣️ Sawtak - Anonymous Whistleblowing Platform
 
-A secure, resilient, and trustworthy platform that allows citizens  to anonymously report misconduct, corruption, or other complaints with cryptographic guarantees of data integrity and submission proof.
-
+A secure, resilient, and trustworthy platform that allows citizens to anonymously report misconduct, corruption, or other complaints with cryptographic guarantees of data integrity and submission proof.
 
 ---
 
@@ -20,15 +19,19 @@ A secure, resilient, and trustworthy platform that allows citizens  to anonymous
   - Browse all anonymous complaints without login
   - Advanced search and filtering by category, area, status
   - Real-time statistics dashboard
+  - Community voting on complaints
 
 - **Secure Admin Portal**
   - Multi-role access control
-  - Identity reveal workflow with multi-sig approval
+  - Identity reveal workflow with multi-sig approval 
   - Comprehensive audit logging
 
 ---
 
 ## 🏗️ Architecture
+
+### Current Architecture (Phase 1)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         SAWTAK                              │
@@ -53,13 +56,66 @@ A secure, resilient, and trustworthy platform that allows citizens  to anonymous
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Future Architecture (Phase 2 - Privacy Proxy Layer)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Client (Frontend)                        │
+│                 (Web Browser / Mobile App)                  │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         │ HTTPS
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              🔒 Privacy Proxy Server 🔒                    │
+│             (Public-Facing, Port 443/8443)                  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Privacy Protection Layer                           │    │
+│  │  ├─ Session Management (Redis)                      │    │
+│  │  ├─ Rate Limiting (Per-Session + IP)                │    │
+│  │  ├─ IP Anonymization (VPN-like)                     │    │
+│  │  ├─ Browser Fingerprint Stripping                   │    │
+│  │  └─ Request Sanitization                            │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  Replaces: Client IP → Proxy IP                             │
+│  Strips: User-Agent, Referer, X-Forwarded-*                 │
+│  Forwards: Clean, anonymized requests                       │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         │ Internal Network Only
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│         Elysia.js Backend (Internal Only, Port 8000)        │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Middleware: Auth, CORS, Logging                    │    │
+│  └─────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Services: Complaints, Storage, Blockchain          │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+          │              │               │
+          ▼              ▼               ▼
+┌──────────────┐ ┌─────────────┐ ┌──────────────┐
+│   Hedera     │ │  PostgreSQL │ │   Storage    │
+│  Blockchain  │ │  Database   │ │  (S3/IPFS)   │
+└──────────────┘ └─────────────┘ └──────────────┘
+```
+
+**Key Benefits of Phase 2:**
+- ✅ Privacy Proxy intercepts ALL client requests
+- ✅ Backend NEVER sees real client IPs or metadata
+- ✅ Session-based rate limiting (not IP-based)
+- ✅ VPN-like anonymization for whistleblowers
+- ✅ Optional Tor integration for maximum privacy
+- ✅ Backend runs on internal network (not publicly accessible)
+
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **UI**: React 18, TailwindCSS
+- **Framework**: Next.js 16 
 - **State**: React Query (TanStack), Zustand
 - **Language**: TypeScript
 
@@ -67,25 +123,22 @@ A secure, resilient, and trustworthy platform that allows citizens  to anonymous
 - **Runtime**: Bun
 - **Framework**: Elysia.js
 - **Language**: TypeScript
-- **Jobs**: Bull Queue
+- **Monitoring**: Prometheus + Grafana
 
 ### Database & Storage
 - **Primary DB**: PostgreSQL 15
-- **Cache**: Redis 7
 - **ORM**: Prisma
-- **File Storage**: 
-  - IPFS (Web3.Storage) for anonymous evidence
-  - Supabase Storage for identified evidence
+- **File Storage**: Supabase Storage (identified evidence), IPFS (anonymous evidence)
 
 ### Blockchain
-- **Network**: Hedera Mainnet
+- **Network**: Hedera Mainnet/Testnet
 - **SDK**: @hashgraph/sdk
 - **Service**: Hedera Consensus Service (HCS)
+
 ---
 
-
-
 ## 📁 Project Structure
+
 ```
 sawtak/
 ├── backend/
@@ -93,35 +146,119 @@ sawtak/
 │   │   ├── routes/           # API route definitions
 │   │   ├── controllers/      # Request handlers
 │   │   ├── services/         # Business logic
-│   │   │   ├── auth.service.ts
+│   │   │   ├── auth/
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── google.provider.ts
+│   │   │   │   └── haweya.provider.ts   # 🆕 Haweya OAuth
 │   │   │   ├── hedera.service.ts
-│   │   │   ├── ipfs.service.ts
-│   │   │   └── supabase.service.ts
-│   │   ├── middleware/       # Auth, validation, rate limiting
-│   │   ├── jobs/             # Background jobs
-│   │   │   ├── hcs-indexer.job.ts
-│   │   │   └── analytics.job.ts
-│   │   ├── db/               # Database clients
+│   │   │   ├── hedera-indexer.service.ts
+│   │   │   ├── anonymous-submission.service.ts
+│   │   │   ├── identified-complaint.service.ts
+│   │   │   ├── feed.service.ts
+│   │   │   └── vote.service.ts
+│   │   ├── data/
+│   │   │   └── egypt-locations.ts      # 🆕 Egypt admin divisions
+│   │   ├── middleware/       # Auth, logging middleware
+│   │   ├── telemetry/        # Prometheus metrics
 │   │   ├── utils/            # Helper functions
-│   │   └── types/            # TypeScript types
+│   │   └── validators/       # Input validation
 │   ├── prisma/
 │   │   └── schema.prisma     # Database schema
 │   ├── package.json
-│   └── tsconfig.json
+│   └── Dockerfile
 │
-├── frontend/
+├── Front-end/
 │   ├── app/
 │   │   ├── (auth)/           # Login, signup pages
-│   │   ├── dashboard/        # User dashboard
+│   │   ├── feed/             # Public feed
 │   │   ├── admin/            # Admin portal
-│   │   └── public/           # Public browse
+│   │   ├── file-complaint/   # Complaint form with directedTo
+│   │   └── complaints/       # Complaint submission
 │   ├── components/           # React components
-│   ├── lib/                  # Utilities
+│   ├── lib/
+│   │   ├── egypt-locations.ts  # 🆕 Egypt admin divisions
+│   │   └── auth-context.tsx
 │   └── package.json
 │
+├── haweya/                   # 🆕 Mock Haweya OAuth Provider
+│   ├── backend/
+│   │   └── src/
+│   │       ├── index.ts      # Elysia OAuth server
+│   │       └── db.ts         # In-memory store
+│   ├── frontend/
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── signup.html
+│   │   └── css/style.css
+│   ├── Dockerfile
+│   ├── package.json
+│   └── README.md             # Haweya documentation
+│
+├── docker/                   # Docker configurations
+├── monitoring/               # Grafana + Prometheus configs
+├── Makefile                  # Build automation
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## 🇪🇬 Egypt-Specific Features
+
+### Directed To (Complaint Routing)
+
+Complaints can be directed to specific government entities for better routing:
+
+- **Ministries**: 16 Egyptian ministries (Health, Education, Interior, etc.)
+- **Governorates**: 27 Egyptian governorates
+- **Centers/Townships**: Major cities and centers within each governorate
+
+This enables admins from specific jurisdictions to filter and view complaints relevant to them.
+
+### Expanded Categories
+
+- General
+- Corruption
+- Misconduct
+- Harassment
+- Discrimination
+- Fraud
+- Safety Concerns
+- Environmental Issues
+- Infrastructure Problems
+- Healthcare Issues
+- Education Issues
+- Public Services
+- Other
+
+---
+
+## 🆔 Haweya OAuth (Mock Identity Provider)
+
+Sawtak includes a mock OAuth 2.0 provider simulating Egypt's National ID (Haweya) system.
+
+### Setup
+
+```bash
+cd haweya
+bun install
+bun run dev
+```
+
+Runs on `http://localhost:3030`
+
+### Integration
+
+1. Add env variables to Sawtak backend:
+```
+HAWEYA_CLIENT_ID=sawtak_client
+HAWEYA_CLIENT_SECRET=sawtak_secret
+HAWEYA_ISSUER_URL=http://localhost:3030
+```
+
+2. Use "Sign in with Haweya" button in frontend
+
+See `haweya/README.md` for full documentation.
 
 ---
 
@@ -144,7 +281,7 @@ Every user gets an auto-generated anonymous identifier (e.g., `anon_a3f9c2e1d4`)
 - Stored in PostgreSQL database
 - Admin sees full identity
 - Can edit/delete
-- Evidence on Supabase (private)
+- Evidence on Supabase Storage (private)
 - Free for users
 
 ### HCS Indexer
@@ -162,11 +299,10 @@ Without the indexer, querying the blockchain directly would be too slow.
 ## 🔐 Security Features
 
 - **Password Hashing**: bcrypt with cost factor 12
-- **JWT Authentication**: Access (1h) + Refresh (7d) tokens
-- **Rate Limiting**: Redis-based per-IP and per-user limits
+- **JWT Authentication**: Access tokens with configurable expiry
 - **Encrypted Storage**: User IDs encrypted (AES-256-GCM) in anonymous tracking
-- **Audit Logging**: All actions logged immutably
-- **Identity Reveal**: Multi-sig approval workflow for accessing anonymous identities
+- **Audit Logging**: All admin actions logged immutably
+- **Identity Reveal**: Multi-sig approval workflow for accessing anonymous identities (🔜 Future)
 - **Input Sanitization**: XSS and SQL injection prevention
 
 ---
@@ -176,88 +312,106 @@ Without the indexer, querying the blockchain directly would be too slow.
 ### Key Tables
 
 - `users`: User accounts with email, password, anonymous_identifier
-- `complaints_identified`: Database-stored complaints (editable)
-- `complaints_anonymous_tracking`: Links users to blockchain submissions (encrypted)
+- `identified_complaints`: Database-stored complaints (editable)
+- `anonymous_complaint_tracking`: Links users to blockchain submissions (encrypted)
 - `indexed_complaints`: Local cache of HCS messages for fast queries
 - `indexed_status_updates`: Status changes from HCS Topic 2
-- `audit_logs`: Immutable log of all system actions
-- `identity_access_logs`: Tracks all anonymous identity reveals
+- `admin_audit`: Admin action audit trail
+- `user_complaint_votes`: Upvote/downvote tracking
 
 ---
 
 ## 🎮 API Endpoints
 
 ### Authentication
-```
-POST   /api/auth/signup
-POST   /api/auth/login
-POST   /api/auth/logout
-GET    /api/auth/profile
-POST   /api/auth/verify-email
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/login` | ❌ | Login with email/password |
+| POST | `/api/auth/register` | ❌ | Register new user |
+| POST | `/api/auth/google/login` | ❌ | Login with Google OAuth |
+| GET | `/api/auth/verify` | ✅ | Verify JWT token |
 
-### Complaints
-```
-POST   /api/complaints/submit-anonymous
-POST   /api/complaints/submit-identified
-GET    /api/complaints/my-anonymous
-GET    /api/complaints/my-identified
-GET    /api/complaints/anonymous/:hash
-GET    /api/complaints/identified/:id
-PUT    /api/complaints/identified/:id
-DELETE /api/complaints/identified/:id
-```
+### Anonymous Complaints
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/complaints/anonymous/submit` | ✅ | Submit anonymous complaint to blockchain |
+
+### Identified Complaints
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/complaints/identified/submit` | ✅ | Submit identified complaint to database |
+| GET | `/api/complaints/identified/my` | ✅ | Get user's identified complaints |
+| PUT | `/api/complaints/identified/:id` | ✅ | Update complaint |
+| DELETE | `/api/complaints/identified/:id` | ✅ | Delete complaint |
+
+### Public Feed
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/feed/public` | ❌ | Get paginated public complaints |
+| GET | `/api/feed/public/:hash` | ❌ | Get single complaint by hash |
+| GET | `/api/feed/stats` | ❌ | Get platform statistics |
+
+### Tracking (User's Submissions)
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/tracking/my-anonymous` | ✅ | Get user's anonymous submissions |
+| GET | `/api/tracking/my-identified` | ✅ | Get user's identified submissions |
+
+### Voting
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/votes/:hash/upvote` | ✅ | Upvote a complaint |
+| POST | `/api/votes/:hash/downvote` | ✅ | Downvote a complaint |
+| DELETE | `/api/votes/:hash` | ✅ | Remove vote |
+| GET | `/api/votes/:hash/status` | ✅ | Get user's vote status |
 
 ### Admin
-```
-GET    /api/admin/complaints/anonymous
-GET    /api/admin/complaints/identified
-POST   /api/admin/complaints/anonymous/:hash/status
-PUT    /api/admin/complaints/identified/:id/status
-POST   /api/admin/identity/request-access
-POST   /api/admin/identity/approve-access
-POST   /api/admin/identity/reveal
-GET    /api/admin/analytics
-GET    /api/admin/audit-logs
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/complaints` | ✅ Admin | Get all complaints |
+| GET | `/api/admin/complaints/:id` | ✅ Admin | Get complaint details |
+| PUT | `/api/admin/complaints/:id/status` | ✅ Admin | Update complaint status |
+| GET | `/api/admin/stats` | ✅ Admin | Admin dashboard stats |
+| GET | `/api/admin/audit` | ✅ Admin | Get audit logs |
 
-### Public
-```
-GET    /api/public/complaints
-GET    /api/public/complaint/:hash
-POST   /api/public/search
-GET    /api/public/stats
-```
+### Uploads
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/upload` | ✅ | Upload evidence files |
+
+### Indexer (Internal)
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/indexer/trigger` | ✅ Admin | Manually trigger indexer |
+| GET | `/api/indexer/status` | ✅ Admin | Get indexer status |
+
+### Health & Metrics
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/health` | ❌ | Health check |
+| GET | `/metrics` | ❌ | Prometheus metrics |
 
 ---
-
 
 ## 📈 Monitoring
 
 Access monitoring dashboards:
 
 - **Grafana**: http://localhost:3001
-- **Bull Dashboard**: http://localhost:8000/admin/queues
+- **Prometheus**: http://localhost:9090
 - **Prisma Studio**: `bunx prisma studio`
-
----
-
-## Get Started (Locally)
-
-
-## 📋 Prerequisites
-
-- **Bun** >= 1.0.0
-- **Node.js** >= 20.0.0 (for some dependencies)
-- **PostgreSQL** >= 15
-- **Redis** >= 7
-- **Docker** (optional, for local development)
+- **Swagger API Docs**: http://localhost:8000/swagger
 
 ---
 
 ## 🚀 Quick Start
+
+### Prerequisites
+
+- **Bun** >= 1.0.0
+- **Node.js** >= 20.0.0 (for some dependencies)
+- **PostgreSQL** >= 15
+- **Docker** (recommended for local development)
 
 ### 1. Clone Repository
 ```bash
@@ -265,43 +419,30 @@ git clone https://github.com/yourusername/sawtak.git
 cd sawtak
 ```
 
-### 2. Backend Setup
+### 2. Using Docker (Recommended)
+```bash
+# Start all services
+make up
+
+# Or manually
+docker-compose up -d
+```
+
+### 3. Manual Setup
+
+**Backend:**
 ```bash
 cd backend
-
-# Install dependencies
 bun install
-
-# Copy environment file
-cp .env.example .env
-
-# Edit .env with your credentials
-nano .env
-
-# Run database migrations
-bunx prisma migrate dev
-
-# Generate Prisma client
 bunx prisma generate
-
-# Start development server
+bunx prisma migrate dev
 bun run dev
 ```
 
-### 3. Frontend Setup
+**Frontend:**
 ```bash
-cd frontend
-
-# Install dependencies
+cd Front-end
 bun install
-
-# Copy environment file
-cp .env.local.example .env.local
-
-# Edit .env.local
-nano .env.local
-
-# Start development server
 bun run dev
 ```
 
@@ -313,51 +454,27 @@ bun run dev
 
 ---
 
-## 🔧 Environment Variables
+## � Future Roadmap
 
-### Backend (.env)
-```bash
-# Server
-NODE_ENV=development
-PORT=8000
-FRONTEND_URL=http://localhost:3000
+### 1 - Privacy Proxy Layer
+- [ ] Dedicated privacy proxy server
+- [ ] Redis-based session management
+- [ ] IP anonymization and metadata stripping
+- [ ] Rate limiting per-session
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/sawtak
+### 2 - Enhanced Security
+- [ ] Multi-signature identity reveal workflow
+- [ ] Integration with Hweya (Egyptian national ID)
+- [ ] End-to-end encryption for identified complaints
 
-# Redis
-REDIS_URL=redis://localhost:6379
+### 3 - Mobile & Accessibility
+- [ ] Progressive Web App (PWA)
+- [ ] Arabic RTL support improvements
+- [ ] Accessibility (WCAG 2.1 compliance)
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key-change-this
-JWT_REFRESH_SECRET=your-refresh-secret-change-this
+### 4 - Custom Blockchain Network
+- [ ] Migration from Hedera to custom blockchain solution
+- [ ] Private/consortium blockchain for government/corporate deployments
+- [ ] Enhanced throughput and reduced transaction costs
+- [ ] Full control over consensus mechanisms
 
-# Encryption
-ENCRYPTION_KEY=your-32-byte-hex-encryption-key
-PLATFORM_SECRET=your-platform-secret-for-anonymous-ids
-
-# Hedera
-HEDERA_NETWORK=mainnet
-HEDERA_OPERATOR_ID=0.0.YOUR_ACCOUNT_ID
-HEDERA_OPERATOR_KEY=your-private-key
-HEDERA_TOPIC_COMPLAINTS=0.0.TOPIC_ID
-HEDERA_TOPIC_STATUS=0.0.TOPIC_ID
-
-# IPFS
-WEB3_STORAGE_TOKEN=your-web3-storage-token
-
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-supabase-anon-key
-SUPABASE_BUCKET=complaints-evidence
-
-# Logging
-LOG_LEVEL=info
-```
-
-### Frontend (.env.local)
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-NEXT_PUBLIC_IPFS_GATEWAY=https://w3s.link/ipfs
-NEXT_PUBLIC_HEDERA_EXPLORER=https://hashscan.io/mainnet
-```

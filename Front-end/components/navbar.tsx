@@ -28,6 +28,13 @@ interface NavbarProps {
   variant?: "floating" | "sticky";
 }
 
+// Truncate name to first 2 words
+function truncateName(name: string | null | undefined): string {
+  if (!name) return "User";
+  const words = name.trim().split(/\s+/);
+  return words.slice(0, 2).join(" ");
+}
+
 export function Navbar({ variant = "sticky" }: NavbarProps) {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -110,12 +117,12 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                             {user?.name?.[0] || user?.email?.[0] || "U"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="hidden sm:inline">{user?.name || user?.email}</span>
+                        <span className="hidden sm:inline">{truncateName(user?.name) || user?.email}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem className="flex flex-col items-start">
-                        <span className="font-medium">{user?.name || "User"}</span>
+                        <span className="font-medium">{truncateName(user?.name)}</span>
                         <span className="text-xs text-muted-foreground">{user?.email}</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -125,12 +132,14 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           My Complaints
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="flex items-center">
-                          <Shield className="mr-2 h-4 w-4" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
+                      {user?.role?.toLowerCase() === "admin" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={logout} className="text-red-600">
                         <LogOut className="mr-2 h-4 w-4" />
@@ -179,7 +188,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
-                              <span className="font-medium">{user?.name || "User"}</span>
+                              <span className="font-medium">{truncateName(user?.name)}</span>
                               <span className="text-xs text-muted-foreground">{user?.email}</span>
                             </div>
                           </div>
@@ -288,12 +297,12 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                         {user?.name?.[0] || user?.email?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm">{user?.name || user?.email}</span>
+                    <span className="text-sm">{truncateName(user?.name) || user?.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem className="flex flex-col items-start">
-                    <span className="font-medium">{user?.name || "User"}</span>
+                    <span className="font-medium">{truncateName(user?.name)}</span>
                     <span className="text-xs text-muted-foreground">{user?.email}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -303,12 +312,14 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                       My Complaints
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </Link>
-                  </DropdownMenuItem>
+                  {user?.role?.toLowerCase() === "admin" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -357,7 +368,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-medium">{user?.name || "User"}</span>
+                          <span className="font-medium">{truncateName(user?.name)}</span>
                           <span className="text-xs text-muted-foreground">{user?.email}</span>
                         </div>
                       </div>

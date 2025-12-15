@@ -100,7 +100,12 @@ export class AuthController {
         }),
       });
 
-      const tokenData = await tokenResponse.json();
+      const tokenData = await tokenResponse.json() as {
+        error?: string;
+        error_description?: string;
+        id_token?: string;
+        access_token?: string;
+      };
 
       if (tokenData.error) {
         console.error("[AuthController] Google token error:", tokenData);
@@ -112,7 +117,7 @@ export class AuthController {
       }
 
       // Use the id_token to authenticate
-      const user = await this.authService.loginWithProvider("google", tokenData.id_token);
+      const user = await this.authService.loginWithProvider("google", tokenData.id_token!);
 
       // Generate our JWT
       const jwtToken = await jwt.sign({
@@ -138,6 +143,100 @@ export class AuthController {
       };
     } catch (error: any) {
       console.error("[AuthController] Google callback error:", error);
+      set.status = 401;
+      return {
+        success: false,
+        error: error.message || "Authentication failed",
+      };
+    }
+  }
+
+  /**
+   * Handle Haweya OAuth callback - exchange code for tokens
+   * Body: { code: "...", redirect_uri: "..." }
+   */
+  async handleHaweyaCallback(body: any, jwt: any, set: any) {
+    try {
+      const { code, redirect_uri } = body;
+
+      if (!code) {
+        set.status = 400;
+        return {
+          success: false,
+          error: "Missing 'code' in request body",
+        };
+      }
+
+      const haweyaUrl = process.env.HAWEYA_ISSUER_URL || "http://localhost:3030";
+      const clientId = process.env.HAWEYA_CLIENT_ID;
+      const clientSecret = process.env.HAWEYA_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Haweya OAuth not configured on server",
+        };
+      }
+
+      // Exchange code for tokens with Haweya server
+      const tokenResponse = await fetch(`${haweyaUrl}/oauth/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          grant_type: "authorization_code",
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirect_uri || "",
+        }),
+      });
+
+      const tokenData = await tokenResponse.json() as {
+        error?: string;
+        error_description?: string;
+        access_token?: string;
+        id_token?: string;
+      };
+
+      if (tokenData.error) {
+        console.error("[AuthController] Haweya token error:", tokenData);
+        set.status = 401;
+        return {
+          success: false,
+          error: tokenData.error_description || tokenData.error,
+        };
+      }
+
+      // Use the access_token to authenticate with our haweya provider
+      const user = await this.authService.loginWithProvider("haweya", tokenData.access_token!);
+
+      // Generate our JWT
+      const jwtToken = await jwt.sign({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      return {
+        success: true,
+        data: {
+          token: jwtToken,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            picture: user.picture,
+            role: user.role,
+            anonymousIdentifier: user.anonymous_identifier,
+            provider: user.auth_provider
+          },
+        },
+      };
+    } catch (error: any) {
+      console.error("[AuthController] Haweya callback error:", error);
       set.status = 401;
       return {
         success: false,

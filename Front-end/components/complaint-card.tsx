@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -43,6 +43,7 @@ export interface Complaint {
     evidenceUrls?: string[];
     evidenceCids?: string[];
     upvoteCount?: number;
+    hasVoted?: boolean;  // Server can return this
     user?: {
         name: string | null;
         picture?: string | null;
@@ -61,9 +62,33 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const canUpvote = !isAnonymous;
 
     const [localUpvotes, setLocalUpvotes] = useState(complaint.upvoteCount || 0);
-    const [hasVoted, setHasVoted] = useState(false);
+    const [hasVoted, setHasVoted] = useState(complaint.hasVoted || false);
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
+
+    // Check if user has voted on mount
+    useEffect(() => {
+        if (!isLoggedIn || !token || !canUpvote) return;
+        
+        const checkVoteStatus = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setHasVoted(data.data.hasVoted);
+                    setLocalUpvotes(data.data.voteCount);
+                }
+            } catch (error) {
+                // Silently fail - not critical
+            }
+        };
+        
+        checkVoteStatus();
+    }, [complaint.id, token, isLoggedIn, canUpvote]);
 
     // Evidence handling
     const allEvidence: string[] = [
@@ -212,7 +237,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                         {/* Image Grid - Max 4 images */}
                         {imageEvidence.length > 0 && (
                             <div className={cn(
-                                "grid gap-0.5 rounded-xl overflow-hidden mt-3",
+                                "grid gap-1 mt-3 rounded-2xl overflow-hidden",
                                 imageEvidence.length === 1 && "grid-cols-1",
                                 imageEvidence.length === 2 && "grid-cols-2",
                                 imageEvidence.length >= 3 && "grid-cols-2"
@@ -229,9 +254,19 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                         <div
                                             key={i}
                                             className={cn(
-                                                "relative bg-muted/50",
-                                                imageEvidence.length === 1 ? "aspect-video max-h-72" : "aspect-square",
-                                                isTall && "row-span-2"
+                                                "relative bg-muted/50 overflow-hidden",
+                                                imageEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
+                                                isTall && "row-span-2",
+                                                // Corner rounding based on position for multi-image grids
+                                                imageEvidence.length === 2 && i === 0 && "rounded-l-2xl",
+                                                imageEvidence.length === 2 && i === 1 && "rounded-r-2xl",
+                                                imageEvidence.length >= 3 && i === 0 && "rounded-tl-2xl",
+                                                imageEvidence.length >= 3 && !isTall && i === 1 && "rounded-tr-2xl",
+                                                imageEvidence.length >= 3 && i === 2 && "rounded-bl-2xl",
+                                                imageEvidence.length >= 3 && i === 3 && "rounded-br-2xl",
+                                                imageEvidence.length === 3 && i === 0 && "rounded-l-2xl",
+                                                imageEvidence.length === 3 && i === 1 && "rounded-tr-2xl",
+                                                imageEvidence.length === 3 && i === 2 && "rounded-br-2xl"
                                             )}
                                             onClick={(e) => e.stopPropagation()}
                                         >
