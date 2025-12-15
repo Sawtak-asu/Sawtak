@@ -32,7 +32,7 @@ services:
   # ==========================================
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: sawtak-backend
     restart: unless-stopped
@@ -73,7 +73,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/src:/app/src:ro  # Mount source for development
+      - ../backend/src:/app/src:ro  # Mount source for development
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/health"]
       interval: 30s
@@ -85,7 +85,7 @@ services:
   # ==========================================
   frontend:
     build:
-      context: ./Front-end
+      context: ../Front-end
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
@@ -93,7 +93,7 @@ services:
     container_name: sawtak-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
@@ -114,4 +114,3 @@ networks:
   default:
     name: sawtak-network
     driver: bridge
-

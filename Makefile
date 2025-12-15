@@ -39,96 +39,96 @@ help:
 # ============================================
 
 dev:
-	docker-compose up -d
+	docker-compose -f docker/docker-compose.yml up -d
 	@echo "✅ Development environment started"
 	@echo "👉 Frontend: http://localhost:3000"
 	@echo "👉 Backend:  http://localhost:8000"
 	@echo "👉 API Docs: http://localhost:8000/swagger"
 
 build:
-	docker-compose build --no-cache
+	docker-compose -f docker/docker-compose.yml build --no-cache
 
 up:
-	docker-compose up -d
+	docker-compose -f docker/docker-compose.yml up -d
 
 down:
-	docker-compose down
+	docker-compose -f docker/docker-compose.yml down
 
 logs:
-	docker-compose logs -f
+	docker-compose -f docker/docker-compose.yml logs -f
 
 logs-backend:
-	docker-compose logs -f backend
+	docker-compose -f docker/docker-compose.yml logs -f backend
 
 logs-frontend:
-	docker-compose logs -f frontend
+	docker-compose -f docker/docker-compose.yml logs -f frontend
 
 restart:
-	docker-compose restart
+	docker-compose -f docker/docker-compose.yml restart
 
 # ============================================
 # Database Commands
 # ============================================
 
 migrate:
-	docker-compose exec backend bunx prisma migrate deploy
+	docker-compose -f docker/docker-compose.yml exec backend bunx prisma migrate deploy
 
 migrate-dev:
-	docker-compose exec backend bunx prisma migrate dev
+	docker-compose -f docker/docker-compose.yml exec backend bunx prisma migrate dev
 
 db-shell:
-	docker-compose exec postgres psql -U postgres -d sawtak
+	docker-compose -f docker/docker-compose.yml exec postgres psql -U postgres -d sawtak
 
 db-reset:
-	docker-compose exec backend bunx prisma migrate reset --force
+	docker-compose -f docker/docker-compose.yml exec backend bunx prisma migrate reset --force
 
 # ============================================
 # Production Commands
 # ============================================
 
 prod-build:
-	docker-compose -f docker-compose.prod.yml build --no-cache
+	docker-compose -f docker/docker-compose.prod.yml build --no-cache
 
 prod-up:
-	docker-compose -f docker-compose.prod.yml up -d
+	docker-compose -f docker/docker-compose.prod.yml up -d
 
 prod-down:
-	docker-compose -f docker-compose.prod.yml down
+	docker-compose -f docker/docker-compose.prod.yml down
 
 prod-logs:
-	docker-compose -f docker-compose.prod.yml logs -f
+	docker-compose -f docker/docker-compose.prod.yml logs -f
 
 prod-restart:
-	docker-compose -f docker-compose.prod.yml restart
+	docker-compose -f docker/docker-compose.prod.yml restart
 
 # ============================================
 # Monitoring Commands (Prometheus + Grafana)
 # ============================================
 
 monitor:
-	docker-compose -f docker-compose.monitoring.yml up -d
+	docker-compose -f docker/docker-compose.monitoring.yml up -d
 	@echo "✅ Monitoring stack started"
 	@echo "👉 Grafana:    http://localhost:3001 (admin/admin)"
 	@echo "👉 Prometheus: http://localhost:9090"
 	@echo "👉 Metrics:    http://localhost:8000/metrics"
 
 monitor-down:
-	docker-compose -f docker-compose.monitoring.yml down
+	docker-compose -f docker/docker-compose.monitoring.yml down
 
 monitor-logs:
-	docker-compose -f docker-compose.monitoring.yml logs -f
+	docker-compose -f docker/docker-compose.monitoring.yml logs -f
 
 # ============================================
 # Maintenance Commands
 # ============================================
 
 clean:
-	docker-compose down -v --rmi local
+	docker-compose -f docker/docker-compose.yml down -v --rmi local
 	@echo "✅ Containers and volumes removed"
 
 backup:
 	@mkdir -p backups
-	docker-compose exec postgres pg_dump -U postgres sawtak > backups/sawtak_$$(date +%Y%m%d_%H%M%S).sql
+	docker-compose -f docker/docker-compose.yml exec postgres pg_dump -U postgres sawtak > backups/sawtak_$$(date +%Y%m%d_%H%M%S).sql
 	@echo "✅ Database backed up to backups/"
 
 # ============================================
@@ -141,5 +141,4 @@ health:
 	@curl -s http://localhost:3000 > /dev/null && echo "Frontend: OK" || echo "Frontend: Not responding"
 
 status:
-	docker-compose ps
-
+	docker-compose -f docker/docker-compose.yml ps

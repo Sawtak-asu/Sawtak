@@ -33,7 +33,7 @@ services:
   # ==========================================
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: sawtak-backend
     restart: always
@@ -91,7 +91,7 @@ services:
   # ==========================================
   frontend:
     build:
-      context: ./Front-end
+      context: ../Front-end
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://api.${DOMAIN}
@@ -171,7 +171,7 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=30d"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
       - internal
@@ -193,8 +193,8 @@ services:
       GF_SERVER_ROOT_URL: https://grafana.${DOMAIN}
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
       - internal
       - proxy
@@ -224,4 +224,3 @@ networks:
   proxy:
     name: sawtak-proxy
     driver: bridge
-
