@@ -34,32 +34,14 @@ A secure, resilient, and trustworthy platform that allows citizens to anonymousl
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         SAWTAK                               │
+│                         SAWTAK                              │
 ├─────────────────────────────────────────────────────────────┤
-<<<<<<< Updated upstream
-│                                                               │
-│  Frontend (Next.js 14)              Backend (Bun + Elysia)   │
-│  ├── User Dashboard                 ├── REST API             │
-│  ├── Admin Portal                   ├── Hedera Integration   │
-│  └── Public Browse                  ├── IPFS/Supabase        │
-│                                     └── Background Jobs      │
-│                                                               │
-│  Database (PostgreSQL)              Blockchain (Hedera)      │
-│  ├── Users & Profiles               ├── HCS Topic 1          │
-│  ├── Identified Complaints          │   (Complaints)         │
-│  ├── Tracking & Audit               └── HCS Topic 2          │
-│  └── Indexed Complaints                 (Status Updates)     │
-│                                                               │
-│  Cache (Redis)                      Storage                  │
-│  ├── Sessions                       ├── IPFS (Anonymous)     │
-│  ├── Rate Limiting                  └── Supabase (Identified)│
-│  └── Job Queue                                               │
-=======
 │                                                             │
 │  Frontend (Next.js 14)             Backend (Bun + Elysia)   │
 │  ├── User Dashboard                ├── REST API             │
 │  ├── Admin Portal                  ├── Hedera Integration   │
-│  └── Public Feed                   └── Background Indexer   │
+│  └── Public Browse                 ├── IPFS/Supabase        │
+│                                    └── Background Jobs      │
 │                                                             │
 │  Database (PostgreSQL)             Blockchain (Hedera)      │
 │  ├── Users & Profiles              ├── HCS Topic 1          │
@@ -67,7 +49,10 @@ A secure, resilient, and trustworthy platform that allows citizens to anonymousl
 │  ├── Tracking & Audit              └── HCS Topic 2          │
 │  └── Indexed Complaints                (Status Updates)     │
 │                                                             │
->>>>>>> Stashed changes
+│  Cache (Redis)                     Storage                  │
+│  ├── Sessions                      ├── IPFS (Anonymous)     │
+│  ├── Rate Limiting                 └── Supabase (Identified)│
+│  └── Job Queue                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -82,7 +67,7 @@ A secure, resilient, and trustworthy platform that allows citizens to anonymousl
                          │ HTTPS
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              🔒 Privacy Proxy Server 🔒                     │
+│              🔒 Privacy Proxy Server 🔒                    │
 │             (Public-Facing, Port 443/8443)                  │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │  Privacy Protection Layer                           │    │
