@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haweya - Egypt National ID</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🆔</div>
+      <span class="logo-text">Haweya</span>
+    </div>
+
+    <div class="card-header">
+      <h1 class="card-title">Welcome</h1>
+      <p class="card-description">Egypt National Identity System</p>
+    </div>
+
+    <div id="user-section" style="display: none;">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div>
+          <div class="user-name" id="user-name">User</div>
+          <div class="user-email" id="user-email">user@example.com</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="logout()">Sign out</button>
+    </div>
+
+    <div id="auth-section">
+      <a href="/login.html" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none; margin-bottom: 0.75rem;">
+        Sign in
+      </a>
+      <a href="/signup.html" class="btn btn-outline" style="display: block; text-align: center; text-decoration: none;">
+        Create account
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Mock OAuth provider for development</p>
+  </div>
+
+  <script>
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        if (res.ok) {
+          const user = await res.json();
+          document.getElementById('auth-section').style.display = 'none';
+          document.getElementById('user-section').style.display = 'block';
+          document.getElementById('user-name').textContent = user.name;
+          document.getElementById('user-email').textContent = user.email;
+          document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+        }
+      } catch (e) {
+        console.log('Not authenticated');
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      window.location.reload();
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
