@@ -30,6 +30,7 @@ export class AnonymousComplaintController {
         text,
         category,
         area,
+        directedTo,
         incidentDate,
         evidenceCids
       } = body;
@@ -42,6 +43,7 @@ export class AnonymousComplaintController {
         text,
         category,
         area,
+        directedTo,
         incidentDate: incidentDate ? new Date(incidentDate) : undefined,
         evidenceCids: evidenceCids || []
       });

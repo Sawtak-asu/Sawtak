@@ -3,6 +3,7 @@ import { IBlockchainService } from "../interfaces/blockchain.interface";
 import { HederaService } from "./hedera.service";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 import { ComplaintStatusService } from "./complaint-status.service";
+import { DirectedTo } from "../data/egypt-locations";
 import crypto from "crypto";
 
 interface AnonymousSubmission {
@@ -12,6 +13,7 @@ interface AnonymousSubmission {
   text: string;
   category: string;
   area?: string;
+  directedTo?: DirectedTo;
   incidentDate?: Date;
   evidenceCids?: string[];
 }
@@ -70,6 +72,7 @@ export class AnonymousSubmissionService {
       text: payload.text,
       category: payload.category,
       area: payload.area || null,
+      directed_to: payload.directedTo || null,
       incident_date: payload.incidentDate ? payload.incidentDate.toISOString() : null,
       evidence: payload.evidenceCids || [],
       timestamp: new Date().toISOString(),

@@ -33,6 +33,7 @@ export class IdentifiedComplaintController {
         text,
         category,
         area,
+        directedTo,
         incidentDate,
         evidenceUrls,
         visibility
@@ -45,6 +46,7 @@ export class IdentifiedComplaintController {
         text,
         category,
         area,
+        directedTo,
         incidentDate: incidentDate ? new Date(incidentDate) : undefined,
         evidenceUrls: evidenceUrls || [],
         visibility: visibility || "public" // Default to public for identified complaints
