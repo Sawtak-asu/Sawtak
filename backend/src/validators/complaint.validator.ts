@@ -1,60 +1,9 @@
-import { validateDirectedTo, DirectedTo } from "../data/egypt-locations";
-
-export const VALID_CATEGORIES = [
-  "general",
-  "corruption",
-  "misconduct",
-  "harassment",
-  "discrimination",
-  "fraud",
-  "safety",
-  "environment",
-  "infrastructure",
-  "healthcare",
-  "education",
-  "public_services",
-  "other"
-] as const;
+export const VALID_CATEGORIES = ["corruption", "misconduct", "harassment", "discrimination", "other"] as const;
 export type ComplaintCategory = typeof VALID_CATEGORIES[number];
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
-}
-
-/**
- * Validate the directedTo field if provided
- */
-function validateDirectedToField(data: any): ValidationResult {
-  // directedTo is optional, if not provided, skip validation
-  if (!data.directedTo) {
-    return { isValid: true };
-  }
-
-  const directedTo = data.directedTo as DirectedTo;
-  
-  if (!directedTo.type) {
-    return {
-      isValid: false,
-      error: "directedTo.type is required (ministry, governorate, or center)"
-    };
-  }
-
-  if (!["ministry", "governorate", "center"].includes(directedTo.type)) {
-    return {
-      isValid: false,
-      error: "directedTo.type must be one of: ministry, governorate, center"
-    };
-  }
-
-  if (!validateDirectedTo(directedTo)) {
-    return {
-      isValid: false,
-      error: "Invalid directedTo value. Please check the ministry, governorate, or center ID."
-    };
-  }
-
-  return { isValid: true };
 }
 
 /**
@@ -77,12 +26,6 @@ export function validateAnonymousComplaint(data: any): ValidationResult {
       isValid: false,
       error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}`
     };
-  }
-
-  // Validate directedTo if provided
-  const directedToValidation = validateDirectedToField(data);
-  if (!directedToValidation.isValid) {
-    return directedToValidation;
   }
 
   // Validate title length
@@ -124,12 +67,6 @@ export function validateIdentifiedComplaint(data: any): ValidationResult {
       isValid: false,
       error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}`
     };
-  }
-
-  // Validate directedTo if provided
-  const directedToValidation = validateDirectedToField(data);
-  if (!directedToValidation.isValid) {
-    return directedToValidation;
   }
 
   // Validate title length
