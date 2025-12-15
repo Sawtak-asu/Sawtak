@@ -468,17 +468,22 @@ export function ComplaintForm() {
                 <FormItem>
                   <FormLabel>Evidence (Optional, Multiple Files)</FormLabel>
                   <FormControl>
-                    <Input
+                    <input
                       type="file"
-                      multiple
+                      multiple={true}
+                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
                       ref={field.ref}
                       name={field.name}
                       onBlur={field.onBlur}
                       onChange={(e) => {
                         field.onChange(e.target.files);
                       }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can select multiple files at once (images, videos, documents)
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

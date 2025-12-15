@@ -147,12 +147,17 @@ sawtak/
 │   │   ├── controllers/      # Request handlers
 │   │   ├── services/         # Business logic
 │   │   │   ├── auth/
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── google.provider.ts
+│   │   │   │   └── haweya.provider.ts   # 🆕 Haweya OAuth
 │   │   │   ├── hedera.service.ts
 │   │   │   ├── hedera-indexer.service.ts
 │   │   │   ├── anonymous-submission.service.ts
 │   │   │   ├── identified-complaint.service.ts
 │   │   │   ├── feed.service.ts
 │   │   │   └── vote.service.ts
+│   │   ├── data/
+│   │   │   └── egypt-locations.ts      # 🆕 Egypt admin divisions
 │   │   ├── middleware/       # Auth, logging middleware
 │   │   ├── telemetry/        # Prometheus metrics
 │   │   ├── utils/            # Helper functions
@@ -167,10 +172,27 @@ sawtak/
 │   │   ├── (auth)/           # Login, signup pages
 │   │   ├── feed/             # Public feed
 │   │   ├── admin/            # Admin portal
+│   │   ├── file-complaint/   # Complaint form with directedTo
 │   │   └── complaints/       # Complaint submission
 │   ├── components/           # React components
-│   ├── lib/                  # Utilities
+│   ├── lib/
+│   │   ├── egypt-locations.ts  # 🆕 Egypt admin divisions
+│   │   └── auth-context.tsx
 │   └── package.json
+│
+├── haweya/                   # 🆕 Mock Haweya OAuth Provider
+│   ├── backend/
+│   │   └── src/
+│   │       ├── index.ts      # Elysia OAuth server
+│   │       └── db.ts         # In-memory store
+│   ├── frontend/
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── signup.html
+│   │   └── css/style.css
+│   ├── Dockerfile
+│   ├── package.json
+│   └── README.md             # Haweya documentation
 │
 ├── docker/                   # Docker configurations
 ├── monitoring/               # Grafana + Prometheus configs
@@ -178,6 +200,65 @@ sawtak/
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## 🇪🇬 Egypt-Specific Features
+
+### Directed To (Complaint Routing)
+
+Complaints can be directed to specific government entities for better routing:
+
+- **Ministries**: 16 Egyptian ministries (Health, Education, Interior, etc.)
+- **Governorates**: 27 Egyptian governorates
+- **Centers/Townships**: Major cities and centers within each governorate
+
+This enables admins from specific jurisdictions to filter and view complaints relevant to them.
+
+### Expanded Categories
+
+- General
+- Corruption
+- Misconduct
+- Harassment
+- Discrimination
+- Fraud
+- Safety Concerns
+- Environmental Issues
+- Infrastructure Problems
+- Healthcare Issues
+- Education Issues
+- Public Services
+- Other
+
+---
+
+## 🆔 Haweya OAuth (Mock Identity Provider)
+
+Sawtak includes a mock OAuth 2.0 provider simulating Egypt's National ID (Haweya) system.
+
+### Setup
+
+```bash
+cd haweya
+bun install
+bun run dev
+```
+
+Runs on `http://localhost:3030`
+
+### Integration
+
+1. Add env variables to Sawtak backend:
+```
+HAWEYA_CLIENT_ID=sawtak_client
+HAWEYA_CLIENT_SECRET=sawtak_secret
+HAWEYA_ISSUER_URL=http://localhost:3030
+```
+
+2. Use "Sign in with Haweya" button in frontend
+
+See `haweya/README.md` for full documentation.
 
 ---
 
