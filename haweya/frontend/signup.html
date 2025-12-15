@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Haweya</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🆔</div>
+      <span class="logo-text">Haweya</span>
+    </div>
+
+    <div class="card-header">
+      <h1 class="card-title">Create account</h1>
+      <p class="card-description">Register with your National ID</p>
+    </div>
+
+    <div id="alert" class="alert" style="display: none;"></div>
+
+    <form id="signup-form">
+      <div class="form-group">
+        <label class="form-label" for="name">Full Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          class="form-input" 
+          placeholder="Ahmed Mohamed"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="nationalId">National ID</label>
+        <input 
+          type="text" 
+          id="nationalId" 
+          class="form-input" 
+          placeholder="14 digits"
+          pattern="[0-9]{14}"
+          maxlength="14"
+          required
+        >
+        <p class="form-hint">Enter your 14-digit Egyptian National ID</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          class="form-input" 
+          placeholder="name@example.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          class="form-input" 
+          placeholder="••••••••"
+          minlength="8"
+          required
+        >
+        <p class="form-hint">Minimum 8 characters</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        Create account
+      </button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <p style="text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">
+      Already have an account? 
+      <a href="/login.html" class="link" id="login-link">Sign in</a>
+    </p>
+  </div>
+
+  <div class="footer">
+    <p>Mock identity provider for development</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get('client_id');
+    const redirectUri = params.get('redirect_uri');
+    const scope = params.get('scope');
+    const state = params.get('state');
+    const isOAuthFlow = clientId && redirectUri;
+
+    if (isOAuthFlow) {
+      const loginLink = document.getElementById('login-link');
+      loginLink.href = `/login.html?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope || '')}&state=${encodeURIComponent(state || '')}`;
+    }
+
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('submit-btn');
+      const alert = document.getElementById('alert');
+      
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      alert.style.display = 'none';
+
+      const name = document.getElementById('name').value;
+      const nationalId = document.getElementById('nationalId').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, nationalId, email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Signup failed');
+        }
+
+        if (isOAuthFlow) {
+          const authorizeRes = await fetch('/api/authorize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              client_id: clientId,
+              redirect_uri: redirectUri,
+              scope: scope,
+              state: state
+            })
+          });
+
+          const authorizeData = await authorizeRes.json();
+          
+          if (authorizeRes.ok && authorizeData.redirect_to) {
+            window.location.href = authorizeData.redirect_to;
+            return;
+          }
+        }
+
+        alert.textContent = 'Account created successfully!';
+        alert.classList.remove('alert-error');
+        alert.classList.add('alert-success');
+        alert.style.display = 'block';
+        
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } catch (err) {
+        alert.textContent = err.message;
+        alert.classList.remove('alert-success');
+        alert.classList.add('alert-error');
+        alert.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+      }
+    });
+  </script>
+</body>
+</html>

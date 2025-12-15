@@ -36,6 +36,20 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   })
 
   /**
+   * POST /api/auth/haweya/callback
+   * Exchange Haweya OAuth authorization code for tokens
+   * 
+   * Body:
+   * {
+   *   "code": "authorization-code",
+   *   "redirect_uri": "http://localhost:3000/auth/haweya/callback"
+   * }
+   */
+  .post("/haweya/callback", async ({ body, jwt, set }: any) => {
+    return controller.handleHaweyaCallback(body, jwt, set);
+  })
+
+  /**
    * GET /api/auth/verify
    * Verify JWT token and get user data
    * 
