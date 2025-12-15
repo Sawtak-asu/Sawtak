@@ -15,6 +15,7 @@ import { indexerRoutes } from "./routes/indexer.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
+import { voteRoutes } from "./routes/vote.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
 
 const startTime = Date.now();
@@ -38,6 +39,7 @@ async function bootstrap() {
     .use(adminRoutes)
     .use(trackingRoutes)
     .use(uploadRoutes)
+    .use(voteRoutes)
     .get("/", () => "Sawtak backend :p")
     // Health check endpoint for Docker/Kubernetes
     .get("/api/health", () => ({

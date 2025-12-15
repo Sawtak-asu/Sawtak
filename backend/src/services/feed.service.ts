@@ -17,6 +17,9 @@ export interface FeedComplaint {
   transactionId?: string; // For anonymous complaints from blockchain
   evidenceUrls?: string[]; // Evidence URLs for identified complaints
   evidenceCids?: string[]; // Evidence CIDs for anonymous complaints (IPFS)
+  upvoteCount?: number; // Number of upvotes
+  encryptedAnonId?: string; // Encrypted anonymous identifier (for admin view)
+  trackingHash?: string; // Tracking hash for anonymous complaints
 }
 
 export interface FeedFilters {
@@ -156,6 +159,8 @@ export class FeedService {
       submissionMode: "anonymous" as const,
       transactionId: c.hcs_hash,
       evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
+      encryptedAnonId: c.anonymous_identifier, // Include anonymous identifier for admin
+      trackingHash: c.tracking_hash || undefined, // Include tracking hash
     }));
 
     // Merge and sort
@@ -170,6 +175,40 @@ export class FeedService {
     const paginatedComplaints = allComplaints.slice(skip, skip + limit);
     const total = identifiedCount + anonymousCount;
 
+    // Fetch upvote counts for public identified complaints only
+    // Anonymous complaints don't have upvotes
+    let voteCountMap = new Map<string, number>();
+    try {
+      const identifiedIds = paginatedComplaints
+        .filter((c) => c.submissionMode === "public")
+        .map((c) => c.id);
+
+      if (identifiedIds.length > 0) {
+        const voteCounts = await prisma.complaintVote.groupBy({
+          by: ["complaint_id"],
+          where: {
+            complaint_id: { in: identifiedIds },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        for (const vote of voteCounts) {
+          voteCountMap.set(vote.complaint_id, vote._count.id);
+        }
+      }
+    } catch (error) {
+      // Table might not exist yet, continue without vote counts
+      console.log("[FeedService] Vote table not ready, skipping vote counts");
+    }
+
+    // Add upvote counts to complaints (only for identified/public ones)
+    const complaintsWithVotes = paginatedComplaints.map((c) => ({
+      ...c,
+      upvoteCount: c.submissionMode === "public" ? (voteCountMap.get(c.id) || 0) : undefined,
+    }));
+
     // Get distinct categories and areas for filter dropdowns
     const [categories, areas] = await Promise.all([
       this.getDistinctCategories(),
@@ -177,7 +216,7 @@ export class FeedService {
     ]);
 
     return {
-      complaints: paginatedComplaints,
+      complaints: complaintsWithVotes,
       pagination: {
         page,
         limit,
@@ -248,7 +287,7 @@ export class FeedService {
       where: { id, visibility: "public", deleted_at: null },
       include: {
         user: {
-          select: { name: true },
+          select: { name: true, picture: true },
         },
       },
     });
@@ -264,7 +303,8 @@ export class FeedService {
         createdAt: identified.created_at.toISOString(),
         status: identified.status,
         submissionMode: "public",
-        user: identified.user ? { name: identified.user.name } : undefined,
+        user: identified.user ? { name: identified.user.name, picture: identified.user.picture } : undefined,
+        evidenceUrls: identified.evidence_urls ? (identified.evidence_urls as string[]) : [],
       };
     }
 
@@ -285,6 +325,9 @@ export class FeedService {
         status: anonymous.status,
         submissionMode: "anonymous",
         transactionId: anonymous.hcs_hash,
+        evidenceCids: anonymous.evidence_cids ? (anonymous.evidence_cids as string[]) : [],
+        encryptedAnonId: anonymous.anonymous_identifier,
+        trackingHash: anonymous.tracking_hash || undefined,
       };
     }
 
