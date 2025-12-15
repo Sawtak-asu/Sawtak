@@ -1,0 +1,23 @@
+{
+  "name": "haweya-mock-oauth",
+  "version": "1.0.0",
+  "description": "Mock OAuth 2.0 provider for Haweya (Egypt National ID) authentication",
+  "scripts": {
+    "dev": "bun run --hot backend/src/index.ts",
+    "start": "bun run backend/src/index.ts",
+    "build": "echo 'No build step needed for Bun runtime'"
+  },
+  "dependencies": {
+    "elysia": "^1.0.0",
+    "@elysiajs/cors": "^1.0.0",
+    "@elysiajs/jwt": "^1.0.0",
+    "@prisma/client": "^5.22.0",
+    "nanoid": "^5.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "bun-types": "latest",
+    "prisma": "5.22.0",
+    "typescript": "^5.0.0"
+  }
+}

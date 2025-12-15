@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Haweya</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🆔</div>
+      <span class="logo-text">Haweya</span>
+    </div>
+
+    <div class="card-header">
+      <h1 class="card-title">Sign in</h1>
+      <p class="card-description">Enter your credentials to continue</p>
+    </div>
+
+    <div id="alert" class="alert alert-error" style="display: none;"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          class="form-input" 
+          placeholder="name@example.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          class="form-input" 
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        Sign in
+      </button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <p style="text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">
+      Don't have an account? 
+      <a href="/signup.html" class="link" id="signup-link">Create one</a>
+    </p>
+  </div>
+
+  <div class="footer">
+    <p>Test: ahmed@test.com / password123</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get('client_id');
+    const redirectUri = params.get('redirect_uri');
+    const scope = params.get('scope');
+    const state = params.get('state');
+    const isOAuthFlow = clientId && redirectUri;
+
+    if (isOAuthFlow) {
+      const signupLink = document.getElementById('signup-link');
+      signupLink.href = `/signup.html?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope || '')}&state=${encodeURIComponent(state || '')}`;
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('submit-btn');
+      const alert = document.getElementById('alert');
+      
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      alert.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+
+        if (isOAuthFlow) {
+          const authorizeRes = await fetch('/api/authorize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              client_id: clientId,
+              redirect_uri: redirectUri,
+              scope: scope,
+              state: state
+            })
+          });
+
+          const authorizeData = await authorizeRes.json();
+          
+          if (authorizeRes.ok && authorizeData.redirect_to) {
+            window.location.href = authorizeData.redirect_to;
+            return;
+          }
+        }
+
+        window.location.href = '/';
+      } catch (err) {
+        alert.textContent = err.message;
+        alert.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

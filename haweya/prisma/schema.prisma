@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Haweya Users (Egypt National ID holders)
+model HaweyaUser {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String   // In production, this should be hashed
+  name        String
+  national_id String   @unique // 14-digit Egyptian National ID
+  picture     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  sessions   HaweyaSession[]
+  auth_codes HaweyaAuthCode[]
+
+  @@map("haweya_users")
+}
+
+// OAuth Sessions
+model HaweyaSession {
+  id         String   @id @default(uuid())
+  user_id    String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user HaweyaUser @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("haweya_sessions")
+}
+
+// OAuth Authorization Codes
+model HaweyaAuthCode {
+  id           String   @id @default(uuid())
+  code         String   @unique
+  user_id      String
+  client_id    String
+  redirect_uri String
+  scope        String
+  used         Boolean  @default(false)
+  expires_at   DateTime
+  created_at   DateTime @default(now())
+
+  user HaweyaUser @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("haweya_auth_codes")
+}
+
+// OAuth Registered Clients
+model HaweyaClient {
+  id            String   @id @default(uuid())
+  client_id     String   @unique
+  client_secret String
+  name          String
+  redirect_uris String[] // Array of allowed redirect URIs
+  created_at    DateTime @default(now())
+
+  @@map("haweya_clients")
+}
