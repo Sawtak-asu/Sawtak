@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { DirectedTo } from "../data/egypt-locations";
 
 interface CreateIdentifiedComplaintDTO {
     userId: string;
@@ -6,6 +7,7 @@ interface CreateIdentifiedComplaintDTO {
     text: string;
     category: string;
     area: string;
+    directedTo?: DirectedTo;
     incidentDate?: Date;
     evidenceUrls?: string[];
     visibility?: string;
@@ -24,6 +26,7 @@ export class IdentifiedComplaintService {
                 text: data.text,
                 category: data.category,
                 area: data.area,
+                directed_to: data.directedTo || null,
                 incident_date: data.incidentDate || new Date(),
                 evidence_urls: data.evidenceUrls || [],
                 visibility: data.visibility || "private",
@@ -129,11 +132,20 @@ export class IdentifiedComplaintService {
     }
     /**
      * Get all identified complaints for admin dashboard (includes private ones)
+     * Supports filtering by directedTo for ministry/governorate/center specific admins
      */
     async getAllComplaintsForAdmin(
         page: number = 1,
         limit: number = 20,
-        filters: { status?: string; category?: string; area?: string } = {}
+        filters: { 
+            status?: string; 
+            category?: string; 
+            area?: string;
+            directedToType?: string;
+            directedToMinistry?: string;
+            directedToGovernorate?: string;
+            directedToCenter?: string;
+        } = {}
     ) {
         const skip = (page - 1) * limit;
         const where: any = { deleted_at: null };
@@ -141,6 +153,29 @@ export class IdentifiedComplaintService {
         if (filters.status) where.status = filters.status;
         if (filters.category) where.category = filters.category;
         if (filters.area) where.area = { contains: filters.area, mode: 'insensitive' };
+
+        // Filter by directedTo - allows admins to see complaints directed to their jurisdiction
+        if (filters.directedToMinistry) {
+            where.directed_to = {
+                path: ['ministryId'],
+                equals: filters.directedToMinistry
+            };
+        } else if (filters.directedToGovernorate) {
+            where.directed_to = {
+                path: ['governorateId'],
+                equals: filters.directedToGovernorate
+            };
+        } else if (filters.directedToCenter) {
+            where.directed_to = {
+                path: ['centerId'],
+                equals: filters.directedToCenter
+            };
+        } else if (filters.directedToType) {
+            where.directed_to = {
+                path: ['type'],
+                equals: filters.directedToType
+            };
+        }
 
         const [complaints, total] = await Promise.all([
             prisma.identifiedComplaint.findMany({
