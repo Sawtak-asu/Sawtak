@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,11 +47,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarIcon, Copy, Check, Shield, Eye, Lock } from "lucide-react";
+import { CalendarIcon, Copy, Check, Shield, Eye, Lock, Building2, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/lib/auth-context";
+import { 
+  MINISTRIES, 
+  GOVERNORATES, 
+  COMPLAINT_CATEGORIES,
+  type DirectedTo,
+  type DirectedToType 
+} from "@/lib/egypt-locations";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -60,6 +68,10 @@ const formSchema = z.object({
     message: "Main text must be at least 10 characters.",
   }),
   category: z.string().nonempty("Please select a category."),
+  directedToType: z.enum(["none", "ministry", "governorate", "center"]).optional(),
+  directedToMinistry: z.string().optional(),
+  directedToGovernorate: z.string().optional(),
+  directedToCenter: z.string().optional(),
   area: z.string().optional(),
   date: z.date().optional(),
   evidence: z.any().optional(),
@@ -84,10 +96,21 @@ export function ComplaintForm() {
       mainText: "",
       area: "",
       category: "",
+      directedToType: "none",
+      directedToMinistry: "",
+      directedToGovernorate: "",
+      directedToCenter: "",
       submissionMode: "anonymous",
       visibility: "public",
     },
   });
+
+  // Watch directedToType and governorate for conditional rendering
+  const directedToType = useWatch({ control: form.control, name: "directedToType" });
+  const selectedGovernorate = useWatch({ control: form.control, name: "directedToGovernorate" });
+
+  // Get centers for selected governorate
+  const selectedGovData = GOVERNORATES.find(g => g.id === selectedGovernorate);
 
   const copyToClipboard = async () => {
     if (trackingCode) {
@@ -191,12 +214,29 @@ export function ComplaintForm() {
       }
     }
     
+    // Build directedTo object if specified
+    let directedTo: DirectedTo | undefined = undefined;
+    if (values.directedToType && values.directedToType !== "none") {
+      directedTo = {
+        type: values.directedToType as DirectedToType,
+      };
+      if (values.directedToType === "ministry" && values.directedToMinistry) {
+        directedTo.ministryId = values.directedToMinistry;
+      } else if (values.directedToType === "governorate" && values.directedToGovernorate) {
+        directedTo.governorateId = values.directedToGovernorate;
+      } else if (values.directedToType === "center" && values.directedToGovernorate && values.directedToCenter) {
+        directedTo.governorateId = values.directedToGovernorate;
+        directedTo.centerId = values.directedToCenter;
+      }
+    }
+
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
       userId: user.id,
       title: values.title,
       text: values.mainText,
       category: values.category,
+      directedTo: directedTo,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
       evidenceUrls: evidenceUrls, 
@@ -208,6 +248,7 @@ export function ComplaintForm() {
       title: values.title,
       text: values.mainText,
       category: values.category,
+      directedTo: directedTo,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
       evidenceCids: [], // IPFS CIDs to be handled later
@@ -376,15 +417,162 @@ export function ComplaintForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="corruption">Corruption</SelectItem>
-                      <SelectItem value="misconduct">Misconduct</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {COMPLAINT_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
+
+        {/* Directed To Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Direct Your Complaint
+            </CardTitle>
+            <CardDescription>
+              Optionally specify which government entity this complaint is directed to.
+              This helps route your complaint to the appropriate administrators.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="directedToType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Directed To</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Reset dependent fields
+                      if (value !== "ministry") form.setValue("directedToMinistry", "");
+                      if (value !== "governorate" && value !== "center") {
+                        form.setValue("directedToGovernorate", "");
+                        form.setValue("directedToCenter", "");
+                      }
+                    }}
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select target (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Not Specified</SelectItem>
+                      <SelectItem value="ministry">Ministry</SelectItem>
+                      <SelectItem value="governorate">Governorate</SelectItem>
+                      <SelectItem value="center">Center / Township</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select whether you want to direct this to a ministry, governorate, or specific center
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Ministry Selector */}
+            {directedToType === "ministry" && (
+              <FormField
+                control={form.control}
+                name="directedToMinistry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ministry</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a ministry" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {MINISTRIES.map((ministry) => (
+                          <SelectItem key={ministry.id} value={ministry.id}>
+                            {ministry.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Governorate Selector (for governorate or center type) */}
+            {(directedToType === "governorate" || directedToType === "center") && (
+              <FormField
+                control={form.control}
+                name="directedToGovernorate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Governorate</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("directedToCenter", "");
+                      }}
+                      defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a governorate" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {GOVERNORATES.map((gov) => (
+                          <SelectItem key={gov.id} value={gov.id}>
+                            {gov.name} ({gov.nameAr})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Center / Township Selector */}
+            {directedToType === "center" && selectedGovernorate && selectedGovData?.centers && (
+              <FormField
+                control={form.control}
+                name="directedToCenter"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Center / Township</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a center" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {selectedGovData!.centers!.map((center) => (
+                          <SelectItem key={center.id} value={center.id}>
+                            {center.name} ({center.nameAr})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </CardContent>
         </Card>
 
