@@ -18,7 +18,9 @@ import { uploadRoutes } from "./routes/upload.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
 import { rateLimiter } from "./services/rate-limiter.service";
-import { openapi } from '@elysiajs/openapi'
+import { openapi } from '@elysiajs/openapi';
+import { prisma } from "./db";
+import { textGuardPlugin } from "./plugins/text-guard";
 
 const startTime = Date.now();
 
@@ -121,13 +123,14 @@ Anonymous complaints can be verified on the Hedera network:
     .use(trackingRoutes)
     .use(uploadRoutes)
     .use(voteRoutes)
+    .use(textGuardPlugin)
     .get("/", () => "Sawtak API v1.0.0 - Visit /swagger for documentation", {
       detail: {
         hide: true
       }
     })
-
-.get("/api/health", async () => {
+    // Health check endpoint with Redis
+    .get("/api/health", async () => {
       const redisHealth = await rateLimiter.healthCheck();
       return {
         status: "healthy",
@@ -157,7 +160,7 @@ Anonymous complaints can be verified on the Hedera network:
     .listen(process.env.PORT || 8000);
 
   console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+    `Elysia is running at ${app.server?.hostname}:${app.server?.port}`
   );
   console.log(
     `📚 Swagger docs available at http://${app.server?.hostname}:${app.server?.port}/swagger`

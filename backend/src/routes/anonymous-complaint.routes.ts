@@ -5,6 +5,8 @@ import { authMiddleware } from "../middleware/auth.middleware";
 // Initialize controller
 const controller = new AnonymousComplaintController();
 
+import { textGuardPlugin } from "../plugins/text-guard";
+
 export const anonymousComplaintRoutes = new Elysia({ 
   prefix: "/api/complaints/anonymous",
   detail: {
@@ -13,11 +15,15 @@ export const anonymousComplaintRoutes = new Elysia({
   }
 })
   .use(authMiddleware)
+  .use(textGuardPlugin)
   /**
    * POST /api/complaints/anonymous/submit
    * Submit an anonymous complaint to the blockchain
    */
-  .post("/submit", async ({ body, set }: any) => {
+  .post("/submit", async ({ body, set, guardArabic }: any) => {
+    if (body.text) {
+      guardArabic(body.text);
+    }
     return controller.submitComplaint(body, set);
   }, {
     body: t.Object({

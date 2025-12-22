@@ -5,6 +5,8 @@ import { authMiddleware } from "../middleware/auth.middleware";
 // Initialize controller
 const controller = new IdentifiedComplaintController();
 
+import { textGuardPlugin } from "../plugins/text-guard";
+
 export const identifiedComplaintRoutes = new Elysia({ 
   prefix: "/api/complaints/identified",
   detail: {
@@ -13,11 +15,15 @@ export const identifiedComplaintRoutes = new Elysia({
   }
 })
   .use(authMiddleware)
+  .use(textGuardPlugin)
   /**
    * POST /api/complaints/identified/submit
    * Submit an identified complaint to the database
    */
-  .post("/submit", async ({ body, set }: any) => {
+  .post("/submit", async ({ body, set, guardArabic }: any) => {
+    if (body.text) {
+      guardArabic(body.text);
+    }
     return controller.submitComplaint(body, set);
   }, {
     body: t.Object({
