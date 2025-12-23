@@ -82,10 +82,9 @@ export default function LoginPage() {
 
                     {/* OAuth login buttons */}
                     <div className="space-y-3">
-                        {/* Google Sign In */}
-                        <GoogleSignInButton />
-
-                        {/* Haweya (Egypt National ID) */}
+                        {/* DISABLED - Google Sign In */}
+                        {/* <GoogleSignInButton /> *
+                        {/* Haweya  (mock xD) */}
                         <HaweyaSignInButton />
                     </div>
 
