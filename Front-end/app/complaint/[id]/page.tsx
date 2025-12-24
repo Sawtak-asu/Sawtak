@@ -33,7 +33,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -67,6 +67,7 @@ interface Complaint {
     evidenceUrls?: string[];
     evidenceCids?: string[];
     upvoteCount?: number;
+    hasVoted?: boolean;
     user?: {
         name: string | null;
         picture?: string | null;
@@ -110,13 +111,48 @@ export default function ComplaintPage() {
     const isAnonymous = complaint?.submissionMode === "anonymous";
     const canUpvote = complaint && !isAnonymous;
 
-    // Update local state when data loads
-    useState(() => {
-        if (complaint) {
-            setLocalUpvotes(complaint.upvoteCount || 0);
-            setNewStatus(complaint.status || "submitted");
+    // Check vote status when complaint loads (same pattern as complaint-card)
+    useEffect(() => {
+        if (!complaint) return;
+        
+        setNewStatus(complaint.status || "submitted");
+        
+        // For public complaints, fetch vote status
+        if (!isAnonymous && isLoggedIn && token) {
+            const checkVoteStatus = async () => {
+                try {
+                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        setHasVoted(data.data.hasVoted);
+                        setLocalUpvotes(data.data.voteCount);
+                    }
+                } catch (error) {
+                    // Silently fail - not critical
+                }
+            };
+            checkVoteStatus();
+        } else if (!isAnonymous) {
+            // For public complaints without auth, just get vote count
+            const getVoteCount = async () => {
+                try {
+                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        setLocalUpvotes(data.data.voteCount);
+                    }
+                } catch (error) {
+                    // Silently fail
+                }
+            };
+            getVoteCount();
         }
-    });
+    }, [complaint, isAnonymous, isLoggedIn, token]);
+
 
     const handleUpvote = useCallback(async () => {
         if (!complaint) return;
@@ -423,15 +459,15 @@ export default function ComplaintPage() {
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
-                                    "gap-2 rounded-full",
-                                    hasVoted && "text-primary"
+                                    "gap-2 rounded-full hover:text-orange-500 hover:bg-orange-500/10",
+                                    hasVoted && "text-orange-500 bg-orange-500/10"
                                 )}
                                 onClick={handleUpvote}
                                 disabled={isVoting}
                             >
                                 <ArrowBigUp className={cn(
                                     "h-5 w-5",
-                                    hasVoted && "fill-primary"
+                                    hasVoted && "fill-orange-500"
                                 )} />
                                 <span>{localUpvotes}</span>
                             </Button>

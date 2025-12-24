@@ -309,15 +309,15 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     variant="ghost"
                                     size="sm"
                                     className={cn(
-                                        "h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all",
-                                        hasVoted && "text-primary bg-primary/10"
+                                        "h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-all",
+                                        hasVoted && "text-orange-500 bg-orange-500/10"
                                     )}
                                     onClick={handleUpvote}
                                     disabled={isVoting}
                                 >
                                     <ArrowBigUp className={cn(
                                         "h-4 w-4 transition-transform",
-                                        hasVoted && "fill-primary",
+                                        hasVoted && "fill-orange-500",
                                         isVoting && "animate-pulse"
                                     )} />
                                     <span className="text-xs font-medium">{localUpvotes}</span>
