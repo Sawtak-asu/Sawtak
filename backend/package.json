@@ -11,6 +11,7 @@
     "@aws-sdk/client-s3": "^3.940.0",
     "@elysiajs/cors": "latest",
     "@elysiajs/jwt": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.12",
     "@elysiajs/swagger": "latest",
     "@hashgraph/sdk": "latest",
     "@prisma/client": "5.22.0",
