@@ -1,0 +1,77 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { ArrowRight, Shield, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/navbar";
+
+export function Hero() {
+    return (
+        <section className="relative pt-24 md:pt-36 pb-16 md:pb-24 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full z-50">
+                <Navbar variant="floating" />
+            </div>
+            <div className="mx-auto max-w-7xl px-6 relative z-10">
+                <div className="text-center">
+                    {/* Badge with subtle animation */}
+                    <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/50 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground shadow-sm hover:border-primary/30 transition-colors">
+                        <Shield className="h-4 w-4 text-primary" />
+                        <span>Blockchain-Secured Reporting</span>
+                        <Sparkles className="h-3 w-3 text-primary/60" />
+                    </div>
+
+                    {/* Main Heading with highlight */}
+                    <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                        <span className="relative">
+                            Speak Up.
+                            <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/20" viewBox="0 0 200 10" preserveAspectRatio="none">
+                                <path d="M0 5 Q50 0 100 5 T200 5" fill="none" stroke="currentColor" strokeWidth="3" />
+                            </svg>
+                        </span>{" "}
+                        <span className="text-muted-foreground">Stay Safe.</span>
+                    </h1>
+
+                    {/* Subheading */}
+                    <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl leading-relaxed">
+                        A secure whistleblowing platform with <span className="text-foreground font-medium">blockchain-backed integrity</span>.
+                        Report misconduct anonymously with cryptographic proof of your submission.
+                    </p>
+
+                    {/* CTA Buttons */}
+                    <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                        <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
+                            <Link href="/file-complaint">
+                                File a Complaint
+                                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80">
+                            <Link href="/feed">
+                                View Public Feed
+                            </Link>
+                        </Button>
+                    </div>
+
+                    {/* Trust indicators */}
+                    <div className="mt-12 flex items-center justify-center gap-8 text-sm text-muted-foreground">
+                        <Link href="/docs#security" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse group-hover/indicator:scale-125 transition-transform" />
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-green-500">256-bit Encrypted</span>
+                        </Link>
+                        <div className="hidden sm:block h-4 w-px bg-border" />
+                        <Link href="/docs#blockchain" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                            <div className="h-2 w-2 rounded-full bg-blue-500 group-hover/indicator:scale-125 transition-transform" />
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">Hedera Blockchain</span>
+                        </Link>
+                        <div className="hidden sm:block h-4 w-px bg-border" />
+                        <Link href="/docs#overview" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
+                            <div className="h-2 w-2 rounded-full bg-purple-500 group-hover/indicator:scale-125 transition-transform" />
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-purple-500">Anonymous</span>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
