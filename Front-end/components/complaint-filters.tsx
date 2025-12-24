@@ -18,7 +18,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { type DirectedToType, GOVERNORATES, MINISTRIES, type DirectedTo } from "@/lib/egypt-locations";
 import { FormItem } from "./ui/form";
@@ -60,6 +60,43 @@ export function ComplaintFilters({
     const [directedToMinistry, setDirectedToMinistry] = useState("");
     const [directedToGovernorate, setDirectedToGovernorate] = useState("");
     const [directedToCenter, setDirectedToCenter] = useState("");
+    
+    // Local state for location input with debouncing
+    const [localLocation, setLocalLocation] = useState(location);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Debounce location changes
+    useEffect(() => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+            setLocation(localLocation);
+        }, 500);
+        
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, [localLocation, setLocation]);
+
+    // Sync local location with external location when cleared
+    useEffect(() => {
+        if (location === "" && localLocation !== "") {
+            setLocalLocation("");
+        }
+    }, [location]);
+
+    // Handle directedToType changes - clear values and notify parent
+    useEffect(() => {
+        if (directedToType === "none") {
+            setDirectedToMinistry("");
+            setDirectedToGovernorate("");
+            setDirectedToCenter("");
+            setDirectedTo(undefined);
+        }
+    }, [directedToType, setDirectedTo]);
 
     const onChangeDirectedTo = (value: string) => {
         switch (directedToType) {
@@ -101,6 +138,7 @@ export function ComplaintFilters({
 
     const clearFilters = () => {
         setCategory("all");
+        setLocalLocation("");
         setLocation("");
         setDateFrom(undefined);
         setDateTo(undefined);
@@ -122,8 +160,8 @@ export function ComplaintFilters({
         directedToType !== "none",
     ].filter(Boolean).length;
 
-    // Filter controls - shared between both variants
-    const FilterControls = () => (
+    // Filter controls - shared between both variants (as JSX, not a component to prevent remounting)
+    const filterControls = (
         <>
             {/* Category */}
             <div className="space-y-2">
@@ -151,8 +189,8 @@ export function ComplaintFilters({
                 <Input
                     id="location"
                     placeholder="Enter location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    value={localLocation}
+                    onChange={(e) => setLocalLocation(e.target.value)}
                     className="w-full"
                 />
             </div>
@@ -266,12 +304,12 @@ export function ComplaintFilters({
                             <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-full justify-start text-left font-normal text-sm",
+                                    "w-full justify-start text-left font-normal text-xs px-2 overflow-hidden",
                                     !dateFrom && "text-muted-foreground"
                                 )}
                             >
-                                <CalendarIcon className="mr-2 h-3 w-3" />
-                                {dateFrom ? format(dateFrom, "PP") : <span>From</span>}
+                                <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
+                                <span className="truncate">{dateFrom ? format(dateFrom, "MMM d, yy") : "From"}</span>
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
@@ -288,12 +326,12 @@ export function ComplaintFilters({
                             <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-full justify-start text-left font-normal text-sm",
+                                    "w-full justify-start text-left font-normal text-xs px-2 overflow-hidden",
                                     !dateTo && "text-muted-foreground"
                                 )}
                             >
-                                <CalendarIcon className="mr-2 h-3 w-3" />
-                                {dateTo ? format(dateTo, "PP") : <span>To</span>}
+                                <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
+                                <span className="truncate">{dateTo ? format(dateTo, "MMM d, yy") : "To"}</span>
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
@@ -348,7 +386,7 @@ export function ComplaintFilters({
                             </span>
                         )}
                     </div>
-                    <FilterControls />
+                    {filterControls}
                 </div>
             </div>
         );
@@ -389,7 +427,7 @@ export function ComplaintFilters({
                                     </p>
                                 </div>
                                 <div className="grid gap-3">
-                                    <FilterControls />
+                                    {filterControls}
                                 </div>
                             </div>
                         </PopoverContent>
