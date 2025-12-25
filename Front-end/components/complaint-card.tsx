@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -29,6 +31,7 @@ export interface Complaint {
     text: string;
     category: string;
     area?: string;
+    directedTo?: DirectedTo;
     incidentDate?: string;
     createdAt: string;
     status?: string;
@@ -69,7 +72,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     // Check if user has voted on mount
     useEffect(() => {
         if (!isLoggedIn || !token || !canUpvote) return;
-        
+
         const checkVoteStatus = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
@@ -86,7 +89,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 // Silently fail - not critical
             }
         };
-        
+
         checkVoteStatus();
     }, [complaint.id, token, isLoggedIn, canUpvote]);
 
@@ -96,14 +99,14 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         ...(complaint.evidence || []),
         ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
     ].filter(Boolean);
-    
+
     // Filter for images only for preview
     const imageEvidence = allEvidence.filter(url => /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url));
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        
+
         if (!isLoggedIn || !token) {
             setShowLoginDialog(true);
             return;
@@ -123,12 +126,12 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
             });
 
             const data = await res.json();
-            
+
             if (data.requiresLogin) {
                 setShowLoginDialog(true);
                 return;
             }
-            
+
             if (data.success) {
                 setLocalUpvotes(data.data.voteCount);
                 setHasVoted(data.data.hasVoted);
@@ -180,179 +183,196 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
             </Dialog>
 
             {/* Complaint Card */}
-            <Card 
-                onClick={handleCardClick}
-                className="group overflow-hidden border-white/5 bg-background/30 backdrop-blur-xl transition-all duration-200 hover:bg-background/40 hover:border-white/10 cursor-pointer"
+            <motion.div
+                layoutId={`complaint-card-${complaint.id}`}
+                layout
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-                <div className="flex gap-3 p-4">
-                    {/* Avatar */}
-                    <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarImage src={complaint.user?.picture ?? undefined} />
-                        <AvatarFallback className="text-xs font-medium">
-                            {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
-                        </AvatarFallback>
-                    </Avatar>
+                <Card
+                    onClick={handleCardClick}
+                    className="group overflow-hidden border-white/5 bg-background/30 backdrop-blur-xl transition-all duration-200 hover:bg-background/40 hover:border-white/10 cursor-pointer"
+                >
+                    <div className="flex gap-3 p-4">
+                        {/* Avatar */}
+                        <motion.div layoutId={`complaint-avatar-${complaint.id}`}>
+                            <Avatar className="h-10 w-10 shrink-0">
+                                <AvatarImage src={complaint.user?.picture ?? undefined} />
+                                <AvatarFallback className="text-xs font-medium">
+                                    {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
+                                </AvatarFallback>
+                            </Avatar>
+                        </motion.div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 space-y-2">
-                        {/* Header Row */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm truncate">
-                                {isAnonymous ? "Anonymous" : complaint.user?.name || "User"}
-                            </span>
-                            <span className="text-muted-foreground text-xs">·</span>
-                            <span className="text-muted-foreground text-xs">
-                                {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
-                            </span>
-                            <Badge variant="outline" className={cn(
-                                "text-[10px] uppercase h-5 px-1.5 shrink-0",
-                                isAnonymous
-                                    ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                            )}>
-                                {isAnonymous ? "Anon" : "Public"}
-                            </Badge>
-                            <Badge variant="outline" className={cn(
-                                "text-[10px] uppercase h-5 px-1.5 shrink-0",
-                                complaint.status === "resolved"
-                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                    : complaint.status === "investigating"
-                                    ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                                    : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                            )}>
-                                {complaint.status || "pending"}
-                            </Badge>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="font-medium text-[15px] leading-snug line-clamp-1 group-hover:text-primary transition-colors">
-                            {complaint.title}
-                        </h3>
-
-                        {/* Description Preview */}
-                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                            {complaint.text}
-                        </p>
-
-                        {/* Image Grid - Max 4 images */}
-                        {imageEvidence.length > 0 && (
-                            <div className={cn(
-                                "grid gap-1 mt-3 rounded-2xl overflow-hidden",
-                                imageEvidence.length === 1 && "grid-cols-1",
-                                imageEvidence.length === 2 && "grid-cols-2",
-                                imageEvidence.length >= 3 && "grid-cols-2"
-                            )}>
-                                {imageEvidence.slice(0, 4).map((url, i) => {
-                                    const isLastVisible = i === 3;
-                                    const hasMore = imageEvidence.length > 4;
-                                    const remaining = imageEvidence.length - 4;
-                                    
-                                    // For 3 images: first is tall
-                                    const isTall = imageEvidence.length === 3 && i === 0;
-                                    
-                                    return (
-                                        <div
-                                            key={i}
-                                            className={cn(
-                                                "relative bg-muted/50 overflow-hidden",
-                                                imageEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
-                                                isTall && "row-span-2",
-                                                // Corner rounding based on position for multi-image grids
-                                                imageEvidence.length === 2 && i === 0 && "rounded-l-2xl",
-                                                imageEvidence.length === 2 && i === 1 && "rounded-r-2xl",
-                                                imageEvidence.length >= 3 && i === 0 && "rounded-tl-2xl",
-                                                imageEvidence.length >= 3 && !isTall && i === 1 && "rounded-tr-2xl",
-                                                imageEvidence.length >= 3 && i === 2 && "rounded-bl-2xl",
-                                                imageEvidence.length >= 3 && i === 3 && "rounded-br-2xl",
-                                                imageEvidence.length === 3 && i === 0 && "rounded-l-2xl",
-                                                imageEvidence.length === 3 && i === 1 && "rounded-tr-2xl",
-                                                imageEvidence.length === 3 && i === 2 && "rounded-br-2xl"
-                                            )}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <img
-                                                src={url}
-                                                alt=""
-                                                className="w-full h-full object-cover"
-                                                loading="lazy"
-                                            />
-                                            {isLastVisible && hasMore && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                    <span className="text-xl font-bold text-white">+{remaining}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Metadata - Category & Location (only if exists) */}
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                            <span className="flex items-center gap-1">
-                                <Hash className="h-3 w-3" />
-                                {complaint.category}
-                            </span>
-                            {complaint.area && complaint.area.toLowerCase() !== 'unknown' && (
-                                <span className="flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
-                                    {complaint.area}
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-2">
+                            {/* Header Row */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-sm truncate">
+                                    {isAnonymous ? "Anonymous" : complaint.user?.name || "User"}
                                 </span>
-                            )}
-                        </div>
+                                <span className="text-muted-foreground text-xs">·</span>
+                                <span className="text-muted-foreground text-xs">
+                                    {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
+                                </span>
+                                <Badge variant="outline" className={cn(
+                                    "text-[10px] uppercase h-5 px-1.5 shrink-0",
+                                    isAnonymous
+                                        ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                        : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                )}>
+                                    {isAnonymous ? "Anon" : "Public"}
+                                </Badge>
+                                <Badge variant="outline" className={cn(
+                                    "text-[10px] uppercase h-5 px-1.5 shrink-0",
+                                    complaint.status === "resolved"
+                                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                        : complaint.status === "investigating"
+                                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                                )}>
+                                    {complaint.status || "pending"}
+                                </Badge>
+                            </div>
 
-                        {/* Action Bar */}
-                        <div className="flex items-center gap-1 pt-1 -ml-2">
-                            {/* Upvote Button - Only for public/identified complaints */}
-                            {canUpvote ? (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className={cn(
-                                        "h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-all",
-                                        hasVoted && "text-orange-500 bg-orange-500/10"
-                                    )}
-                                    onClick={handleUpvote}
-                                    disabled={isVoting}
-                                >
-                                    <ArrowBigUp className={cn(
-                                        "h-4 w-4 transition-transform",
-                                        hasVoted && "fill-orange-500",
-                                        isVoting && "animate-pulse"
-                                    )} />
-                                    <span className="text-xs font-medium">{localUpvotes}</span>
-                                </Button>
-                            ) : (
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400/80">
-                                    <Shield className="h-3.5 w-3.5" />
-                                    <span>Verified</span>
+                            {/* Title */}
+                            <motion.h3
+                                layoutId={`complaint-title-${complaint.id}`}
+                                className="font-medium text-[15px] leading-snug line-clamp-1 group-hover:text-primary transition-colors"
+                            >
+                                {complaint.title}
+                            </motion.h3>
+
+                            {/* Description Preview */}
+                            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                                {complaint.text}
+                            </p>
+
+                            {/* Image Grid - Max 4 images */}
+                            {imageEvidence.length > 0 && (
+                                <div className={cn(
+                                    "grid gap-1 mt-3 rounded-2xl overflow-hidden",
+                                    imageEvidence.length === 1 && "grid-cols-1",
+                                    imageEvidence.length === 2 && "grid-cols-2",
+                                    imageEvidence.length >= 3 && "grid-cols-2"
+                                )}>
+                                    {imageEvidence.slice(0, 4).map((url, i) => {
+                                        const isLastVisible = i === 3;
+                                        const hasMore = imageEvidence.length > 4;
+                                        const remaining = imageEvidence.length - 4;
+
+                                        // For 3 images: first is tall
+                                        const isTall = imageEvidence.length === 3 && i === 0;
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={cn(
+                                                    "relative bg-muted/50 overflow-hidden",
+                                                    imageEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
+                                                    isTall && "row-span-2",
+                                                    // Corner rounding based on position for multi-image grids
+                                                    imageEvidence.length === 2 && i === 0 && "rounded-l-2xl",
+                                                    imageEvidence.length === 2 && i === 1 && "rounded-r-2xl",
+                                                    imageEvidence.length >= 3 && i === 0 && "rounded-tl-2xl",
+                                                    imageEvidence.length >= 3 && !isTall && i === 1 && "rounded-tr-2xl",
+                                                    imageEvidence.length >= 3 && i === 2 && "rounded-bl-2xl",
+                                                    imageEvidence.length >= 3 && i === 3 && "rounded-br-2xl",
+                                                    imageEvidence.length === 3 && i === 0 && "rounded-l-2xl",
+                                                    imageEvidence.length === 3 && i === 1 && "rounded-tr-2xl",
+                                                    imageEvidence.length === 3 && i === 2 && "rounded-br-2xl"
+                                                )}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <img
+                                                    src={url}
+                                                    alt=""
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                                {isLastVisible && hasMore && (
+                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <span className="text-xl font-bold text-white">+{remaining}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
 
-                            {/* Comment indicator */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <MessageCircle className="h-4 w-4" />
-                                <span className="text-xs font-medium">0</span>
-                            </Button>
+                            {/* Metadata - Category & Location (only if exists) */}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                                <span className="flex items-center gap-1">
+                                    <Hash className="h-3 w-3" />
+                                    {complaint.category}
+                                </span>
+                                {complaint.area && complaint.area.toLowerCase() !== 'unknown' && (
+                                    <span className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {complaint.area}
+                                    </span>
+                                )}
+                                {complaint.directedTo && (complaint.directedTo.ministryId || complaint.directedTo.governorateId || complaint.directedTo.centerId) && (
+                                    <span className="flex items-center gap-1 font-semibold">
+                                        <span>To: </span>
+                                        {complaint.directedTo.ministryId ? MINISTRIES.find((ministry) => ministry.id === complaint.directedTo?.ministryId)?.name : complaint.directedTo.governorateId ? GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.governorateId)?.name : GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.centerId)?.name}
+                                    </span>
+                                )}
+                            </div>
 
-                            {/* Share Button */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-3 rounded-full text-muted-foreground hover:text-green-400 hover:bg-green-500/10"
-                                onClick={handleShare}
-                            >
-                                <Share2 className="h-4 w-4" />
-                            </Button>
+                            {/* Action Bar */}
+                            <div className="flex items-center gap-1 pt-1 -ml-2">
+                                {/* Upvote Button - Only for public/identified complaints */}
+                                {canUpvote ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn(
+                                            "h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-all",
+                                            hasVoted && "text-orange-500 bg-orange-500/10"
+                                        )}
+                                        onClick={handleUpvote}
+                                        disabled={isVoting}
+                                    >
+                                        <ArrowBigUp className={cn(
+                                            "h-4 w-4 transition-transform",
+                                            hasVoted && "fill-orange-500",
+                                            isVoting && "animate-pulse"
+                                        )} />
+                                        <span className="text-xs font-medium">{localUpvotes}</span>
+                                    </Button>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400/80">
+                                        <Shield className="h-3.5 w-3.5" />
+                                        <span>Verified</span>
+                                    </div>
+                                )}
+
+                                {/* Comment indicator */}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-3 gap-1.5 rounded-full text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    <span className="text-xs font-medium">0</span>
+                                </Button>
+
+                                {/* Share Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-3 rounded-full text-muted-foreground hover:text-green-400 hover:bg-green-500/10"
+                                    onClick={handleShare}
+                                >
+                                    <Share2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </Card>
+                </Card>
+            </motion.div>
         </>
     );
 }

@@ -63,7 +63,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
     return (
       <header>
         <nav
-          className="fixed z-20 w-full px-2">
+          className="fixed z-20 w-full px-2 h-[5vh]">
           <div
             className={cn(
               "mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12",
@@ -111,7 +111,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                 ) : isLoggedIn ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2">
+                      <Button variant="ghost" className="gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">
                             {user?.name?.[0] || user?.email?.[0] || "U"}
@@ -291,7 +291,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
             ) : isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" className="gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
                         {user?.name?.[0] || user?.email?.[0] || "U"}

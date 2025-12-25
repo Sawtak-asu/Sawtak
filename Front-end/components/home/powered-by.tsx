@@ -327,7 +327,7 @@ function TechCard({
     }, []);
 
     // Generate pseudo-random values based on index for consistent randomization
-    const randomDuration = 3 + (index * 0.7) % 2.5; // Duration between 3-5.5 seconds
+    const randomDuration = 5 + (index * 0.5) % 2; // Duration between 5-7 seconds
     const randomStartAngle = (index * 137) % 360; // Golden angle distribution for varied starting points
 
     // Border colors for light and dark mode (default to dark mode colors during SSR)

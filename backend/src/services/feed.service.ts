@@ -1,11 +1,19 @@
 import { prisma } from "../db";
 
+export type DirectedTo = {
+  type: "ministry" | "governorate" | "center";
+  ministryId?: string;
+  governorateId?: string;
+  centerId?: string;
+} | null;
+
 export interface FeedComplaint {
   id: string;
   title: string;
   text: string;
   category: string;
   area: string;
+  directedTo: DirectedTo;
   incidentDate: string;
   createdAt: string;
   status: string;
@@ -20,13 +28,6 @@ export interface FeedComplaint {
   upvoteCount?: number; // Number of upvotes
   encryptedAnonId?: string; // Encrypted anonymous identifier (for admin view)
   trackingHash?: string; // Tracking hash for anonymous complaints
-}
-
-export interface DirectedTo {
-  type: "ministry" | "governorate" | "center";
-  ministryId?: string;
-  governorateId?: string;
-  centerId?: string;
 }
 
 export interface FeedFilters {
@@ -206,6 +207,7 @@ export class FeedService {
       text: c.text,
       category: c.category,
       area: c.area,
+      directedTo: c.directed_to as DirectedTo,
       incidentDate: c.incident_date.toISOString(),
       createdAt: c.created_at.toISOString(),
       status: c.status,
@@ -220,6 +222,7 @@ export class FeedService {
       text: c.complaint_text,
       category: c.category,
       area: c.area,
+      directedTo: c.directed_to as DirectedTo,
       incidentDate: c.incident_date.toISOString(),
       createdAt: c.consensus_timestamp.toISOString(),
       status: c.status,
@@ -366,6 +369,12 @@ export class FeedService {
         text: identified.text,
         category: identified.category,
         area: identified.area,
+        directedTo: identified.directed_to as {
+          type: "ministry" | "governorate" | "center";
+          ministryId?: string;
+          governorateId?: string;
+          centerId?: string;
+        } | null,
         incidentDate: identified.incident_date.toISOString(),
         createdAt: identified.created_at.toISOString(),
         status: identified.status,
@@ -387,6 +396,7 @@ export class FeedService {
         text: anonymous.complaint_text,
         category: anonymous.category,
         area: anonymous.area,
+        directedTo: anonymous.directed_to as DirectedTo,
         incidentDate: anonymous.incident_date.toISOString(),
         createdAt: anonymous.consensus_timestamp.toISOString(),
         status: anonymous.status,

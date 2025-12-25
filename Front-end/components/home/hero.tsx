@@ -41,9 +41,24 @@ export function Hero() {
                             >
                                 Speak Up.
                             </TextEffect>
-                            <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/20" viewBox="0 0 200 10" preserveAspectRatio="none">
-                                <path d="M0 5 Q50 0 100 5 T200 5" fill="none" stroke="currentColor" strokeWidth="3" />
-                            </svg>
+                            <motion.svg
+                                className="absolute -bottom-2 left-0 w-full h-3 text-primary/20"
+                                viewBox="0 0 200 10"
+                                preserveAspectRatio="none"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2, delay: 0.7 }}
+                            >
+                                <motion.path
+                                    d="M0 5 Q50 0 100 5 T200 5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    initial={{ pathLength: 0 }}
+                                    animate={{ pathLength: 1 }}
+                                    transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
+                                />
+                            </motion.svg>
                         </span>{" "}
                         <TextEffect
                             per="char"
