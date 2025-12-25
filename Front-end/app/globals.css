@@ -205,3 +205,69 @@
   display: none;  /* Chrome, Safari and Opera */
 }
 
+/* Marquee animations */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee-slow {
+  animation: marquee 60s linear infinite;
+}
+
+.animate-marquee-fast {
+  animation: marquee 15s linear infinite;
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical 30s linear infinite;
+}
+
+.animate-marquee-vertical-slow {
+  animation: marquee-vertical 60s linear infinite;
+}
+
+.animate-marquee-vertical-fast {
+  animation: marquee-vertical 15s linear infinite;
+}
+
+.direction-reverse {
+  animation-direction: reverse;
+}
+
+/* Pause animation on hover */
+.pause {
+  animation-play-state: paused;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-text {
+  background-size: 200% auto;
+  animation: gradient-shift 3s ease infinite;
+}

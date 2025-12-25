@@ -3,18 +3,22 @@ import FooterSection from "@/components/footer";
 import { Hero } from "@/components/home/hero";
 import { Aim } from "@/components/home/aim";
 import { HowItWorks } from "@/components/home/how-it-works";
-import { TechStack } from "@/components/home/tech-stack";
+import { PoweredBy } from "@/components/home/powered-by";
 import { Team } from "@/components/home/team";
 import { CTA } from "@/components/home/cta";
+import { FAQ } from "@/components/home/faq";
+// import { TechMarquee } from "@/components/home/tech-marquee";
 
 export default function Home() {
   return (
     <GridBackground>
       <main className="overflow-hidden relative">
         <Hero />
+        {/* <TechMarquee /> */}
         <Aim />
         <HowItWorks />
-        <TechStack />
+        <PoweredBy />
+        <FAQ />
         <Team />
         <CTA />
       </main>
@@ -22,3 +26,4 @@ export default function Home() {
     </GridBackground>
   );
 }
+

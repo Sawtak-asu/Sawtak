@@ -149,11 +149,11 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                   </DropdownMenu>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Button asChild variant="ghost" size="sm">
+                    {/* <Button asChild variant="ghost" size="sm">
                       <Link href="/login">Login</Link>
-                    </Button>
+                    </Button> */}
                     <Button asChild size="sm">
-                      <Link href="/signup">Sign Up</Link>
+                      <Link href="/login">Get Started</Link>
                     </Button>
                   </div>
                 )}
@@ -226,11 +226,11 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                         </div>
                       ) : (
                         <div className="flex flex-col gap-2 px-3">
-                          <Button asChild variant="outline" className="w-full justify-center">
+                          {/* <Button asChild variant="outline" className="w-full justify-center">
                             <Link href="/login" onClick={() => setMenuState(false)}>Login</Link>
-                          </Button>
+                          </Button> */}
                           <Button asChild className="w-full justify-center">
-                            <Link href="/signup" onClick={() => setMenuState(false)}>Sign Up</Link>
+                            <Link href="/login" onClick={() => setMenuState(false)}>Get Started</Link>
                           </Button>
                         </div>
                       )}
@@ -251,7 +251,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
 
   // Sticky navbar for other pages
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-6">
         <div className="flex flex-wrap items-center justify-between py-3">
           {/* Logo & Mobile Toggle */}
@@ -406,11 +406,11 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 px-3">
-                      <Button asChild variant="outline" className="w-full justify-center">
+                      {/* <Button asChild variant="outline" className="w-full justify-center">
                         <Link href="/login" onClick={() => setMenuState(false)}>Login</Link>
-                      </Button>
+                      </Button> */}
                       <Button asChild className="w-full justify-center">
-                        <Link href="/signup" onClick={() => setMenuState(false)}>Sign Up</Link>
+                        <Link href="/login" onClick={() => setMenuState(false)}>Get Started</Link>
                       </Button>
                     </div>
                   )}

@@ -162,7 +162,7 @@ function ParallaxCard({ step, index, progress }: { step: typeof timelineSteps[0]
 
             {/* Content Card */}
             <div className={cn(
-                "ml-16 md:ml-0 md:w-1/2 p-6 bg-background/80 backdrop-blur-sm border border-border/60 hover:border-primary/50 transition-colors rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300",
+                "ml-16 md:ml-0 md:w-1/2 p-6 bg-background/80 backdrop-blur-sm border border-border/60 hover:border-primary/50 transition-colors rounded-2xl shadow-sm hover:shadow-xl duration-300",
                 index % 2 === 0 ? "md:mr-12" : "md:ml-12"
             )}>
                 <div className="flex items-center justify-between mb-4">
@@ -261,7 +261,7 @@ export function HowItWorks() {
                     {/* Central Connecting Tube Foreground (Animated) */}
                     <motion.div
                         style={{ height: lineHeight }}
-                        className="absolute left-8 md:left-1/2 top-4 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/20 -translate-x-1/2 rounded-full z-0 origin-top"
+                        className="absolute left-8 md:left-1/2 top-4 w-1 bg-linear-to-b from-primary via-primary/80 to-primary/20 -translate-x-1/2 rounded-full z-0 origin-top"
                     />
 
                     <div className="space-y-0">

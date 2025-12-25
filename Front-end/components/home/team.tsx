@@ -1,30 +1,29 @@
 "use client";
 
 import React from "react";
-import { User } from "lucide-react";
+import { User, Github } from "lucide-react";
+import Link from "next/link";
 
 export function Team() {
     const team = [
         {
-            name: "Ahmed Hassan",
-            role: "Lead Developer",
-            bio: "Full-stack engineer passionate about civic tech and blockchain."
+            name: "Ahmed Khaled",
+            role: "Backend Developer",
+            bio: "",
+            github: "https://github.com/AhmeddKhaledd"
         },
         {
-            name: "Sarah Kareem",
-            role: "Security Researcher",
-            bio: "Expert in cryptography and privacy-preserving protocols."
+            name: "Sayed Ibrahim",
+            role: "Blockchain Developer",
+            bio: "",
+            github: "https://github.com/Sayed-Ibrahim"
         },
         {
-            name: "Omar Youssef",
-            role: "Product Designer",
-            bio: "Crafting intuitive experiences for complex systems."
+            name: "Sherif Lotfy",
+            role: "Frontend Developer",
+            bio: "",
+            github: "https://github.com/sheriflotfy"
         },
-        {
-            name: "Layla Mahmoud",
-            role: "Legal Advisor",
-            bio: "Ensuring compliance and protecting whistleblower rights."
-        }
     ];
 
     return (
@@ -35,11 +34,11 @@ export function Team() {
                         Meet Our <span className="text-primary">Team</span>
                     </h2>
                     <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-                        A dedicated group of professionals working to bring transparency to the forefront.
+                        A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {team.map((member) => (
                         <div key={member.name} className="group relative text-center">
                             <div className="mx-auto mb-6 h-32 w-32 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
@@ -49,7 +48,19 @@ export function Team() {
                             </div>
                             <h3 className="text-lg font-semibold">{member.name}</h3>
                             <p className="text-sm text-primary mb-2">{member.role}</p>
-                            <p className="text-sm text-muted-foreground leading-relaxed px-2">{member.bio}</p>
+                            <p className="text-sm text-muted-foreground leading-relaxed px-2 mb-4">{member.bio}</p>
+
+                            <div className="flex justify-center">
+                                <Link
+                                    href={member.github}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                                >
+                                    <Github className="h-5 w-5" />
+                                    <span className="sr-only">GitHub</span>
+                                </Link>
+                            </div>
                         </div>
                     ))}
                 </div>
