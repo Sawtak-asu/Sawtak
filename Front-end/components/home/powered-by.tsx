@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "motion/react";
 import { ArrowUpRight, Lock, Zap, Database, Shield, Cloud, Fingerprint } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 const poweredByTech = [
     {
@@ -66,7 +67,7 @@ function CircuitLines() {
 
     return (
         <svg
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full text-black/20 dark:text-white/10"
             viewBox="0 0 800 200"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +78,7 @@ function CircuitLines() {
                 <motion.path
                     key={path.id}
                     d={path.d}
-                    stroke="rgba(255,255,255,0.1)"
+                    stroke="currentColor"
                     strokeWidth="1"
                     initial={{ pathLength: 0, opacity: 0 }}
                     whileInView={{ pathLength: 1, opacity: 1 }}
@@ -91,7 +92,7 @@ function CircuitLines() {
                 <motion.path
                     key={path.id}
                     d={path.d}
-                    stroke="rgba(255,255,255,0.1)"
+                    stroke="currentColor"
                     strokeWidth="1"
                     initial={{ pathLength: 0, opacity: 0 }}
                     whileInView={{ pathLength: 1, opacity: 1 }}
@@ -318,31 +319,74 @@ function TechCard({
     link?: string;
     index: number;
 }) {
+    const { resolvedTheme } = useTheme();
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Generate pseudo-random values based on index for consistent randomization
+    const randomDuration = 3 + (index * 0.7) % 2.5; // Duration between 3-5.5 seconds
+    const randomStartAngle = (index * 137) % 360; // Golden angle distribution for varied starting points
+
+    // Border colors for light and dark mode (default to dark mode colors during SSR)
+    const isDark = !mounted || resolvedTheme === "dark";
+    const borderColor = isDark
+        ? "rgba(255,255,255,0.8)"
+        : "rgba(80,80,80,0.9)";
+    const borderColorBright = isDark
+        ? "white"
+        : "rgba(50,50,50,1)";
+
     const CardContent = (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="group relative h-full p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 hover:border-primary/30 transition-all duration-300"
+            className="group relative h-full flex items-center justify-center"
         >
-            {/* Icon */}
-            <div className="mb-4">
-                <Icon className={`h-10 w-10 ${iconColor}`} strokeWidth={1.5} />
+            {/* Animated border container */}
+            <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                {/* Spinning line */}
+                <motion.div
+                    className="absolute w-[200%] h-[200%] top-[-55%] left-[-55%]"
+                    style={{
+                        background: `conic-gradient(from ${randomStartAngle}deg, transparent 0%, transparent 85%, ${borderColor} 90%, ${borderColorBright} 95%, ${borderColor} 97%, transparent 100%)`
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                        duration: randomDuration,
+                        repeat: Infinity,
+                        ease: "linear"
+                    }}
+                />
             </div>
 
-            {/* Title with link arrow */}
-            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 group-hover:text-primary transition-colors">
-                {name}
-                {link && (
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                )}
-            </h3>
+            {/* Static border fallback */}
+            <div className="absolute inset-0 rounded-2xl border border-border/30 pointer-events-none" />
 
-            {/* Description */}
-            <p className="text-sm text-muted-foreground leading-relaxed">
-                {description}
-            </p>
+            {/* Card content with solid background */}
+            <div className="relative h-[calc(100%-2px)] mx-px p-6 rounded-[14px] bg-card backdrop-blur-sm transition-all duration-300">
+                {/* Icon */}
+                <div className="relative mb-4">
+                    <Icon className={`relative h-10 w-10 ${iconColor} group-hover:scale-110 transition-transform duration-300`} strokeWidth={1.5} />
+                </div>
+
+                {/* Title with link arrow */}
+                <h3 className="relative text-lg font-semibold mb-2 flex items-center gap-2 group-hover:text-primary transition-colors">
+                    {name}
+                    {link && (
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    )}
+                </h3>
+
+                {/* Description */}
+                <p className="relative text-sm text-muted-foreground leading-relaxed">
+                    {description}
+                </p>
+            </div>
         </motion.div>
     );
 
@@ -390,20 +434,20 @@ export function PoweredBy() {
                     >
                         <div className="relative">
                             {/* Chip border */}
-                            <div className="absolute -inset-3 border border-border/50 rounded-lg" />
-                            <div className="absolute -inset-6 border border-border/30 rounded-xl" />
+                            <div className="absolute -inset-3 border border-border rounded-lg" />
+                            <div className="absolute -inset-6 border border-border/80 rounded-xl" />
 
                             {/* Chip pins - top */}
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex gap-2">
                                 {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="w-1.5 h-3 bg-primary/30 rounded-full" />
+                                    <div key={i} className="w-1.5 h-3 bg-primary/50 rounded-full" />
                                 ))}
                             </div>
 
                             {/* Chip pins - bottom */}
                             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
                                 {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="w-1.5 h-3 bg-primary/30 rounded-full" />
+                                    <div key={i} className="w-1.5 h-3 bg-primary/50 rounded-full" />
                                 ))}
                             </div>
 

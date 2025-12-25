@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
             <div className="container max-w-7xl mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Sidebar Navigation */}
-                    <aside className="lg:w-64 flex-shrink-0">
+                    <aside className="lg:w-64 shrink-0">
                         <div className="sticky top-24 space-y-6">
                             <div className="hidden lg:block">
                                 <h3 className="font-semibold text-lg mb-4 px-4 flex items-center gap-2">
@@ -517,7 +517,7 @@ export default function PrivacyPolicyPage() {
                                         <div className="p-4 bg-muted/30 rounded-lg">
                                             <h4 className="font-medium text-sm mb-2">Email</h4>
                                             <a href="mailto:privacy@sawtak.org" className="text-primary hover:underline">
-                                                privacy@sawtak.org
+                                                63ahmedkhaled@gmail.com
                                             </a>
                                         </div>
                                         <div className="p-4 bg-muted/30 rounded-lg">
