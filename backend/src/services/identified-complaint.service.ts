@@ -25,8 +25,8 @@ export class IdentifiedComplaintService {
                 title: data.title,
                 text: data.text,
                 category: data.category,
-                area: data.area,
-                directed_to: data.directedTo || null,
+                area: data.area || "",
+                directed_to: data.directedTo as { type: string, ministryId?: string, governorateId?: string, centerId?: string } || null,
                 incident_date: data.incidentDate || new Date(),
                 evidence_urls: data.evidenceUrls || [],
                 visibility: data.visibility || "private",
@@ -137,9 +137,9 @@ export class IdentifiedComplaintService {
     async getAllComplaintsForAdmin(
         page: number = 1,
         limit: number = 20,
-        filters: { 
-            status?: string; 
-            category?: string; 
+        filters: {
+            status?: string;
+            category?: string;
             area?: string;
             directedToType?: string;
             directedToMinistry?: string;
