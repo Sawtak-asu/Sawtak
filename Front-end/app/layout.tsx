@@ -46,7 +46,7 @@ export default function RootLayout({
         <meta name="referrer" content="origin-when-cross-origin" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <ThemeProvider
