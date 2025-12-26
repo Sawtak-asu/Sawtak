@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -52,12 +53,12 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/lib/auth-context";
-import { 
-  MINISTRIES, 
-  GOVERNORATES, 
+import {
+  MINISTRIES,
+  GOVERNORATES,
   COMPLAINT_CATEGORIES,
   type DirectedTo,
-  type DirectedToType 
+  type DirectedToType
 } from "@/lib/egypt-locations";
 
 const formSchema = z.object({
@@ -88,6 +89,9 @@ export function ComplaintForm() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
   const [copied, setCopied] = useState(false);
+  const t = useTranslations("ComplaintForm");
+  const tToasts = useTranslations("Toasts");
+  const locale = useLocale();
 
   const form = useForm<ComplaintFormData>({
     resolver: zodResolver(formSchema),
@@ -128,15 +132,15 @@ export function ComplaintForm() {
       }
 
       // Correct endpoints: /api/complaints/{type}/submit
-      const endpoint = data.mode === "public" 
+      const endpoint = data.mode === "public"
         ? `${API_URL}/api/complaints/identified/submit`
         : `${API_URL}/api/complaints/anonymous/submit`;
-      
+
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       };
-      
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers,
@@ -155,18 +159,15 @@ export function ComplaintForm() {
       if (variables.mode === "anonymous" && data.data?.trackingCode) {
         setTrackingCode(data.data.trackingCode);
         setShowTrackingDialog(true);
-        toast.success("Anonymous complaint submitted successfully!");
+        toast.success(tToasts("anonymousSubmitted"));
       } else {
-        const message = data.data?.transactionId 
-          ? `Complaint submitted! ID: ${data.data.transactionId.substring(0, 16)}...`
-          : "Complaint submitted successfully!";
-        toast.success(message);
+        toast.success(tToasts("identifiedSubmitted"));
       }
       console.log("Submission successful:", data);
       form.reset();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to submit complaint.");
+      toast.error(error.message || tToasts("submitFailed"));
       console.error("Submission error:", error);
     },
   });
@@ -175,7 +176,7 @@ export function ComplaintForm() {
 
   async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
-      toast.error("You must be logged in to submit a complaint.");
+      toast.error(tToasts("loginRequired"));
       return;
     }
 
@@ -209,11 +210,11 @@ export function ComplaintForm() {
         }
       } catch (error: any) {
         console.error("Upload error:", error);
-        toast.error(error.message || "Failed to upload evidence files. Please try again.");
+        toast.error(error.message || tToasts("uploadFailed"));
         return;
       }
     }
-    
+
     // Build directedTo object if specified
     let directedTo: DirectedTo | undefined = undefined;
     if (values.directedToType && values.directedToType !== "none") {
@@ -239,7 +240,7 @@ export function ComplaintForm() {
       directedTo: directedTo,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
-      evidenceUrls: evidenceUrls, 
+      evidenceUrls: evidenceUrls,
       visibility: values.visibility, // public = visible in feed, private = admin only
     } : {
       // Anonymous complaint payload - matches anonymous-complaint.controller.ts
@@ -253,18 +254,18 @@ export function ComplaintForm() {
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
       evidenceCids: [], // IPFS CIDs to be handled later
     };
-    
+
     mutation.mutate({ payload, mode: values.submissionMode });
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" dir="ltr">
         <Card>
           <CardHeader>
-            <CardTitle>Complaint Details</CardTitle>
+            <CardTitle>{t("detailsTitle")}</CardTitle>
             <CardDescription>
-              Please provide the essential details of your complaint.
+              {t("detailsDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -273,10 +274,10 @@ export function ComplaintForm() {
               name="submissionMode"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Submission Mode</FormLabel>
+                  <FormLabel>{t("submissionMode")}</FormLabel>
                   {!isLoggedIn && (
                     <p className="text-sm text-amber-600 dark:text-amber-400">
-                      Please log in to submit a complaint.
+                      {t("loginRequired")}
                     </p>
                   )}
                   <FormControl>
@@ -294,10 +295,10 @@ export function ComplaintForm() {
                             <div className="p-2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-200">
                               <Shield className="h-5 w-5" />
                             </div>
-                            <span className="font-semibold text-base">Anonymous</span>
+                            <span className="font-semibold text-base">{t("anonymous")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            Stored on blockchain. Identity encrypted & hidden. You'll get a tracking code.
+                            {t("anonymousDesc")}
                           </p>
                         </FormLabel>
                       </FormItem>
@@ -310,10 +311,10 @@ export function ComplaintForm() {
                             <div className="p-2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-200">
                               <Check className="h-5 w-5" />
                             </div>
-                            <span className="font-semibold text-base">Identified</span>
+                            <span className="font-semibold text-base">{t("identified")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            Stored in database. Linked to your account. Admin can see who you are.
+                            {t("identifiedDesc")}
                           </p>
                         </FormLabel>
                       </FormItem>
@@ -331,7 +332,7 @@ export function ComplaintForm() {
                 name="visibility"
                 render={({ field }) => (
                   <FormItem className="space-y-3 bg-muted/30 p-4 rounded-xl border">
-                    <FormLabel>Visibility Setting</FormLabel>
+                    <FormLabel>{t("visibility")}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -347,8 +348,8 @@ export function ComplaintForm() {
                               <Eye className="w-5 h-5" />
                             </div>
                             <div className="flex-1">
-                              <span className="font-semibold block text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Public</span>
-                              <span className="text-xs text-muted-foreground">Visible in community feed</span>
+                              <span className="font-semibold block text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{t("public")}</span>
+                              <span className="text-xs text-muted-foreground">{t("publicDesc")}</span>
                             </div>
                           </FormLabel>
                         </FormItem>
@@ -361,8 +362,8 @@ export function ComplaintForm() {
                               <Lock className="w-5 h-5" />
                             </div>
                             <div className="flex-1">
-                              <span className="font-semibold block text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Private</span>
-                              <span className="text-xs text-muted-foreground">Only admin can view</span>
+                              <span className="font-semibold block text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{t("private")}</span>
+                              <span className="text-xs text-muted-foreground">{t("privateDesc")}</span>
                             </div>
                           </FormLabel>
                         </FormItem>
@@ -378,9 +379,9 @@ export function ComplaintForm() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{t("title")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter the title" {...field} />
+                    <Input placeholder={t("titlePlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -391,10 +392,10 @@ export function ComplaintForm() {
               name="mainText"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Main Text</FormLabel>
+                  <FormLabel>{t("mainText")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe your complaint in detail"
+                      placeholder={t("mainTextPlaceholder")}
                       {...field}
                     />
                   </FormControl>
@@ -407,19 +408,19 @@ export function ComplaintForm() {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{t("category")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder={t("categoryPlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {COMPLAINT_CATEGORIES.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
+                          {locale === "ar" ? cat.nameAr : cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -436,11 +437,10 @@ export function ComplaintForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
-              Direct Your Complaint
+              {t("directTitle")}
             </CardTitle>
             <CardDescription>
-              Optionally specify which government entity this complaint is directed to.
-              This helps route your complaint to the appropriate administrators.
+              {t("directDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -449,7 +449,7 @@ export function ComplaintForm() {
               name="directedToType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Directed To</FormLabel>
+                  <FormLabel>{t("directedTo")}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -463,18 +463,18 @@ export function ComplaintForm() {
                     defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select target (optional)" />
+                        <SelectValue placeholder={t("directedToPlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">Not Specified</SelectItem>
-                      <SelectItem value="ministry">Ministry</SelectItem>
-                      <SelectItem value="governorate">Governorate</SelectItem>
-                      <SelectItem value="center">Center / Township</SelectItem>
+                      <SelectItem value="none">{t("notSpecified")}</SelectItem>
+                      <SelectItem value="ministry">{t("ministry")}</SelectItem>
+                      <SelectItem value="governorate">{t("governorate")}</SelectItem>
+                      <SelectItem value="center">{t("center")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Select whether you want to direct this to a ministry, governorate, or specific center
+                    {t("directedToDescription")}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -488,19 +488,19 @@ export function ComplaintForm() {
                 name="directedToMinistry"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ministry</FormLabel>
+                    <FormLabel>{t("ministry")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a ministry" />
+                          <SelectValue placeholder={t("selectMinistry")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {MINISTRIES.map((ministry) => (
                           <SelectItem key={ministry.id} value={ministry.id}>
-                            {ministry.name}
+                            {locale === "ar" ? ministry.nameAr : ministry.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -518,7 +518,7 @@ export function ComplaintForm() {
                 name="directedToGovernorate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Governorate</FormLabel>
+                    <FormLabel>{t("governorate")}</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -527,13 +527,13 @@ export function ComplaintForm() {
                       defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a governorate" />
+                          <SelectValue placeholder={t("selectGovernorate")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {GOVERNORATES.map((gov) => (
                           <SelectItem key={gov.id} value={gov.id}>
-                            {gov.name} ({gov.nameAr})
+                            {locale === "ar" ? gov.nameAr : gov.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -551,19 +551,19 @@ export function ComplaintForm() {
                 name="directedToCenter"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Center / Township</FormLabel>
+                    <FormLabel>{t("center")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a center" />
+                          <SelectValue placeholder={t("selectCenter")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {selectedGovData!.centers!.map((center) => (
                           <SelectItem key={center.id} value={center.id}>
-                            {center.name} ({center.nameAr})
+                            {locale === "ar" ? center.nameAr : center.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -578,10 +578,9 @@ export function ComplaintForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
+            <CardTitle>{t("additionalTitle")}</CardTitle>
             <CardDescription>
-              This information is optional but can help us better understand the
-              context.
+              {t("additionalDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -590,9 +589,9 @@ export function ComplaintForm() {
               name="area"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Area (Optional)</FormLabel>
+                  <FormLabel>{t("area")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter the area" {...field} />
+                    <Input placeholder={t("areaPlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -603,7 +602,7 @@ export function ComplaintForm() {
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date of Incident (Optional)</FormLabel>
+                  <FormLabel>{t("incidentDate")}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -616,7 +615,7 @@ export function ComplaintForm() {
                           {field.value ? (
                             format(field.value, "PPP")
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t("pickDate")}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -643,9 +642,9 @@ export function ComplaintForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Supporting Evidence</CardTitle>
+            <CardTitle>{t("evidenceTitle")}</CardTitle>
             <CardDescription>
-              Upload any files that support your complaint.
+              {t("evidenceDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -654,7 +653,7 @@ export function ComplaintForm() {
               name="evidence"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Evidence (Optional, Multiple Files)</FormLabel>
+                  <FormLabel>{t("evidenceLabel")}</FormLabel>
                   <FormControl>
                     <input
                       type="file"
@@ -670,7 +669,7 @@ export function ComplaintForm() {
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground mt-1">
-                    You can select multiple files at once (images, videos, documents)
+                    {t("evidenceHint")}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -680,7 +679,7 @@ export function ComplaintForm() {
         </Card>
 
         <Button type="submit" disabled={mutation.isPending || form.formState.isSubmitting}>
-          {mutation.isPending || form.formState.isSubmitting ? "Submitting..." : "Submit Complaint"}
+          {mutation.isPending || form.formState.isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </form>
 
@@ -690,11 +689,10 @@ export function ComplaintForm() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Save Your Tracking Code
+              {t("trackingTitle")}
             </DialogTitle>
             <DialogDescription>
-              This is the only way to track your anonymous complaint. 
-              Please save it somewhere safe - we cannot recover it for you.
+              {t("trackingDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center py-4">
@@ -711,28 +709,27 @@ export function ComplaintForm() {
               {copied ? (
                 <>
                   <Check className="h-4 w-4 mr-2" />
-                  Copied!
+                  {t("copied")}
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy to Clipboard
+                  {t("copyToClipboard")}
                 </>
               )}
             </Button>
           </div>
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm">
             <p className="text-amber-600 dark:text-amber-400 font-medium">
-              ⚠️ Important: Write this down!
+              {t("importantWarning")}
             </p>
             <p className="text-muted-foreground mt-1">
-              You can use this code at /track to check your complaint status.
-              Your identity is not linked to this code.
+              {t("trackingHint")}
             </p>
           </div>
           <DialogFooter>
             <Button onClick={() => setShowTrackingDialog(false)}>
-              I've Saved My Code
+              {t("savedCode")}
             </Button>
           </DialogFooter>
         </DialogContent>

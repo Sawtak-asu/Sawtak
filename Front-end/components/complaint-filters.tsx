@@ -20,8 +20,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
-import { type DirectedToType, GOVERNORATES, MINISTRIES, type DirectedTo } from "@/lib/egypt-locations";
+import { type DirectedToType, GOVERNORATES, MINISTRIES, type DirectedTo, COMPLAINT_CATEGORIES } from "@/lib/egypt-locations";
 import { FormItem } from "./ui/form";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ComplaintFiltersProps {
     search: string;
@@ -56,11 +57,17 @@ export function ComplaintFilters({
     setDirectedTo,
     variant = "popover",
 }: ComplaintFiltersProps) {
+    const t = useTranslations("ComplaintFilters");
+    const tCategories = useTranslations("Categories");
+    const tModes = useTranslations("SubmissionModes");
+    const tDirected = useTranslations("DirectedTo");
+    const locale = useLocale();
+
     const [directedToType, setDirectedToType] = useState("none");
     const [directedToMinistry, setDirectedToMinistry] = useState("");
     const [directedToGovernorate, setDirectedToGovernorate] = useState("");
     const [directedToCenter, setDirectedToCenter] = useState("");
-    
+
     // Local state for location input with debouncing
     const [localLocation, setLocalLocation] = useState(location);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,7 +80,7 @@ export function ComplaintFilters({
         debounceTimerRef.current = setTimeout(() => {
             setLocation(localLocation);
         }, 500);
-        
+
         return () => {
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
@@ -166,17 +173,19 @@ export function ComplaintFilters({
             {/* Category */}
             <div className="space-y-2">
                 <Label htmlFor="category" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Category
+                    {t("category")}
                 </Label>
                 <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger id="category" className="w-full">
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t("selectCategory")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="corruption">Corruption</SelectItem>
-                        <SelectItem value="misconduct">Misconduct</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="all">{t("allCategories")}</SelectItem>
+                        {COMPLAINT_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                                {locale === "ar" ? cat.nameAr : cat.name}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -184,11 +193,11 @@ export function ComplaintFilters({
             {/* Location */}
             <div className="space-y-2">
                 <Label htmlFor="location" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Location
+                    {t("location")}
                 </Label>
                 <Input
                     id="location"
-                    placeholder="Enter location"
+                    placeholder={t("enterLocation")}
                     value={localLocation}
                     onChange={(e) => setLocalLocation(e.target.value)}
                     className="w-full"
@@ -198,16 +207,16 @@ export function ComplaintFilters({
             {/* Submission Type */}
             <div className="space-y-2">
                 <Label htmlFor="mode" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Submission Type
+                    {t("submissionType")}
                 </Label>
                 <Select value={submissionMode} onValueChange={setSubmissionMode}>
                     <SelectTrigger id="mode" className="w-full">
-                        <SelectValue placeholder="All types" />
+                        <SelectValue placeholder={t("allTypes")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="anonymous">Anonymous</SelectItem>
-                        <SelectItem value="public">Identified</SelectItem>
+                        <SelectItem value="all">{t("allTypes")}</SelectItem>
+                        <SelectItem value="anonymous">{tModes("anonymous")}</SelectItem>
+                        <SelectItem value="public">{tModes("identified")}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -215,17 +224,17 @@ export function ComplaintFilters({
             {/* Directed To */}
             <div className="space-y-2">
                 <Label htmlFor="directTo" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Directed To
+                    {tDirected("label")}
                 </Label>
                 <Select value={directedToType} onValueChange={setDirectedToType}>
                     <SelectTrigger id="directTo" className="w-full">
-                        <SelectValue placeholder="Select target (optional)" />
+                        <SelectValue placeholder={tDirected("notSpecified")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="none">Not Specified</SelectItem>
-                        <SelectItem value="ministry">Ministry</SelectItem>
-                        <SelectItem value="governorate">Governorate</SelectItem>
-                        <SelectItem value="center">Center / Township</SelectItem>
+                        <SelectItem value="none">{tDirected("notSpecified")}</SelectItem>
+                        <SelectItem value="ministry">{tDirected("ministry")}</SelectItem>
+                        <SelectItem value="governorate">{tDirected("governorate")}</SelectItem>
+                        <SelectItem value="center">{tDirected("center")}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -234,16 +243,16 @@ export function ComplaintFilters({
             {directedToType === "ministry" && (
                 <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Ministry
+                        {tDirected("ministry")}
                     </Label>
                     <Select value={directedToMinistry} onValueChange={onChangeDirectedTo}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a ministry" />
+                            <SelectValue placeholder={tDirected("selectMinistry")} />
                         </SelectTrigger>
                         <SelectContent>
                             {MINISTRIES.map((ministry) => (
                                 <SelectItem key={ministry.id} value={ministry.id}>
-                                    {ministry.name}
+                                    {locale === "ar" ? ministry.nameAr : ministry.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -255,16 +264,16 @@ export function ComplaintFilters({
             {directedToType === "governorate" && (
                 <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Governorate
+                        {tDirected("governorate")}
                     </Label>
                     <Select value={directedToGovernorate} onValueChange={onChangeDirectedTo}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a governorate" />
+                            <SelectValue placeholder={tDirected("selectGovernorate")} />
                         </SelectTrigger>
                         <SelectContent>
                             {GOVERNORATES.map((gov) => (
                                 <SelectItem key={gov.id} value={gov.id}>
-                                    {gov.name} ({gov.nameAr})
+                                    {locale === "ar" ? gov.nameAr : gov.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -276,16 +285,16 @@ export function ComplaintFilters({
             {directedToType === "center" && (
                 <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Center
+                        {tDirected("center")}
                     </Label>
                     <Select value={directedToCenter} onValueChange={onChangeDirectedTo}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a center" />
+                            <SelectValue placeholder={tDirected("selectCenter")} />
                         </SelectTrigger>
                         <SelectContent>
                             {GOVERNORATES.map((gov) => (
                                 <SelectItem key={gov.id} value={gov.id}>
-                                    {gov.name} ({gov.nameAr})
+                                    {locale === "ar" ? gov.nameAr : gov.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -296,7 +305,7 @@ export function ComplaintFilters({
             {/* Date Range */}
             <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Date Range
+                    {t("dateRange")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                     <Popover>
@@ -309,7 +318,7 @@ export function ComplaintFilters({
                                 )}
                             >
                                 <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
-                                <span className="truncate">{dateFrom ? format(dateFrom, "MMM d, yy") : "From"}</span>
+                                <span className="truncate">{dateFrom ? format(dateFrom, "MMM d, yy") : t("from")}</span>
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
@@ -331,7 +340,7 @@ export function ComplaintFilters({
                                 )}
                             >
                                 <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
-                                <span className="truncate">{dateTo ? format(dateTo, "MMM d, yy") : "To"}</span>
+                                <span className="truncate">{dateTo ? format(dateTo, "MMM d, yy") : t("to")}</span>
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
@@ -354,7 +363,7 @@ export function ComplaintFilters({
                     onClick={clearFilters}
                 >
                     <X className="h-4 w-4 mr-2" />
-                    Clear Filters ({activeFilterCount})
+                    {t("clearFilters")} ({activeFilterCount})
                 </Button>
             )}
         </>
@@ -368,7 +377,7 @@ export function ComplaintFilters({
                 <div className="relative mb-4">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search complaints..."
+                        placeholder={t("searchPlaceholder")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-8"
@@ -379,10 +388,10 @@ export function ComplaintFilters({
                 <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm p-4 space-y-4">
                     <div className="flex items-center gap-2 pb-2 border-b border-border">
                         <Filter className="h-4 w-4 text-primary" />
-                        <h3 className="font-medium text-sm">Filters</h3>
+                        <h3 className="font-medium text-sm">{t("filters")}</h3>
                         {activeFilterCount > 0 && (
                             <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                                {activeFilterCount} active
+                                {activeFilterCount} {t("active")}
                             </span>
                         )}
                     </div>
@@ -399,7 +408,7 @@ export function ComplaintFilters({
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search complaints..."
+                        placeholder={t("searchPlaceholder")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-8 min-w-52"
@@ -410,7 +419,7 @@ export function ComplaintFilters({
                         <PopoverTrigger asChild>
                             <Button variant="outline" className="gap-2" size={'lg'}>
                                 <Filter className="h-4 w-4" />
-                                Filters
+                                {t("filters")}
                                 {activeFilterCount > 0 && (
                                     <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
                                         {activeFilterCount}
@@ -421,9 +430,9 @@ export function ComplaintFilters({
                         <PopoverContent className="w-80">
                             <div className="grid gap-4">
                                 <div className="space-y-2">
-                                    <h4 className="font-medium leading-none">Filters</h4>
+                                    <h4 className="font-medium leading-none">{t("filters")}</h4>
                                     <p className="text-sm text-muted-foreground">
-                                        Refine your search results.
+                                        {t("refineSearch")}
                                     </p>
                                 </div>
                                 <div className="grid gap-3">

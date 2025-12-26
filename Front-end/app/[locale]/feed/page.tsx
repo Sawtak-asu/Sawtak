@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
 import { AlertCircle, RefreshCw, FileText, Shield, Eye, Loader2, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { GridBackground } from "@/components/grid-background";
 import {
     Sheet,
@@ -19,6 +19,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { type DirectedTo } from "@/lib/egypt-locations";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -79,6 +80,8 @@ export default function FeedPage() {
     const [location, setLocation] = useState("");
     const [sort, setSort] = useState("newest");
     const { user } = useAuth();
+    const t = useTranslations("Feed");
+    const tCommon = useTranslations("Common");
 
     const ITEMS_PER_PAGE = 10;
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -165,14 +168,14 @@ export default function FeedPage() {
             <Navbar />
 
             {/* Header Section */}
-            <div className="border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-15 z-40">
+            <div className="border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-15 z-40" dir="ltr">
                 <div className="container max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-1.5 rounded-lg bg-primary/10">
                                 <Eye className="h-4 w-4 text-primary" />
                             </div>
-                            <h1 className="text-lg font-semibold tracking-tight">Public Feed</h1>
+                            <h1 className="text-lg font-semibold tracking-tight">{t("title")}</h1>
                             <span className="text-muted-foreground">|</span>
                             <Button
                                 variant="ghost"
@@ -189,15 +192,15 @@ export default function FeedPage() {
                             <Sheet>
                                 <SheetTrigger asChild>
                                     <Button variant="outline" size="sm">
-                                        <Filter className="h-4 w-4 mr-2" />
-                                        Filters
+                                        <Filter className="h-4 w-4 me-2" />
+                                        {t("filters")}
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="left" className="w-80 overflow-y-auto">
                                     <SheetHeader>
                                         <SheetTitle className="flex items-center gap-2">
                                             <Shield className="h-4 w-4" />
-                                            Filters
+                                            {t("filters")}
                                         </SheetTitle>
                                     </SheetHeader>
                                     <div className="mt-6">
@@ -214,7 +217,7 @@ export default function FeedPage() {
             </div>
 
             {/* Main Content with Sidebar */}
-            <div className="container max-w-7xl mx-auto px-6 py-6">
+            <div className="container max-w-7xl mx-auto px-6 py-6" dir="ltr">
                 <div className="flex gap-8">
                     {/* Sidebar Filters - Hidden on mobile, visible on md+ */}
                     <aside className="hidden md:block w-72 shrink-0">
@@ -237,12 +240,12 @@ export default function FeedPage() {
                         ) : isError ? (
                             <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card/50">
                                 <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-                                <h3 className="text-lg font-medium">Failed to load complaints</h3>
+                                <h3 className="text-lg font-medium">{t("failedToLoad")}</h3>
                                 <p className="text-sm text-muted-foreground mb-4">
                                     {(error as Error)?.message || "Please try again later."}
                                 </p>
                                 <Button onClick={() => refetch()}>
-                                    Try Again
+                                    {tCommon("tryAgain")}
                                 </Button>
                             </div>
                         ) : allComplaints.length === 0 ? (
@@ -250,14 +253,14 @@ export default function FeedPage() {
                                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                                     <FileText className="h-8 w-8 text-muted-foreground" />
                                 </div>
-                                <h3 className="text-lg font-medium">No complaints found</h3>
+                                <h3 className="text-lg font-medium">{t("noResults")}</h3>
                                 <p className="text-sm text-muted-foreground mb-4">
                                     {search || category !== "all" || location
-                                        ? "Try adjusting your filters."
-                                        : "Be the first to file a complaint!"}
+                                        ? t("noResultsHint")
+                                        : t("beFirst")}
                                 </p>
                                 <Button asChild>
-                                    <Link href="/file-complaint">File a Complaint</Link>
+                                    <Link href="/file-complaint">{tCommon("fileComplaint")}</Link>
                                 </Button>
                             </div>
                         ) : (
@@ -271,12 +274,12 @@ export default function FeedPage() {
                                     {isFetchingNextPage ? (
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <Loader2 className="h-5 w-5 animate-spin" />
-                                            <span className="text-sm">Loading more...</span>
+                                            <span className="text-sm">{t("loadingMore")}</span>
                                         </div>
                                     ) : hasNextPage ? (
                                         <div className="h-8" />
                                     ) : allComplaints.length > 0 ? (
-                                        <p className="text-sm text-muted-foreground">You've reached the end</p>
+                                        <p className="text-sm text-muted-foreground">{t("endOfResults")}</p>
                                     ) : null}
                                 </div>
                             </div>
@@ -290,7 +293,7 @@ export default function FeedPage() {
                 <Button asChild size="icon" className="h-14 w-14 rounded-full shadow-xl hover:shadow-2xl transition-all bg-primary text-primary-foreground border-2 border-background">
                     <Link href="/file-complaint">
                         <Plus className="h-6 w-6" />
-                        <span className="sr-only">File Complaint</span>
+                        <span className="sr-only">{tCommon("fileComplaint")}</span>
                     </Link>
                 </Button>
             </div>

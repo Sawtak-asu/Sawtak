@@ -1,42 +1,30 @@
+"use client";
+
 import { Logo } from '@/components/logo'
 import { Github, Linkedin } from 'lucide-react'
-import Link from 'next/link'
-
-const links = [
-    {
-        title: 'Home',
-        href: '/',
-    },
-    {
-        title: 'File Complaint',
-        href: '/file-complaint',
-    },
-    {
-        title: 'Track Status',
-        href: '/track',
-    },
-    {
-        title: 'Public Feed',
-        href: '/feed',
-    },
-    {
-        title: 'Documentation',
-        href: '/docs',
-    },
-    {
-        title: 'Privacy Policy',
-        href: '/privacy-policy',
-    },
-]
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function FooterSection() {
+    const t = useTranslations('Footer');
+
+    const links = [
+        { title: t('home'), href: '/' },
+        { title: t('fileComplaint'), href: '/file-complaint' },
+        { title: t('trackStatus'), href: '/track' },
+        { title: t('publicFeed'), href: '/feed' },
+        { title: t('documentation'), href: '/docs' },
+        { title: t('privacyPolicy'), href: '/privacy-policy' },
+    ];
+
     return (
         <footer className="py-16 md:py-32">
             <div className="mx-auto max-w-5xl px-6">
                 <Link
                     href="/"
                     aria-label="go home"
-                    className="mx-auto block size-fit">
+                    className="mx-auto block size-fit"
+                    dir="ltr">
                     <Logo />
                 </Link>
 
@@ -51,26 +39,26 @@ export default function FooterSection() {
                     ))}
                 </div>
                 <div className="my-8 flex flex-wrap justify-center gap-6 text-sm">
-                    <Link
+                    <a
                         href="https://www.linkedin.com/company/wearemasons/"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="LinkedIn"
                         className="text-muted-foreground hover:text-primary block">
                         <Linkedin />
-                    </Link>
-                    <Link
+                    </a>
+                    <a
                         href="https://github.com/Sawtak-asu"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Github"
                         className="text-muted-foreground hover:text-primary block">
                         <Github />
-                    </Link>
-
-
+                    </a>
                 </div>
-                <span className="text-muted-foreground block text-center text-sm"> © {new Date().getFullYear()} Sawtak, All rights reserved</span>
+                <span className="text-muted-foreground block text-center text-sm">
+                    {t('copyright', { year: new Date().getFullYear() })}
+                </span>
             </div>
         </footer>
     )

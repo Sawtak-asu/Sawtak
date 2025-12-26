@@ -8,10 +8,12 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GridBackground } from "@/components/grid-background";
 import { Shield, Lock, FileText, CheckCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function ComplaintPage() {
   const { isLoggedIn, isLoading } = useAuth();
   const router = useRouter();
+  const t = useTranslations("FileComplaint");
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -50,10 +52,10 @@ export default function ComplaintPage() {
             <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-md shadow-sm">
               <FileText className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">File a Complaint</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           </div>
           <p className="mt-4 text-md text-muted-foreground font-mono leading-relaxed">
-            Your voice matters. Submit a complaint securely and help build a more transparent and accountable society.
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -64,19 +66,19 @@ export default function ComplaintPage() {
           <div className="">
             <div className="lg:col-span-1 space-y-6 h-fit sticky top-24">
               <div className="rounded-xl border bg-card p-6">
-                <h2 className="font-semibold mb-4">What to include</h2>
+                <h2 className="font-semibold mb-4">{t("whatToInclude")}</h2>
                 <ul className="space-y-3 text-sm text-muted-foreground">
                   <li className="flex gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                    <span>Clear description of the incident</span>
+                    <span>{t("include1")}</span>
                   </li>
                   <li className="flex gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                    <span>Date and location details</span>
+                    <span>{t("include2")}</span>
                   </li>
                   <li className="flex gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                    <span>Supporting evidence if available</span>
+                    <span>{t("include3")}</span>
                   </li>
                 </ul>
               </div>
@@ -84,26 +86,23 @@ export default function ComplaintPage() {
               <div className="rounded-xl border bg-card p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Shield className="h-5 w-5 text-primary" />
-                  <h2 className="font-semibold">Our Commitment</h2>
+                  <h2 className="font-semibold">{t("commitment")}</h2>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable.
-                  Whether you choose to be anonymous or identified, your voice is protected.
+                  {t("commitmentText")}
                 </p>
               </div>
 
               <div className="rounded-xl border bg-card p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Lock className="h-5 w-5 text-primary" />
-                  <h2 className="font-semibold">Privacy</h2>
+                  <h2 className="font-semibold">{t("privacyTitle")}</h2>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  <strong>Anonymous mode:</strong> Your identity is encrypted and
-                  stored on the blockchain. You'll receive a tracking code.
+                  <strong>{t("anonymousMode")}</strong> {t("anonymousModeText")}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  <strong>Identified mode:</strong> Your complaint is linked to
-                  your account for direct follow-up.
+                  <strong>{t("identifiedMode")}</strong> {t("identifiedModeText")}
                 </p>
               </div>
             </div>

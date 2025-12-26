@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface HaweyaSignInButtonProps {
   className?: string;
@@ -13,13 +14,14 @@ interface HaweyaSignInButtonProps {
 export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("Auth");
 
   const handleHaweyaLogin = async () => {
     const haweyaUrl = process.env.NEXT_PUBLIC_HAWEYA_URL;
     const clientId = process.env.NEXT_PUBLIC_HAWEYA_CLIENT_ID;
-    
+
     if (!haweyaUrl || !clientId) {
-      toast.error("Haweya Sign-In is not configured");
+      toast.error(t("notConfigured", { provider: "Haweya" }));
       console.error("Missing NEXT_PUBLIC_HAWEYA_URL or NEXT_PUBLIC_HAWEYA_CLIENT_ID");
       return;
     }
@@ -31,7 +33,7 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       const redirectUri = `${window.location.origin}/auth/haweya/callback`;
       const scope = "openid profile email";
       const state = crypto.randomUUID(); // CSRF protection
-      
+
       // Store state for verification after redirect
       sessionStorage.setItem("haweya_oauth_state", state);
 
@@ -55,7 +57,7 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       );
 
       if (!popup) {
-        toast.error("Popup blocked. Please allow popups for this site.");
+        toast.error(t("popupBlocked"));
         setIsLoading(false);
         return;
       }
@@ -64,17 +66,17 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       const handleMessage = async (event: MessageEvent) => {
         // Verify origin
         if (event.origin !== window.location.origin) return;
-        
+
         if (event.data.type === "haweya-oauth-success") {
           window.removeEventListener("message", handleMessage);
-          
+
           const { token, user } = event.data;
           login(token, user);
-          toast.success(`Welcome, ${user.name || user.email}!`);
+          toast.success(t("welcome", { name: user.name || user.email }));
           setIsLoading(false);
         } else if (event.data.type === "haweya-oauth-error") {
           window.removeEventListener("message", handleMessage);
-          toast.error(event.data.error || "Haweya sign-in failed");
+          toast.error(event.data.error || t("signInFailed", { provider: "Haweya" }));
           setIsLoading(false);
         }
       };
@@ -92,7 +94,7 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
 
     } catch (error) {
       console.error("Haweya sign-in error:", error);
-      toast.error("An error occurred during sign-in");
+      toast.error(t("errorDuringSignIn"));
       setIsLoading(false);
     }
   };
@@ -108,15 +110,15 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       {isLoading ? (
         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
       ) : (
-        <Image 
-          src="/haweya.webp" 
-          alt="Haweya" 
-          width={20} 
-          height={20} 
+        <Image
+          src="/haweya.webp"
+          alt="Haweya"
+          width={20}
+          height={20}
           className="w-5 h-5"
         />
       )}
-      {isLoading ? "Signing in..." : "Continue with Haweya"}
+      {isLoading ? t("signingIn") : t("continueWithHaweya")}
     </Button>
   );
 }

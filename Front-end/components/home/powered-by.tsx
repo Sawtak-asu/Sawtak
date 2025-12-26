@@ -5,54 +5,48 @@ import { motion } from "motion/react";
 import { ArrowUpRight, Lock, Zap, Database, Shield, Cloud, Fingerprint } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 const poweredByTech = [
     {
-        name: "Hedera Hashgraph",
+        key: "hedera",
         icon: Lock,
         iconColor: "text-purple-400",
-        description: "Enterprise-grade public distributed ledger technology. Immutable record-keeping with 10,000+ TPS and carbon-negative operations.",
         link: "https://hedera.com"
     },
     {
-        name: "Bun & Elysia",
+        key: "bun",
         icon: Zap,
         iconColor: "text-amber-400",
-        description: "Blazing-fast JavaScript runtime and type-safe framework. Up to 18x faster than Node.js with end-to-end type safety.",
         link: "https://bun.sh"
     },
     {
-        name: "IPFS",
+        key: "ipfs",
         icon: Cloud,
         iconColor: "text-cyan-400",
-        description: "Decentralized, content-addressed file storage. Censorship-resistant evidence preservation with cryptographic verification.",
         link: "https://ipfs.tech"
     }
 ];
 
 const additionalTech = [
     {
-        name: "AES-256 Encryption",
+        key: "aes",
         icon: Shield,
         iconColor: "text-green-400",
-        description: "Military-grade encryption for all sensitive data. Your information is protected at rest and in transit."
     },
     {
-        name: "PostgreSQL",
+        key: "postgres",
         icon: Database,
         iconColor: "text-blue-400",
-        description: "Enterprise relational database for fast querying and reliable data indexing of blockchain records."
     },
     {
-        name: "Haweya Integration",
+        key: "haweya",
         icon: Fingerprint,
         iconColor: "text-pink-400",
-        description: "National ID verification for identified submissions. Secure government-grade identity verification."
     }
 ];
 
 function CircuitLines() {
-    // Define paths for animated dots to follow
     const leftPaths = [
         { id: "path-l1", d: "M0 100 H250 L270 100", delay: 0 },
         { id: "path-l2", d: "M50 60 H200 L250 100", delay: 0.5 },
@@ -73,7 +67,6 @@ function CircuitLines() {
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="xMidYMid meet"
         >
-            {/* Left circuit lines - static paths */}
             {leftPaths.map((path) => (
                 <motion.path
                     key={path.id}
@@ -87,7 +80,6 @@ function CircuitLines() {
                 />
             ))}
 
-            {/* Right circuit lines - static paths */}
             {rightPaths.map((path) => (
                 <motion.path
                     key={path.id}
@@ -101,13 +93,9 @@ function CircuitLines() {
                 />
             ))}
 
-            {/* Animated flowing dots on left paths */}
-            {leftPaths.map((path, index) => (
+            {leftPaths.map((path) => (
                 <React.Fragment key={`dot-${path.id}`}>
-                    {/* Hidden path for motion reference */}
                     <path id={path.id} d={path.d} fill="none" />
-
-                    {/* Glowing animated dot */}
                     <motion.circle
                         r="4"
                         fill="url(#dot-gradient)"
@@ -129,8 +117,6 @@ function CircuitLines() {
                             <mpath href={`#${path.id}`} />
                         </animateMotion>
                     </motion.circle>
-
-                    {/* Trail effect - secondary dot */}
                     <motion.circle
                         r="2"
                         fill="currentColor"
@@ -155,13 +141,9 @@ function CircuitLines() {
                 </React.Fragment>
             ))}
 
-            {/* Animated flowing dots on right paths */}
             {rightPaths.map((path) => (
                 <React.Fragment key={`dot-${path.id}`}>
-                    {/* Hidden path for motion reference */}
                     <path id={path.id} d={path.d} fill="none" />
-
-                    {/* Glowing animated dot */}
                     <motion.circle
                         r="4"
                         fill="url(#dot-gradient)"
@@ -183,8 +165,6 @@ function CircuitLines() {
                             <mpath href={`#${path.id}`} />
                         </animateMotion>
                     </motion.circle>
-
-                    {/* Trail effect */}
                     <motion.circle
                         r="2"
                         fill="currentColor"
@@ -209,7 +189,6 @@ function CircuitLines() {
                 </React.Fragment>
             ))}
 
-            {/* Static endpoint dots with pulse animation */}
             {[
                 { cx: 50, cy: 60 },
                 { cx: 80, cy: 140 },
@@ -219,7 +198,6 @@ function CircuitLines() {
                 { cx: 800, cy: 100 },
             ].map((dot, i) => (
                 <React.Fragment key={`endpoint-${i}`}>
-                    {/* Pulse ring */}
                     <motion.circle
                         cx={dot.cx}
                         cy={dot.cy}
@@ -236,7 +214,6 @@ function CircuitLines() {
                             delay: i * 0.3,
                         }}
                     />
-                    {/* Static dot */}
                     <motion.circle
                         cx={dot.cx}
                         cy={dot.cy}
@@ -251,7 +228,6 @@ function CircuitLines() {
                 </React.Fragment>
             ))}
 
-            {/* Center connection points - where lines meet the chip */}
             {[
                 { cx: 270, cy: 100 },
                 { cx: 530, cy: 100 },
@@ -283,14 +259,11 @@ function CircuitLines() {
             ))}
 
             <defs>
-                {/* Radial gradient for glowing dot */}
                 <radialGradient id="dot-gradient">
                     <stop offset="0%" stopColor="white" stopOpacity="1" />
                     <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
                     <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
                 </radialGradient>
-
-                {/* Glow filter */}
                 <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                     <feMerge>
@@ -305,32 +278,29 @@ function CircuitLines() {
 
 
 function TechCard({
-    name,
+    techKey,
     icon: Icon,
     iconColor,
-    description,
     link,
     index
 }: {
-    name: string;
+    techKey: string;
     icon: typeof Lock;
     iconColor: string;
-    description: string;
     link?: string;
     index: number;
 }) {
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
+    const t = useTranslations("PoweredBy.tech");
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Generate pseudo-random values based on index for consistent randomization
-    const randomDuration = 5 + (index * 0.5) % 2; // Duration between 5-7 seconds
-    const randomStartAngle = (index * 137) % 360; // Golden angle distribution for varied starting points
+    const randomDuration = 5 + (index * 0.5) % 2;
+    const randomStartAngle = (index * 137) % 360;
 
-    // Border colors for light and dark mode (default to dark mode colors during SSR)
     const isDark = !mounted || resolvedTheme === "dark";
     const borderColor = isDark
         ? "rgba(255,255,255,0.8)"
@@ -347,9 +317,7 @@ function TechCard({
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="group relative h-full flex items-center justify-center"
         >
-            {/* Animated border container */}
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                {/* Spinning line */}
                 <motion.div
                     className="absolute w-[200%] h-[200%] top-[-55%] left-[-55%]"
                     style={{
@@ -364,27 +332,22 @@ function TechCard({
                 />
             </div>
 
-            {/* Static border fallback */}
             <div className="absolute inset-0 rounded-2xl border border-border/30 pointer-events-none" />
 
-            {/* Card content with solid background */}
             <div className="relative h-[calc(100%-2px)] mx-px p-6 rounded-[14px] bg-card backdrop-blur-sm transition-all duration-300">
-                {/* Icon */}
                 <div className="relative mb-4">
                     <Icon className={`relative h-10 w-10 ${iconColor} group-hover:scale-110 transition-transform duration-300`} strokeWidth={1.5} />
                 </div>
 
-                {/* Title with link arrow */}
                 <h3 className="relative text-lg font-semibold mb-2 flex items-center gap-2 group-hover:text-primary transition-colors">
-                    {name}
+                    {t(`${techKey}.name`)}
                     {link && (
                         <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                     )}
                 </h3>
 
-                {/* Description */}
                 <p className="relative text-sm text-muted-foreground leading-relaxed">
-                    {description}
+                    {t(`${techKey}.description`)}
                 </p>
             </div>
         </motion.div>
@@ -402,10 +365,11 @@ function TechCard({
 }
 
 export function PoweredBy() {
+    const t = useTranslations("PoweredBy");
+
     return (
-        <section className="py-24 md:py-32 relative overflow-hidden">
+        <section dir="ltr" className="py-24 md:py-32 relative overflow-hidden">
             <div className="mx-auto max-w-6xl px-6">
-                {/* Heading */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -414,17 +378,15 @@ export function PoweredBy() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                        Built on a foundation of{" "}
-                        <span className="text-primary">secure</span>,{" "}
-                        <span className="text-primary">decentralized</span> tech
+                        {t("title1")}{" "}
+                        <span className="text-primary">{t("secure")}</span>,{" "}
+                        <span className="text-primary">{t("decentralized")}</span> {t("title2")}
                     </h2>
                 </motion.div>
 
-                {/* Circuit diagram with Powered By badge */}
                 <div className="relative h-48 md:h-56 mb-16">
                     <CircuitLines />
 
-                    {/* Central "Powered By" chip */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         whileInView={{ opacity: 1, scale: 1 }}
@@ -433,43 +395,37 @@ export function PoweredBy() {
                         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                     >
                         <div className="relative">
-                            {/* Chip border */}
                             <div className="absolute -inset-3 border border-border rounded-lg" />
                             <div className="absolute -inset-6 border border-border/80 rounded-xl" />
 
-                            {/* Chip pins - top */}
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex gap-2">
                                 {[...Array(5)].map((_, i) => (
                                     <div key={i} className="w-1.5 h-3 bg-primary/50 rounded-full" />
                                 ))}
                             </div>
 
-                            {/* Chip pins - bottom */}
                             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
                                 {[...Array(5)].map((_, i) => (
                                     <div key={i} className="w-1.5 h-3 bg-primary/50 rounded-full" />
                                 ))}
                             </div>
 
-                            {/* Main badge */}
-                            <div className="px-6 py-3 bg-card border border-border rounded-lg shadow-2xl">
-                                <span className="text-sm font-medium text-muted-foreground">Powered By</span>
+                            <div className="px-8 py-3 bg-card border border-border rounded-lg shadow-2xl">
+                                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{t("badge")}</span>
                             </div>
                         </div>
                     </motion.div>
                 </div>
 
-                {/* Primary tech cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                     {poweredByTech.map((tech, index) => (
-                        <TechCard key={tech.name} {...tech} index={index} />
+                        <TechCard key={tech.key} techKey={tech.key} icon={tech.icon} iconColor={tech.iconColor} link={tech.link} index={index} />
                     ))}
                 </div>
 
-                {/* Secondary tech cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     {additionalTech.map((tech, index) => (
-                        <TechCard key={tech.name} {...tech} index={index + 3} />
+                        <TechCard key={tech.key} techKey={tech.key} icon={tech.icon} iconColor={tech.iconColor} index={index + 3} />
                     ))}
                 </div>
             </div>
