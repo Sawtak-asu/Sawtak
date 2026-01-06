@@ -5,16 +5,16 @@ import { Navbar } from "@/components/navbar";
 import { GridBackground } from "@/components/grid-background";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
-  Shield, 
-  Lock, 
-  Database, 
-  Hash, 
-  FileText, 
-  ChevronRight, 
-  Server, 
-  Key, 
-  Globe 
+import {
+  Shield,
+  Lock,
+  Database,
+  Hash,
+  FileText,
+  ChevronRight,
+  Server,
+  Key,
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,40 @@ export default function DocsPage() {
     { id: "faq", title: "FAQ", icon: Database },
   ];
 
+  // Scroll spy: update active section based on scroll position
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-20% 0px -70% 0px", // Trigger when section is in the upper third of viewport
+        threshold: 0,
+      }
+    );
+
+    // Observe all sections
+    sections.forEach((section) => {
+      const element = document.getElementById(section.id);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => {
+      sections.forEach((section) => {
+        const element = document.getElementById(section.id);
+        if (element) {
+          observer.unobserve(element);
+        }
+      });
+    };
+  }, []);
+
   const scrollToSection = (id: string) => {
     setActiveSection(id);
     const element = document.getElementById(id);
@@ -40,7 +74,7 @@ export default function DocsPage() {
   return (
     <GridBackground>
       <Navbar />
-      
+
       <div className="container max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Sidebar Navigation */}
@@ -69,11 +103,11 @@ export default function DocsPage() {
                   ))}
                 </nav>
               </div>
-              
+
               <div className="rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm">
                 <h4 className="font-medium text-sm mb-2">HCS Topic ID</h4>
                 <code className="block bg-muted p-2 rounded text-xs font-mono text-muted-foreground break-all">
-                  0.0.7303531 
+                  0.0.7303531
                 </code>
                 <p className="text-xs text-muted-foreground mt-2">
                   Use this ID to verify messages on any Hedera explorer.
@@ -85,7 +119,7 @@ export default function DocsPage() {
           {/* Main Content */}
           <main className="flex-1 min-w-0">
             <div className="space-y-16">
-              
+
               {/* Header */}
               <div className="border-b border-border/50 pb-8">
                 <h1 className="text-4xl font-bold tracking-tight mb-4">Sawtak Documentation</h1>
@@ -102,13 +136,13 @@ export default function DocsPage() {
                 </div>
                 <div className="prose prose-gray dark:prose-invert max-w-none">
                   <p className="text-lg leading-relaxed text-muted-foreground">
-                    Sawtak is a hybrid whistleblowing platform designed to balance 
-                    <span className="text-foreground font-medium"> absolute anonymity </span> 
+                    Sawtak is a hybrid whistleblowing platform designed to balance
+                    <span className="text-foreground font-medium"> absolute anonymity </span>
                     with <span className="text-foreground font-medium"> actionable accountability</span>.
                   </p>
                   <p className="text-muted-foreground">
-                    Unlike traditional reporting tools, Sawtak leverages the <strong>Hedera Hashgraph</strong> network 
-                    to create an immutable, public audit trail of anonymous complaints. This ensures that once a complaint 
+                    Unlike traditional reporting tools, Sawtak leverages the <strong>Hedera Hashgraph</strong> network
+                    to create an immutable, public audit trail of anonymous complaints. This ensures that once a complaint
                     is filed, it cannot be deleted or altered by anyone—not even system administrators.
                   </p>
                 </div>
@@ -116,7 +150,7 @@ export default function DocsPage() {
 
               {/* Architecture */}
               <section id="architecture" className="scroll-mt-24 space-y-6">
-                 <div className="flex items-center gap-2 text-primary mb-2">
+                <div className="flex items-center gap-2 text-primary mb-2">
                   <Server className="h-6 w-6" />
                   <h2 className="text-2xl font-semibold">How it Works</h2>
                 </div>
@@ -174,31 +208,31 @@ export default function DocsPage() {
 
               {/* Security */}
               <section id="security" className="scroll-mt-24 space-y-6">
-                 <div className="flex items-center gap-2 text-primary mb-2">
+                <div className="flex items-center gap-2 text-primary mb-2">
                   <Key className="h-6 w-6" />
                   <h2 className="text-2xl font-semibold">Encryption & Privacy</h2>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 p-8 backdrop-blur-sm">
                   <div className="grid gap-8 md:grid-cols-3">
                     <div className="space-y-2">
-                       <h3 className="font-medium text-foreground">Data at Rest</h3>
-                       <p className="text-sm text-muted-foreground">
-                         All sensitive fields in our database are encrypted using AES-256-GCM. 
-                         Database backups are also encrypted.
-                       </p>
+                      <h3 className="font-medium text-foreground">Data at Rest</h3>
+                      <p className="text-sm text-muted-foreground">
+                        All sensitive fields in our database are encrypted using AES-256-GCM.
+                        Database backups are also encrypted.
+                      </p>
                     </div>
                     <div className="space-y-2">
-                       <h3 className="font-medium text-foreground">Data in Transit</h3>
-                       <p className="text-sm text-muted-foreground">
-                         All traffic between your browser and our servers is secured via TLS 1.3. 
-                         We implement HSTS to prevent protocol downgrade attacks.
-                       </p>
+                      <h3 className="font-medium text-foreground">Data in Transit</h3>
+                      <p className="text-sm text-muted-foreground">
+                        All traffic between your browser and our servers is secured via TLS 1.3.
+                        We implement HSTS to prevent protocol downgrade attacks.
+                      </p>
                     </div>
                     <div className="space-y-2">
-                       <h3 className="font-medium text-foreground">Zero-Knowledge</h3>
-                       <p className="text-sm text-muted-foreground">
-                         For anonymous complaints, our servers do not log IP addresses or browser fingerprints associated with the submission.
-                       </p>
+                      <h3 className="font-medium text-foreground">Zero-Knowledge</h3>
+                      <p className="text-sm text-muted-foreground">
+                        For anonymous complaints, our servers do not log IP addresses or browser fingerprints associated with the submission.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -206,13 +240,13 @@ export default function DocsPage() {
 
               {/* Blockchain */}
               <section id="blockchain" className="scroll-mt-24 space-y-6">
-                 <div className="flex items-center gap-2 text-primary mb-2">
+                <div className="flex items-center gap-2 text-primary mb-2">
                   <Hash className="h-6 w-6" />
                   <h2 className="text-2xl font-semibold">Why Blockchain?</h2>
                 </div>
                 <div className="prose prose-gray dark:prose-invert max-w-none">
                   <p className="text-muted-foreground">
-                    We use the <strong>Hedera Consensus Service (HCS)</strong> as a public notary. 
+                    We use the <strong>Hedera Consensus Service (HCS)</strong> as a public notary.
                     When you submit an anonymous complaint, we publish a cryptographic hash of your message to a public "Topic" on Hedera.
                   </p>
                   <div className="my-6 rounded-lg bg-zinc-950 p-4 font-mono text-sm text-zinc-50 border border-zinc-800 overflow-x-auto">
@@ -221,7 +255,7 @@ export default function DocsPage() {
                       <span>Topic: 0.0.1234567</span>
                     </div>
                     <pre className="text-green-400">
-{`{
+                      {`{
   "timestamp": "2024-03-15T10:30:00.000Z",
   "sequenceNumber": 42,
   "message": {
@@ -233,8 +267,8 @@ export default function DocsPage() {
                     </pre>
                   </div>
                   <p className="text-muted-foreground">
-                    This proves that the complaint existed at that specific time and has not been altered since. 
-                    Anyone can verify this by checking the topic on a Hedera explorer like 
+                    This proves that the complaint existed at that specific time and has not been altered since.
+                    Anyone can verify this by checking the topic on a Hedera explorer like
                     <a href="https://hashscan.io/testnet/topic/0.0.7303531" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1 font-medium inline-flex items-center gap-1">
                       HashScan
                       <Globe className="h-3 w-3" />
@@ -253,23 +287,23 @@ export default function DocsPage() {
                   <div className="rounded-lg border border-border/50 bg-card/30 p-6">
                     <h3 className="font-medium text-lg mb-2">Why are anonymous complaints public?</h3>
                     <p className="text-muted-foreground">
-                      Anonymity implies that the <strong>identity</strong> is hidden, not necessarily the message. 
-                      By making the complaint content public and backed by the blockchain, we ensure <strong>transparency</strong>. 
+                      Anonymity implies that the <strong>identity</strong> is hidden, not necessarily the message.
+                      By making the complaint content public and backed by the blockchain, we ensure <strong>transparency</strong>.
                       It prevents the system (or authorities) from "burying" complaints. The public nature is the guarantee that your voice was heard.
                     </p>
                   </div>
                   <div className="rounded-lg border border-border/50 bg-card/30 p-6">
                     <h3 className="font-medium text-lg mb-2">Can I delete my complaint?</h3>
                     <p className="text-muted-foreground">
-                      <strong>Anonymous complaints cannot be deleted</strong> because they are recorded on the blockchain immutable ledger. 
+                      <strong>Anonymous complaints cannot be deleted</strong> because they are recorded on the blockchain immutable ledger.
                       Identified complaints can be withdrawn, but an audit log may remain for administrative purposes.
                     </p>
                   </div>
                   <div className="rounded-lg border border-border/50 bg-card/30 p-6">
                     <h3 className="font-medium text-lg mb-2">Is it truly anonymous?</h3>
                     <p className="text-muted-foreground">
-                      Yes. When you choose "Anonymous" mode, we do not require login, we do not store your IP address, 
-                      and we do not ask for any PII (Personally Identifiable Information). The tracking code you receive 
+                      Yes. When you choose "Anonymous" mode, we do not require login, we do not store your IP address,
+                      and we do not ask for any PII (Personally Identifiable Information). The tracking code you receive
                       is the only link to your report.
                     </p>
                   </div>
@@ -293,7 +327,7 @@ export default function DocsPage() {
 
             </div>
           </main>
-          
+
           {/* Right side TOC (Desktop) */}
           <div className="hidden xl:block w-64 flex-shrink-0">
             <div className="sticky top-24">
@@ -316,7 +350,7 @@ export default function DocsPage() {
               </nav>
             </div>
           </div>
-          
+
         </div>
       </div>
     </GridBackground>

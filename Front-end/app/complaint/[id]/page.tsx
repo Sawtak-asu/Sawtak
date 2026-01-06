@@ -12,27 +12,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
 import { formatDistanceToNow } from "date-fns";
-import { 
-    ArrowLeft, 
-    MapPin, 
-    Calendar, 
-    Hash, 
-    Globe, 
-    CheckCircle2, 
-    CircleDashed, 
-    FileText, 
-    Shield, 
-    Lock, 
-    Eye, 
-    Save, 
-    ArrowBigUp, 
-    MessageCircle, 
-    Share2, 
+import {
+    ArrowLeft,
+    MapPin,
+    Calendar,
+    Hash,
+    Globe,
+    CheckCircle2,
+    CircleDashed,
+    FileText,
+    Shield,
+    Lock,
+    Eye,
+    Save,
+    ArrowBigUp,
+    MessageCircle,
+    Share2,
     LogIn,
     AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -53,6 +55,7 @@ interface Complaint {
     text: string;
     category: string;
     area?: string;
+    directedTo?: DirectedTo;
     incidentDate?: string;
     createdAt: string;
     status?: string;
@@ -80,13 +83,13 @@ export default function ComplaintPage() {
     const router = useRouter();
     const { user, token, isLoggedIn } = useAuth();
     const queryClient = useQueryClient();
-    
+
     // URL-decode the ID to handle hashes with slashes
     const rawId = params.id as string;
     const complaintId = decodeURIComponent(rawId);
-    
+
     const isAdmin = user?.role?.toUpperCase() === "ADMIN";
-    
+
     const [newStatus, setNewStatus] = useState("submitted");
     const [statusNote, setStatusNote] = useState("");
     const [isUpdating, setIsUpdating] = useState(false);
@@ -101,6 +104,7 @@ export default function ComplaintPage() {
             // URL-encode the ID when sending to API to handle special characters
             const res = await fetch(`${API_URL}/api/feed/${encodeURIComponent(complaintId)}`);
             const json = await res.json();
+
             if (!json.success) throw new Error(json.error);
             return json.data as Complaint;
         },
@@ -111,12 +115,14 @@ export default function ComplaintPage() {
     const isAnonymous = complaint?.submissionMode === "anonymous";
     const canUpvote = complaint && !isAnonymous;
 
+    console.log(complaint);
+
     // Check vote status when complaint loads (same pattern as complaint-card)
     useEffect(() => {
         if (!complaint) return;
-        
+
         setNewStatus(complaint.status || "submitted");
-        
+
         // For public complaints, fetch vote status
         if (!isAnonymous && isLoggedIn && token) {
             const checkVoteStatus = async () => {
@@ -156,7 +162,7 @@ export default function ComplaintPage() {
 
     const handleUpvote = useCallback(async () => {
         if (!complaint) return;
-        
+
         if (!isLoggedIn || !token) {
             setShowLoginDialog(true);
             return;
@@ -176,12 +182,12 @@ export default function ComplaintPage() {
             });
 
             const data = await res.json();
-            
+
             if (data.requiresLogin) {
                 setShowLoginDialog(true);
                 return;
             }
-            
+
             if (data.success) {
                 setLocalUpvotes(data.data.voteCount);
                 setHasVoted(data.data.hasVoted);
@@ -269,7 +275,7 @@ export default function ComplaintPage() {
     return (
         <GridBackground>
             <Navbar />
-            
+
             {/* Login Dialog */}
             <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
                 <DialogContent className="sm:max-w-md">
@@ -304,16 +310,23 @@ export default function ComplaintPage() {
                 </Button>
 
                 {/* Main Content */}
-                <article className="bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                <motion.article
+                    layoutId={`complaint-card-${complaint.id}`}
+                    layout
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+                >
                     {/* Header */}
                     <div className="p-4 pb-3 border-b border-white/5">
                         <div className="flex items-start gap-3">
-                            <Avatar className="h-12 w-12">
-                                <AvatarImage src={complaint.user?.picture ?? undefined} />
-                                <AvatarFallback>
-                                    {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
-                                </AvatarFallback>
-                            </Avatar>
+                            <motion.div layoutId={`complaint-avatar-${complaint.id}`}>
+                                <Avatar className="h-12 w-12">
+                                    <AvatarImage src={complaint.user?.picture ?? undefined} />
+                                    <AvatarFallback>
+                                        {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </motion.div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-semibold">
@@ -332,8 +345,8 @@ export default function ComplaintPage() {
                                         complaint.status === "resolved"
                                             ? "bg-green-500/10 text-green-400 border-green-500/20"
                                             : complaint.status === "investigating"
-                                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                                                ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                                                : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                                     )}>
                                         {complaint.status || "pending"}
                                     </Badge>
@@ -348,9 +361,12 @@ export default function ComplaintPage() {
                     {/* Content */}
                     <div className="p-4 space-y-4">
                         {/* Title */}
-                        <h1 className="text-xl font-bold leading-tight">
+                        <motion.h1
+                            layoutId={`complaint-title-${complaint.id}`}
+                            className="text-xl font-bold leading-tight"
+                        >
                             {complaint.title}
-                        </h1>
+                        </motion.h1>
 
                         {/* Description */}
                         <p className="text-base leading-relaxed whitespace-pre-wrap">
@@ -370,7 +386,7 @@ export default function ComplaintPage() {
                                     const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
                                     const isLast = i === 3 && allEvidence.length > 4;
                                     const remaining = allEvidence.length - 4;
-                                    
+
                                     return (
                                         <a
                                             key={i}
@@ -421,6 +437,12 @@ export default function ComplaintPage() {
                                 <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
                                     {new Date(complaint.incidentDate).toLocaleDateString()}
+                                </span>
+                            )}
+                            {complaint.directedTo && (complaint.directedTo.ministryId || complaint.directedTo.governorateId || complaint.directedTo.centerId) && (
+                                <span className="flex items-center gap-1 font-semibold">
+                                    <span>To: </span>
+                                    {complaint.directedTo.ministryId ? MINISTRIES.find((ministry) => ministry.id === complaint.directedTo?.ministryId)?.name : complaint.directedTo.governorateId ? GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.governorateId)?.name : GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.centerId)?.name}
                                 </span>
                             )}
                         </div>
@@ -553,7 +575,7 @@ export default function ComplaintPage() {
                             </div>
                         </div>
                     )}
-                </article>
+                </motion.article>
             </div>
         </GridBackground>
     );

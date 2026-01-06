@@ -41,7 +41,7 @@ export default function LoginPage() {
                         Report with confidence.
                     </h2>
                     <p className="text-muted-foreground text-lg leading-relaxed">
-                        Sawtak provides a secure platform for anonymous whistleblowing 
+                        Sawtak provides a secure platform for anonymous whistleblowing
                         with blockchain-verified submissions and end-to-end encryption.
                     </p>
                     <div className="mt-12 flex gap-8 text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ export default function LoginPage() {
                     {/* OAuth login buttons */}
                     <div className="space-y-3">
                         {/* DISABLED - Google Sign In */}
-                        {/* <GoogleSignInButton /> *
+                        {/* <GoogleSignInButton /> */}
                         {/* Haweya  (mock xD) */}
                         <HaweyaSignInButton />
                     </div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                                 Terms of Service
                             </Link>{' '}
                             and{' '}
-                            <Link href="/privacy" className="text-primary hover:underline">
+                            <Link href="/privacy-policy" className="text-primary hover:underline">
                                 Privacy Policy
                             </Link>
                         </p>

@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth-context";
+import { PageTransitionProvider } from "@/components/page-transition-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,7 @@ export default function RootLayout({
         <meta name="referrer" content="origin-when-cross-origin" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <ThemeProvider
@@ -53,7 +54,9 @@ export default function RootLayout({
               defaultTheme="system"
               enableSystem
               disableTransitionOnChange>
-              {children}
+              <PageTransitionProvider>
+                {children}
+              </PageTransitionProvider>
               <Toaster />
             </ThemeProvider>
           </AuthProvider>

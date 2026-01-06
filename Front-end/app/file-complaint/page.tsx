@@ -42,9 +42,9 @@ export default function ComplaintPage() {
   return (
     <GridBackground>
       <Navbar />
-      
+
       {/* Header */}
-      <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm">
+      <div className="border-b border-border/50 bg-background/50 backdrop-blur-sm ">
         <div className="container max-w-6xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-md shadow-sm">
@@ -61,52 +61,53 @@ export default function ComplaintPage() {
       <div className="container max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Info */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="rounded-xl border bg-card p-6">
-              <h2 className="font-semibold mb-4">What to include</h2>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Clear description of the incident</span>
-                </li>
-                <li className="flex gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Date and location details</span>
-                </li>
-                <li className="flex gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Supporting evidence if available</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-xl border bg-card p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold">Our Commitment</h2>
+          <div className="">
+            <div className="lg:col-span-1 space-y-6 h-fit sticky top-24">
+              <div className="rounded-xl border bg-card p-6">
+                <h2 className="font-semibold mb-4">What to include</h2>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Clear description of the incident</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Date and location details</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                    <span>Supporting evidence if available</span>
+                  </li>
+                </ul>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable. 
-                Whether you choose to be anonymous or identified, your voice is protected.
-              </p>
-            </div>
 
-            <div className="rounded-xl border bg-card p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Lock className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold">Privacy</h2>
+              <div className="rounded-xl border bg-card p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <h2 className="font-semibold">Our Commitment</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable.
+                  Whether you choose to be anonymous or identified, your voice is protected.
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                <strong>Anonymous mode:</strong> Your identity is encrypted and 
-                stored on the blockchain. You'll receive a tracking code.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                <strong>Identified mode:</strong> Your complaint is linked to 
-                your account for direct follow-up.
-              </p>
+
+              <div className="rounded-xl border bg-card p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lock className="h-5 w-5 text-primary" />
+                  <h2 className="font-semibold">Privacy</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Anonymous mode:</strong> Your identity is encrypted and
+                  stored on the blockchain. You'll receive a tracking code.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  <strong>Identified mode:</strong> Your complaint is linked to
+                  your account for direct follow-up.
+                </p>
+              </div>
             </div>
           </div>
-
           {/* Form */}
           <div className="lg:col-span-2">
             <div className="rounded-xl border bg-card p-6">

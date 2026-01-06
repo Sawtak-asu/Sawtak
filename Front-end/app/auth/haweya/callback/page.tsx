@@ -43,7 +43,8 @@ function CallbackContent() {
 
       try {
         // Exchange code for tokens via our backend
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        // const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = "http://localhost:8000";
         const redirectUri = `${window.location.origin}/auth/haweya/callback`;
 
         const response = await fetch(`${apiUrl}/api/auth/haweya/callback`, {
@@ -62,17 +63,17 @@ function CallbackContent() {
         if (data.success) {
           setStatus("success");
           setMessage("Sign-in successful! Closing...");
-          
+
           // Send success message to parent window
           window.opener?.postMessage(
-            { 
-              type: "haweya-oauth-success", 
-              token: data.data.token, 
-              user: data.data.user 
-            }, 
+            {
+              type: "haweya-oauth-success",
+              token: data.data.token,
+              user: data.data.user
+            },
             window.location.origin
           );
-          
+
           // Close popup after short delay
           setTimeout(() => window.close(), 1000);
         } else {
