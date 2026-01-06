@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useTransform, useSpring } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const timelineSteps = [
     {
@@ -75,7 +76,7 @@ const timelineSteps = [
             <div className="w-full p-4 bg-background border border-border rounded-lg flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-mono text-muted-foreground border-b border-border pb-2">
                     <span>HCS Topic 0.0.12345</span>
-                    <span className="flex items-center gap-1 text-green-600"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live</span>
+                    <span className="flex items-center gap-1 text-green-600"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />Live</span>
                 </div>
                 {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-3 text-xs font-mono p-1.5 bg-muted/50 rounded hover:bg-muted transition-colors">
@@ -101,7 +102,6 @@ const timelineSteps = [
                     <Server className="w-4 h-4 text-primary" />
                     <span className="text-xs font-bold">CID: QmXy...7z9</span>
                 </div>
-                {/* Orbiting nodes */}
                 <div className="absolute top-0 w-2 h-2 bg-primary rounded-full" />
                 <div className="absolute bottom-0 w-2 h-2 bg-primary/50 rounded-full" />
                 <div className="absolute left-0 w-2 h-2 bg-primary/30 rounded-full" />
@@ -135,11 +135,6 @@ const timelineSteps = [
 ];
 
 function ParallaxCard({ step, index, progress }: { step: typeof timelineSteps[0], index: number, progress: any }) {
-    // Parallax effect: Calculate a transform based on scroll progress
-    // Even items (Left) move differently than Odd items (Right) to create a "floating" detached feel
-    // We Map the global scroll progress of the container (0 to 1) to a Y pixel offset
-
-    // Adjust these range values to control the parallax intensity
     const yRange = index % 2 === 0 ? [50, -50] : [100, -100];
     const y = useTransform(progress, [0, 1], yRange);
 
@@ -155,12 +150,10 @@ function ParallaxCard({ step, index, progress }: { step: typeof timelineSteps[0]
                 index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
             )}
         >
-            {/* Center Node / Connector */}
             <div className="absolute left-8 md:left-1/2 w-4 h-4 bg-background border-4 border-primary rounded-full z-10 -translate-x-1/2 shadow-[0_0_0_4px_rgba(var(--background),1)]">
                 <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-75" />
             </div>
 
-            {/* Content Card */}
             <div className={cn(
                 "ml-16 md:ml-0 md:w-1/2 p-6 bg-background/80 backdrop-blur-sm border border-border/60 hover:border-primary/50 transition-colors rounded-2xl shadow-sm hover:shadow-xl duration-300",
                 index % 2 === 0 ? "md:mr-12" : "md:ml-12"
@@ -197,7 +190,6 @@ function ParallaxCard({ step, index, progress }: { step: typeof timelineSteps[0]
                 </div>
             </div>
 
-            {/* Empty spacer for opposite side to balance grid */}
             <div className="hidden md:block md:w-1/2" />
         </motion.div>
     );
@@ -205,29 +197,24 @@ function ParallaxCard({ step, index, progress }: { step: typeof timelineSteps[0]
 
 export function HowItWorks() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const t = useTranslations("HowItWorks");
 
-    // Track scroll progress of this specific section
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start end", "end start"]
     });
 
-    // Smooth out the scroll progress
     const smoothProgress = useSpring(scrollYProgress, {
         stiffness: 100,
         damping: 30,
         restDelta: 0.001
     });
 
-    // Map progress to the height of the central line
     const lineHeight = useTransform(smoothProgress, [0.1, 0.9], ["0%", "100%"]);
-
-    // Background Parallax
     const bgY = useTransform(smoothProgress, [0, 1], ["0%", "20%"]);
 
     return (
-        <section ref={containerRef} className="py-32 relative bg-zinc-50/50 dark:bg-background overflow-hidden border-t border-border">
-            {/* Dense Background Pattern with Parallax */}
+        <section dir="ltr" ref={containerRef} className="py-32 relative bg-zinc-50/50 dark:bg-background overflow-hidden border-t border-border">
             <motion.div
                 style={{ y: bgY }}
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -244,21 +231,19 @@ export function HowItWorks() {
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-primary text-xs font-medium mb-4"
                     >
                         <Terminal className="w-3 h-3" />
-                        SYSTEM ARCHITECTURE
+                        {t("badge")}
                     </motion.div>
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-                        The Logic Behind the Curtain
+                        {t("title")}
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        A step-by-step breakdown of how data flows through our secure pipeline.
+                        {t("subtitle")}
                     </p>
                 </div>
 
                 <div className="relative pb-24">
-                    {/* Central Connecting Tube Background */}
                     <div className="absolute left-8 md:left-1/2 top-4 bottom-4 w-1 bg-border/40 -translate-x-1/2 rounded-full" />
 
-                    {/* Central Connecting Tube Foreground (Animated) */}
                     <motion.div
                         style={{ height: lineHeight }}
                         className="absolute left-8 md:left-1/2 top-4 w-1 bg-linear-to-b from-primary via-primary/80 to-primary/20 -translate-x-1/2 rounded-full z-0 origin-top"

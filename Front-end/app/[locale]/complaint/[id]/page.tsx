@@ -46,6 +46,7 @@ import {
     DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
+import { useTranslations, useLocale } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -83,6 +84,13 @@ export default function ComplaintPage() {
     const router = useRouter();
     const { user, token, isLoggedIn } = useAuth();
     const queryClient = useQueryClient();
+    const t = useTranslations("ComplaintDetail");
+    const tCard = useTranslations("ComplaintCard");
+    const tCategories = useTranslations("Categories");
+    const tStatuses = useTranslations("Statuses");
+    const tModes = useTranslations("SubmissionModes");
+    const tDirected = useTranslations("DirectedTo");
+    const locale = useLocale();
 
     // URL-decode the ID to handle hashes with slashes
     const rawId = params.id as string;
@@ -114,8 +122,6 @@ export default function ComplaintPage() {
     const complaint = data;
     const isAnonymous = complaint?.submissionMode === "anonymous";
     const canUpvote = complaint && !isAnonymous;
-
-    console.log(complaint);
 
     // Check vote status when complaint loads (same pattern as complaint-card)
     useEffect(() => {
@@ -191,14 +197,14 @@ export default function ComplaintPage() {
             if (data.success) {
                 setLocalUpvotes(data.data.voteCount);
                 setHasVoted(data.data.hasVoted);
-                toast.success(data.data.hasVoted ? "Upvoted!" : "Vote removed");
+                toast.success(data.data.hasVoted ? t("upvoted") : t("voteRemoved"));
             }
         } catch (error) {
-            toast.error("Failed to vote");
+            toast.error(t("failedToVote"));
         } finally {
             setIsVoting(false);
         }
-    }, [complaint, token, isVoting, isLoggedIn, isAnonymous]);
+    }, [complaint, token, isVoting, isLoggedIn, isAnonymous, t]);
 
     const handleUpdateStatus = async () => {
         if (!token || !complaint) return;
@@ -215,12 +221,12 @@ export default function ComplaintPage() {
 
             if (!res.ok) throw new Error("Failed to update status");
 
-            toast.success("Status updated successfully");
+            toast.success(t("statusUpdated"));
             queryClient.invalidateQueries({ queryKey: ["complaint", complaintId] });
             queryClient.invalidateQueries({ queryKey: ["feed"] });
             setStatusNote("");
         } catch (error) {
-            toast.error("Failed to update status");
+            toast.error(t("failedToUpdateStatus"));
         } finally {
             setIsUpdating(false);
         }
@@ -228,7 +234,44 @@ export default function ComplaintPage() {
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
-        toast.success("Link copied!");
+        toast.success(tCard("linkCopied"));
+    };
+
+    // Get translated category
+    const getCategoryName = (categoryId: string) => {
+        try {
+            return tCategories(categoryId);
+        } catch {
+            return categoryId;
+        }
+    };
+
+    // Get translated status
+    const getStatusName = (status: string) => {
+        try {
+            return tStatuses(status);
+        } catch {
+            return status;
+        }
+    };
+
+    // Get directed to name
+    const getDirectedToName = () => {
+        if (!complaint?.directedTo) return null;
+        const { ministryId, governorateId, centerId } = complaint.directedTo;
+        if (ministryId) {
+            const ministry = MINISTRIES.find(m => m.id === ministryId);
+            return ministry ? (locale === "ar" ? ministry.nameAr : ministry.name) : null;
+        }
+        if (governorateId) {
+            const gov = GOVERNORATES.find(g => g.id === governorateId);
+            return gov ? (locale === "ar" ? gov.nameAr : gov.name) : null;
+        }
+        if (centerId) {
+            const gov = GOVERNORATES.find(g => g.id === centerId);
+            return gov ? (locale === "ar" ? gov.nameAr : gov.name) : null;
+        }
+        return null;
     };
 
     // Evidence handling
@@ -259,13 +302,13 @@ export default function ComplaintPage() {
                 <Navbar />
                 <div className="container max-w-2xl mx-auto px-4 py-16 text-center">
                     <AlertCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h1 className="text-2xl font-bold mb-2">Complaint Not Found</h1>
+                    <h1 className="text-2xl font-bold mb-2">{t("notFoundTitle")}</h1>
                     <p className="text-muted-foreground mb-6">
-                        This complaint may have been removed or doesn't exist.
+                        {t("notFoundMessage")}
                     </p>
                     <Button onClick={() => router.push("/feed")}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Feed
+                        {t("backToFeed")}
                     </Button>
                 </div>
             </GridBackground>
@@ -282,20 +325,20 @@ export default function ComplaintPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <LogIn className="h-5 w-5" />
-                            Login Required
+                            {tCard("loginRequired")}
                         </DialogTitle>
                         <DialogDescription>
-                            You need to be logged in to upvote complaints.
+                            {tCard("loginDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
-                            Cancel
+                            {tCard("cancel")}
                         </Button>
                         <Button asChild>
                             <Link href="/login">
                                 <LogIn className="h-4 w-4 mr-2" />
-                                Sign In
+                                {tCard("signIn")}
                             </Link>
                         </Button>
                     </DialogFooter>
@@ -306,7 +349,7 @@ export default function ComplaintPage() {
                 {/* Back Button */}
                 <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
+                    {t("back")}
                 </Button>
 
                 {/* Main Content */}
@@ -330,7 +373,7 @@ export default function ComplaintPage() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-semibold">
-                                        {isAnonymous ? "Anonymous" : complaint.user?.name || "User"}
+                                        {isAnonymous ? tModes("anonymous") : complaint.user?.name || t("user")}
                                     </span>
                                     <Badge variant="outline" className={cn(
                                         "text-[10px] uppercase h-5 px-1.5",
@@ -338,7 +381,7 @@ export default function ComplaintPage() {
                                             ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
                                             : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                                     )}>
-                                        {isAnonymous ? "Anonymous" : "Public"}
+                                        {isAnonymous ? tModes("anonymous") : tModes("public")}
                                     </Badge>
                                     <Badge variant="outline" className={cn(
                                         "text-[10px] uppercase h-5 px-1.5",
@@ -348,7 +391,7 @@ export default function ComplaintPage() {
                                                 ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
                                                 : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                                     )}>
-                                        {complaint.status || "pending"}
+                                        {getStatusName(complaint.status || "pending")}
                                     </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
@@ -425,7 +468,7 @@ export default function ComplaintPage() {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1">
                                 <Hash className="h-3.5 w-3.5" />
-                                {complaint.category}
+                                {getCategoryName(complaint.category)}
                             </span>
                             {complaint.area && (
                                 <span className="flex items-center gap-1">
@@ -439,10 +482,10 @@ export default function ComplaintPage() {
                                     {new Date(complaint.incidentDate).toLocaleDateString()}
                                 </span>
                             )}
-                            {complaint.directedTo && (complaint.directedTo.ministryId || complaint.directedTo.governorateId || complaint.directedTo.centerId) && (
+                            {getDirectedToName() && (
                                 <span className="flex items-center gap-1 font-semibold">
-                                    <span>To: </span>
-                                    {complaint.directedTo.ministryId ? MINISTRIES.find((ministry) => ministry.id === complaint.directedTo?.ministryId)?.name : complaint.directedTo.governorateId ? GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.governorateId)?.name : GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.centerId)?.name}
+                                    <span>{tDirected("to")}</span>
+                                    {getDirectedToName()}
                                 </span>
                             )}
                         </div>
@@ -452,7 +495,7 @@ export default function ComplaintPage() {
                             <div className="rounded-lg bg-purple-500/5 border border-purple-500/20 p-3">
                                 <div className="flex items-center gap-2 text-purple-400 text-xs mb-2">
                                     <Globe className="h-3.5 w-3.5" />
-                                    <span className="uppercase font-mono tracking-wider">Blockchain Verified</span>
+                                    <span className="uppercase font-mono tracking-wider">{t("blockchainVerified")}</span>
                                 </div>
                                 <code className="text-xs text-purple-300 break-all font-mono">
                                     {complaint.transactionId || complaint.id}
@@ -465,7 +508,7 @@ export default function ComplaintPage() {
                             <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
                                 <h4 className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
                                     <Shield className="h-4 w-4" />
-                                    Official Response
+                                    {t("officialResponse")}
                                 </h4>
                                 <p className="text-sm whitespace-pre-wrap">
                                     {complaint.adminResponse}
@@ -496,7 +539,7 @@ export default function ComplaintPage() {
                         ) : (
                             <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400">
                                 <Shield className="h-4 w-4" />
-                                <span>Protected by Blockchain</span>
+                                <span>{tCard("protectedByBlockchain")}</span>
                             </div>
                         )}
 
@@ -515,12 +558,12 @@ export default function ComplaintPage() {
                         <div className="p-4 bg-primary/5 border-t border-primary/20">
                             <div className="flex items-center gap-2 text-primary mb-4">
                                 <Lock className="h-4 w-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Admin Panel</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">{t("adminPanel")}</span>
                             </div>
 
                             {!isAnonymous && complaint.user?.email && (
                                 <div className="rounded-lg bg-background border border-border p-3 mb-4">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">User Email</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{t("userEmail")}</p>
                                     <code className="text-sm font-mono">{complaint.user.email}</code>
                                 </div>
                             )}
@@ -529,35 +572,35 @@ export default function ComplaintPage() {
                                 <div className="grid gap-3 mb-4">
                                     {complaint.trackingCode && (
                                         <div className="rounded-lg bg-background border border-border p-3">
-                                            <p className="text-[10px] text-muted-foreground uppercase mb-1">Tracking Code</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase mb-1">{t("trackingCode")}</p>
                                             <code className="text-sm font-mono text-red-400">{complaint.trackingCode}</code>
                                         </div>
                                     )}
                                     <div className="rounded-lg bg-background border border-border p-3">
-                                        <p className="text-[10px] text-muted-foreground uppercase mb-1">Anonymous ID (Encrypted)</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase mb-1">{t("anonymousIdEncrypted")}</p>
                                         <code className="text-xs font-mono text-red-400 break-all">
-                                            {complaint.encryptedAnonId || "Not available"}
+                                            {complaint.encryptedAnonId || t("notAvailable")}
                                         </code>
                                     </div>
                                 </div>
                             )}
 
                             <div className="space-y-4 pt-4 border-t border-primary/20">
-                                <h4 className="text-sm font-semibold">Update Status</h4>
+                                <h4 className="text-sm font-semibold">{t("updateStatus")}</h4>
                                 <div className="grid gap-4">
                                     <Select value={newStatus} onValueChange={setNewStatus}>
                                         <SelectTrigger className="bg-background">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="submitted">Pending</SelectItem>
-                                            <SelectItem value="investigating">Investigating</SelectItem>
-                                            <SelectItem value="resolved">Resolved</SelectItem>
-                                            <SelectItem value="dismissed">Dismissed</SelectItem>
+                                            <SelectItem value="submitted">{tStatuses("pending")}</SelectItem>
+                                            <SelectItem value="investigating">{tStatuses("investigating")}</SelectItem>
+                                            <SelectItem value="resolved">{tStatuses("resolved")}</SelectItem>
+                                            <SelectItem value="dismissed">{tStatuses("dismissed")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <Textarea
-                                        placeholder="Add a public response..."
+                                        placeholder={t("addPublicResponse")}
                                         value={statusNote}
                                         onChange={(e) => setStatusNote(e.target.value)}
                                         className="bg-background"
@@ -569,7 +612,7 @@ export default function ComplaintPage() {
                                         ) : (
                                             <Save className="h-4 w-4 mr-2" />
                                         )}
-                                        Save Changes
+                                        {t("saveChanges")}
                                     </Button>
                                 </div>
                             </div>

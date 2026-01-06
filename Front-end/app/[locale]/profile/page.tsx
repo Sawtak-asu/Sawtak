@@ -5,12 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { 
-    User, 
-    FileText, 
-    Clock, 
-    CheckCircle, 
-    XCircle, 
+import {
+    User,
+    FileText,
+    Clock,
+    CheckCircle,
+    XCircle,
     Eye,
     EyeOff,
     Calendar,
@@ -27,8 +27,9 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -51,6 +52,8 @@ const statusColors: Record<string, string> = {
 export default function ProfilePage() {
     const { user, isLoggedIn, isLoading: authLoading, token } = useAuth();
     const router = useRouter();
+    const t = useTranslations("Profile");
+    const tCommon = useTranslations("Common");
 
     // Redirect if not logged in
     useEffect(() => {
@@ -107,8 +110,8 @@ export default function ProfilePage() {
                             </div>
                             <Button asChild>
                                 <Link href="/file-complaint">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    New Complaint
+                                    <FileText className="h-4 w-4 me-2" />
+                                    {t("newComplaint")}
                                 </Link>
                             </Button>
                         </div>
@@ -118,8 +121,8 @@ export default function ProfilePage() {
                 {/* My Complaints Section */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">My Complaints</h2>
-                        <Badge variant="outline">{complaints.length} total</Badge>
+                        <h2 className="text-lg font-semibold">{t("myComplaints")}</h2>
+                        <Badge variant="outline">{complaints.length} {t("total")}</Badge>
                     </div>
 
                     {isLoading ? (
@@ -133,14 +136,14 @@ export default function ProfilePage() {
                             <CardContent className="pt-6">
                                 <div className="text-center py-8">
                                     <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                                    <h3 className="text-lg font-medium">No complaints yet</h3>
+                                    <h3 className="text-lg font-medium">{t("noComplaints")}</h3>
                                     <p className="text-sm text-muted-foreground mt-2">
-                                        You haven't submitted any identified complaints.
+                                        {t("noComplaintsHint")}
                                     </p>
                                     <Button asChild className="mt-4">
                                         <Link href="/file-complaint">
-                                            File Your First Complaint
-                                            <ArrowRight className="h-4 w-4 ml-2" />
+                                            {t("fileFirst")}
+                                            <ArrowRight className="h-4 w-4 ms-2 rtl:rotate-180" />
                                         </Link>
                                     </Button>
                                 </div>
@@ -166,19 +169,19 @@ export default function ProfilePage() {
                                             <div className="flex items-center gap-2">
                                                 {complaint.visibility === "private" ? (
                                                     <Badge variant="outline" className="text-xs">
-                                                        <EyeOff className="h-3 w-3 mr-1" />
-                                                        Private
+                                                        <EyeOff className="h-3 w-3 me-1" />
+                                                        {tCommon("private")}
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline" className="text-xs">
-                                                        <Eye className="h-3 w-3 mr-1" />
-                                                        Public
+                                                        <Eye className="h-3 w-3 me-1" />
+                                                        {tCommon("public")}
                                                     </Badge>
                                                 )}
                                                 <Badge className={statusColors[complaint.status]}>
-                                                    {complaint.status === "submitted" && <Clock className="h-3 w-3 mr-1" />}
-                                                    {complaint.status === "resolved" && <CheckCircle className="h-3 w-3 mr-1" />}
-                                                    {complaint.status === "dismissed" && <XCircle className="h-3 w-3 mr-1" />}
+                                                    {complaint.status === "submitted" && <Clock className="h-3 w-3 me-1" />}
+                                                    {complaint.status === "resolved" && <CheckCircle className="h-3 w-3 me-1" />}
+                                                    {complaint.status === "dismissed" && <XCircle className="h-3 w-3 me-1" />}
                                                     {complaint.status}
                                                 </Badge>
                                             </div>
@@ -196,16 +199,14 @@ export default function ProfilePage() {
                         <div className="flex items-start gap-3">
                             <User className="h-5 w-5 text-primary mt-0.5" />
                             <div>
-                                <h3 className="font-medium">About Your Complaints</h3>
+                                <h3 className="font-medium">{t("aboutTitle")}</h3>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    This page only shows <strong>identified complaints</strong> linked to your account. 
-                                    Anonymous complaints are not associated with any user and can only be tracked 
-                                    using the tracking code provided at submission.
+                                    {t("aboutDescription")}
                                 </p>
                                 <Button asChild variant="link" className="px-0 mt-2">
                                     <Link href="/track">
-                                        Track an Anonymous Complaint
-                                        <ArrowRight className="h-3 w-3 ml-1" />
+                                        {t("trackAnonymous")}
+                                        <ArrowRight className="h-3 w-3 ms-1 rtl:rotate-180" />
                                     </Link>
                                 </Button>
                             </div>

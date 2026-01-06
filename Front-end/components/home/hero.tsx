@@ -1,14 +1,21 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { TextEffect } from "@/components/ui/text-effect";
 import { motion } from "motion/react";
+import { useTranslations, useLocale } from "next-intl";
 
 export function Hero() {
+    const t = useTranslations("Hero");
+    const locale = useLocale();
+
+    // Use Inter for English, inherit Cairo for Arabic
+    const headingFontClass = locale === "ar" ? "font-harmattan" : "font-inter";
+
     return (
         <section className="relative pt-24 md:pt-36 pb-16 md:pb-24 overflow-hidden">
             <div className="absolute top-0 left-0 w-full z-50">
@@ -24,23 +31,34 @@ export function Hero() {
                         className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/50 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground shadow-sm hover:border-primary/30 transition-colors"
                     >
                         <Shield className="h-4 w-4 text-primary" />
-                        <span>Blockchain-Secured Reporting</span>
+                        <span>{t("badge")}</span>
                         <Sparkles className="h-3 w-3 text-primary/60" />
                     </motion.div>
 
                     {/* Main Heading with text effects */}
-                    <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                    <h1 className={`mx-auto max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl ${headingFontClass}`}>
                         <span className="relative inline-block">
-                            <TextEffect
-                                per="char"
-                                preset="fade-in-blur"
-                                delay={0.3}
-                                speedReveal={1.5}
-                                as="span"
-                                className="inline"
-                            >
-                                Speak Up.
-                            </TextEffect>
+                            {locale === "ar" ? (
+                                <motion.span
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.6, delay: 0.3 }}
+                                    className="inline font-light"
+                                >
+                                    {t("heading1")}
+                                </motion.span>
+                            ) : (
+                                <TextEffect
+                                    per="char"
+                                    preset="fade-in-blur"
+                                    delay={0.3}
+                                    speedReveal={1.5}
+                                    as="span"
+                                    className="inline"
+                                >
+                                    {t("heading1")}
+                                </TextEffect>
+                            )}
                             <motion.svg
                                 className="absolute -bottom-2 left-0 w-full h-3 text-primary/20"
                                 viewBox="0 0 200 10"
@@ -60,16 +78,27 @@ export function Hero() {
                                 />
                             </motion.svg>
                         </span>{" "}
-                        <TextEffect
-                            per="char"
-                            preset="blur"
-                            delay={0.8}
-                            speedReveal={1.5}
-                            as="span"
-                            className="text-muted-foreground inline"
-                        >
-                            Stay Safe.
-                        </TextEffect>
+                        {locale === "ar" ? (
+                            <motion.span
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.6 }}
+                                className="text-muted-foreground inline"
+                            >
+                                {t("heading2")}
+                            </motion.span>
+                        ) : (
+                            <TextEffect
+                                per="char"
+                                preset="blur"
+                                delay={0.8}
+                                speedReveal={1.5}
+                                as="span"
+                                className="text-muted-foreground inline"
+                            >
+                                {t("heading2")}
+                            </TextEffect>
+                        )}
                     </h1>
 
                     {/* Subheading with slide effect */}
@@ -81,7 +110,7 @@ export function Hero() {
                         as="p"
                         className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl leading-relaxed"
                     >
-                        A secure whistleblowing platform with blockchain-backed integrity. Report misconduct anonymously with cryptographic proof of your submission.
+                        {t("subheading")}
                     </TextEffect>
 
                     {/* CTA Buttons with fade in */}
@@ -93,13 +122,13 @@ export function Hero() {
                     >
                         <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
                             <Link href="/file-complaint">
-                                File a Complaint
-                                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                {t("cta1")}
+                                <ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />
                             </Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80">
                             <Link href="/feed">
-                                View Public Feed
+                                {t("cta2")}
                             </Link>
                         </Button>
                     </motion.div>
@@ -113,17 +142,17 @@ export function Hero() {
                     >
                         <Link href="/docs#security" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
                             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse group-hover/indicator:scale-125 transition-transform" />
-                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-green-500">256-bit Encrypted</span>
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-green-500">{t("indicator1")}</span>
                         </Link>
                         <div className="hidden sm:block h-4 w-px bg-border" />
                         <Link href="/docs#blockchain" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
                             <div className="h-2 w-2 rounded-full bg-blue-500 group-hover/indicator:scale-125 transition-transform" />
-                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">Hedera Blockchain</span>
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">{t("indicator2")}</span>
                         </Link>
                         <div className="hidden sm:block h-4 w-px bg-border" />
                         <Link href="/docs#overview" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
                             <div className="h-2 w-2 rounded-full bg-purple-500 group-hover/indicator:scale-125 transition-transform" />
-                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-purple-500">Anonymous</span>
+                            <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-purple-500">{t("indicator3")}</span>
                         </Link>
                     </motion.div>
                 </div>

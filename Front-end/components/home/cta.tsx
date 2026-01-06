@@ -1,14 +1,17 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { ArrowRight, Shield } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { TextEffect } from "@/components/ui/text-effect";
 import { LogoIcon } from "../logo";
+import { useTranslations } from "next-intl";
 
 export function CTA() {
+    const t = useTranslations("CTA");
+
     return (
         <section className="border-t border-border/50 py-16 md:py-24 relative overflow-hidden bg-background/30 backdrop-blur-sm">
             <div className="relative mx-auto max-w-7xl px-6 text-center">
@@ -20,7 +23,6 @@ export function CTA() {
                     whileHover={{ rotate: 0, scale: 1.05 }}
                     className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-lg"
                 >
-                    {/* <Shield className="h-8 w-8 text-primary" /> */}
                     <LogoIcon className="size-9" />
                 </motion.div>
 
@@ -32,7 +34,7 @@ export function CTA() {
                 >
                     <h2 className="text-3xl font-semibold md:text-4xl">
                         <TextEffect per="word" preset="blur" speedReveal={2}>
-                            Ready to Make a Difference?
+                            {t("title")}
                         </TextEffect>
                     </h2>
                 </motion.div>
@@ -51,7 +53,7 @@ export function CTA() {
                         as="p"
                         className="mt-4 text-muted-foreground max-w-xl mx-auto"
                     >
-                        Your voice matters. Report misconduct safely and help build a more transparent and accountable society.
+                        {t("subtitle")}
                     </TextEffect>
                 </motion.div>
 
@@ -64,13 +66,13 @@ export function CTA() {
                 >
                     <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
                         <Link href="/file-complaint">
-                            Get Started
-                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            {t("cta1")}
+                            <ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />
                         </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 hover:bg-background/80">
                         <Link href="/docs">
-                            Learn More
+                            {t("cta2")}
                         </Link>
                     </Button>
                 </motion.div>
@@ -78,4 +80,3 @@ export function CTA() {
         </section>
     );
 }
-

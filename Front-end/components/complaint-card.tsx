@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { ar, enUS } from "date-fns/locale";
 import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
+import { useTranslations, useLocale } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -46,7 +48,7 @@ export interface Complaint {
     evidenceUrls?: string[];
     evidenceCids?: string[];
     upvoteCount?: number;
-    hasVoted?: boolean;  // Server can return this
+    hasVoted?: boolean;
     user?: {
         name: string | null;
         picture?: string | null;
@@ -63,6 +65,12 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const { token, isLoggedIn } = useAuth();
     const isAnonymous = complaint.submissionMode === "anonymous";
     const canUpvote = !isAnonymous;
+    const t = useTranslations("ComplaintCard");
+    const tCategories = useTranslations("Categories");
+    const tStatuses = useTranslations("Statuses");
+    const tModes = useTranslations("SubmissionModes");
+    const tDirected = useTranslations("DirectedTo");
+    const locale = useLocale();
 
     const [localUpvotes, setLocalUpvotes] = useState(complaint.upvoteCount || 0);
     const [hasVoted, setHasVoted] = useState(complaint.hasVoted || false);
@@ -151,7 +159,44 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
         navigator.clipboard.writeText(window.location.origin + "/complaint/" + encodeURIComponent(complaint.id));
-        toast.success("Link copied!");
+        toast.success(t("linkCopied"));
+    };
+
+    // Get translated category
+    const getCategoryName = (categoryId: string) => {
+        try {
+            return tCategories(categoryId);
+        } catch {
+            return categoryId;
+        }
+    };
+
+    // Get translated status
+    const getStatusName = (status: string) => {
+        try {
+            return tStatuses(status);
+        } catch {
+            return status;
+        }
+    };
+
+    // Get directed to name
+    const getDirectedToName = () => {
+        if (!complaint.directedTo) return null;
+        const { ministryId, governorateId, centerId } = complaint.directedTo;
+        if (ministryId) {
+            const ministry = MINISTRIES.find(m => m.id === ministryId);
+            return ministry ? (locale === "ar" ? ministry.nameAr : ministry.name) : null;
+        }
+        if (governorateId) {
+            const gov = GOVERNORATES.find(g => g.id === governorateId);
+            return gov ? (locale === "ar" ? gov.nameAr : gov.name) : null;
+        }
+        if (centerId) {
+            const gov = GOVERNORATES.find(g => g.id === centerId);
+            return gov ? (locale === "ar" ? gov.nameAr : gov.name) : null;
+        }
+        return null;
     };
 
     return (
@@ -162,20 +207,20 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <LogIn className="h-5 w-5" />
-                            Login Required
+                            {t("loginRequired")}
                         </DialogTitle>
                         <DialogDescription>
-                            You need to be logged in to upvote complaints.
+                            {t("loginDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
-                            Cancel
+                            {t("cancel")}
                         </Button>
                         <Button asChild>
                             <Link href="/login">
                                 <LogIn className="h-4 w-4 mr-2" />
-                                Sign In
+                                {t("signIn")}
                             </Link>
                         </Button>
                     </DialogFooter>
@@ -190,7 +235,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
             >
                 <Card
                     onClick={handleCardClick}
-                    className="group overflow-hidden border-white/5 bg-background/30 backdrop-blur-xl transition-all duration-200 hover:bg-background/40 hover:border-white/10 cursor-pointer"
+                    className="group overflow-hidden dark:border-white/5 bg-background/30 backdrop-blur-xl transition-all duration-200 hover:bg-background/40 dark:hover:border-white/10 cursor-pointer border border-black/20"
                 >
                     <div className="flex gap-3 p-4">
                         {/* Avatar */}
@@ -208,11 +253,11 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                             {/* Header Row */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-semibold text-sm truncate">
-                                    {isAnonymous ? "Anonymous" : complaint.user?.name || "User"}
+                                    {isAnonymous ? tModes("anonymous") : complaint.user?.name || tModes("identified")}
                                 </span>
                                 <span className="text-muted-foreground text-xs">·</span>
                                 <span className="text-muted-foreground text-xs">
-                                    {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
+                                    {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true, locale: locale === "ar" ? ar : enUS })}
                                 </span>
                                 <Badge variant="outline" className={cn(
                                     "text-[10px] uppercase h-5 px-1.5 shrink-0",
@@ -220,7 +265,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                         ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
                                         : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                                 )}>
-                                    {isAnonymous ? "Anon" : "Public"}
+                                    {isAnonymous ? tModes("anon") : tModes("public")}
                                 </Badge>
                                 <Badge variant="outline" className={cn(
                                     "text-[10px] uppercase h-5 px-1.5 shrink-0",
@@ -230,7 +275,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                             ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
                                             : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                                 )}>
-                                    {complaint.status || "pending"}
+                                    {getStatusName(complaint.status || "pending")}
                                 </Badge>
                             </div>
 
@@ -301,10 +346,10 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                             )}
 
                             {/* Metadata - Category & Location (only if exists) */}
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 w-fit" dir="auto">
                                 <span className="flex items-center gap-1">
                                     <Hash className="h-3 w-3" />
-                                    {complaint.category}
+                                    {getCategoryName(complaint.category)}
                                 </span>
                                 {complaint.area && complaint.area.toLowerCase() !== 'unknown' && (
                                     <span className="flex items-center gap-1">
@@ -312,10 +357,10 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                         {complaint.area}
                                     </span>
                                 )}
-                                {complaint.directedTo && (complaint.directedTo.ministryId || complaint.directedTo.governorateId || complaint.directedTo.centerId) && (
+                                {getDirectedToName() && (
                                     <span className="flex items-center gap-1 font-semibold">
-                                        <span>To: </span>
-                                        {complaint.directedTo.ministryId ? MINISTRIES.find((ministry) => ministry.id === complaint.directedTo?.ministryId)?.name : complaint.directedTo.governorateId ? GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.governorateId)?.name : GOVERNORATES.find((governorate) => governorate.id === complaint.directedTo?.centerId)?.name}
+                                        <span>{tDirected("to")}</span>
+                                        {getDirectedToName()}
                                     </span>
                                 )}
                             </div>
@@ -344,7 +389,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                 ) : (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400/80">
                                         <Shield className="h-3.5 w-3.5" />
-                                        <span>Verified</span>
+                                        <span>{t("verified")}</span>
                                     </div>
                                 )}
 

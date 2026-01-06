@@ -1,0 +1,614 @@
+{
+  "Metadata": {
+    "title": "Sawtak - Anonymous Whistleblowing Platform",
+    "description": "A secure, resilient, and trustworthy platform for anonymous reporting"
+  },
+  "Common": {
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "signIn": "Sign in",
+    "signOut": "Sign Out",
+    "theme": "Theme",
+    "loading": "Loading...",
+    "tryAgain": "Try Again",
+    "fileComplaint": "File a Complaint",
+    "viewPublicFeed": "View Public Feed",
+    "anonymous": "Anonymous",
+    "identified": "Identified",
+    "public": "Public",
+    "private": "Private"
+  },
+  "Navbar": {
+    "feed": "Feed",
+    "fileComplaint": "File Complaint",
+    "track": "Track",
+    "docs": "Docs",
+    "myComplaints": "My Complaints",
+    "adminDashboard": "Admin Dashboard"
+  },
+  "Hero": {
+    "badge": "Blockchain-Secured Reporting",
+    "heading1": "Speak Up.",
+    "heading2": "Stay Safe.",
+    "subheading": "A secure whistleblowing platform with blockchain-backed integrity. Report misconduct anonymously with cryptographic proof of your submission.",
+    "cta1": "File a Complaint",
+    "cta2": "View Public Feed",
+    "indicator1": "256-bit Encrypted",
+    "indicator2": "Hedera Blockchain",
+    "indicator3": "Anonymous"
+  },
+  "Aim": {
+    "title": "Our Mission &",
+    "titleHighlight": "Vision",
+    "subtitle": "Sawtak aims to empower citizens to speak up against misconduct without fear. We believe in transparency, integrity, and the right to safety.",
+    "features": {
+      "privacy": {
+        "title": "Uncompromising Privacy",
+        "description": "We use advanced encryption and anonymous blockchain submission to ensure your identity remains protected at all times."
+      },
+      "truth": {
+        "title": "Immutable Truth",
+        "description": "By leveraging the Hedera Hashgraph, we guarantee that once a record is submitted, it cannot be altered or deleted by anyone, including us."
+      },
+      "transparency": {
+        "title": "Transparency First",
+        "description": "Our public feed allows the community to verify that complaints are being heard, creating a culture of accountability."
+      },
+      "evidence": {
+        "title": "Verifiable Evidence",
+        "description": "Uploaded evidence is secured on decentralized storage (IPFS), ensuring that proof of misconduct is never lost or tampered with."
+      },
+      "authorities": {
+        "title": "Empowering Authorities",
+        "description": "We provide tools for authorities to efficiently manage and investigate valid complaints while filtering out spam."
+      },
+      "data": {
+        "title": "Data-Driven Change",
+        "description": "Aggregated statistics help identify systemic issues and trends, enabling policymakers to make informed decisions."
+      }
+    }
+  },
+  "CTA": {
+    "title": "Ready to Make a Difference?",
+    "subtitle": "Your voice matters. Report misconduct safely and help build a more transparent and accountable society.",
+    "cta1": "Get Started",
+    "cta2": "Learn More"
+  },
+  "Footer": {
+    "home": "Home",
+    "fileComplaint": "File Complaint",
+    "trackStatus": "Track Status",
+    "publicFeed": "Public Feed",
+    "documentation": "Documentation",
+    "privacyPolicy": "Privacy Policy",
+    "copyright": "© {year} Sawtak, All rights reserved"
+  },
+  "Login": {
+    "title": "Sign in",
+    "subtitle": "Welcome back. Choose your preferred sign-in method.",
+    "brandHeading": "Report with confidence.",
+    "brandDescription": "Sawtak provides a secure platform for anonymous whistleblowing with blockchain-verified submissions and end-to-end encryption.",
+    "stat1Label": "Anonymous",
+    "stat2Label": "Encryption",
+    "stat3Label": "Blockchain",
+    "consent": "By signing in, you agree to our",
+    "terms": "Terms of Service",
+    "and": "and",
+    "privacy": "Privacy Policy"
+  },
+  "Feed": {
+    "title": "Public Feed",
+    "filters": "Filters",
+    "loadingMore": "Loading more...",
+    "endOfResults": "You've reached the end",
+    "noResults": "No complaints found",
+    "noResultsHint": "Try adjusting your filters.",
+    "beFirst": "Be the first to file a complaint!",
+    "failedToLoad": "Failed to load complaints"
+  },
+  "Profile": {
+    "newComplaint": "New Complaint",
+    "myComplaints": "My Complaints",
+    "total": "total",
+    "noComplaints": "No complaints yet",
+    "noComplaintsHint": "You haven't submitted any identified complaints.",
+    "fileFirst": "File Your First Complaint",
+    "aboutTitle": "About Your Complaints",
+    "aboutDescription": "This page only shows identified complaints linked to your account. Anonymous complaints are not associated with any user and can only be tracked using the tracking code provided at submission.",
+    "trackAnonymous": "Track an Anonymous Complaint"
+  },
+  "FileComplaint": {
+    "title": "File a Complaint",
+    "subtitle": "Your voice matters. Submit a complaint securely and help build a more transparent and accountable society.",
+    "whatToInclude": "What to include",
+    "include1": "Clear description of the incident",
+    "include2": "Date and location details",
+    "include3": "Supporting evidence if available",
+    "commitment": "Our Commitment",
+    "commitmentText": "Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable. Whether you choose to be anonymous or identified, your voice is protected.",
+    "privacyTitle": "Privacy",
+    "anonymousMode": "Anonymous mode:",
+    "anonymousModeText": "Your identity is encrypted and stored on the blockchain. You'll receive a tracking code.",
+    "identifiedMode": "Identified mode:",
+    "identifiedModeText": "Your complaint is linked to your account for direct follow-up."
+  },
+  "Track": {
+    "title": "Track Your Complaint",
+    "subtitle": "Enter your tracking code to check the status of your complaint. Your identity remains protected - we only show the status.",
+    "placeholder": "Enter your tracking code (e.g., SAWTAK-A7B3C9D2)",
+    "searchButton": "Track",
+    "searching": "Searching...",
+    "currentStatus": "Current Status",
+    "submitted": "Submitted",
+    "category": "Category",
+    "area": "Area",
+    "incidentDate": "Incident Date",
+    "privacyNotice": "Your Privacy is Protected",
+    "privacyNoticeText": "Only basic complaint information is shown. Your identity and detailed complaint text remain confidential and are not displayed here.",
+    "notFound": "Complaint Not Found",
+    "notFoundHint": "Make sure you're using the exact tracking code provided when you submitted your complaint.",
+    "helpTitle1": "Where do I find my tracking code?",
+    "helpText1": "Your tracking code was displayed after you successfully submitted your complaint. It's a unique identifier that looks like",
+    "helpTitle2": "Lost your tracking code?",
+    "helpText2": "For anonymous complaints, we cannot recover your tracking code as it's not linked to any account. For identified complaints, please contact support.",
+    "newComplaintCta": "Need to file a new complaint?"
+  },
+  "Status": {
+    "submitted": "Pending Review",
+    "investigating": "Under Investigation",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed"
+  },
+  "LanguageSwitcher": {
+    "label": "Language"
+  },
+  "HowItWorks": {
+    "badge": "SYSTEM ARCHITECTURE",
+    "title": "The Logic Behind the Curtain",
+    "subtitle": "A step-by-step breakdown of how data flows through our secure pipeline."
+  },
+  "PoweredBy": {
+    "title1": "Built on a foundation of",
+    "secure": "secure",
+    "decentralized": "decentralized",
+    "title2": "tech",
+    "badge": "Powered By",
+    "tech": {
+      "hedera": {
+        "name": "Hedera Hashgraph",
+        "description": "Enterprise-grade public distributed ledger technology. Immutable record-keeping with 10,000+ TPS and carbon-negative operations."
+      },
+      "bun": {
+        "name": "Bun & Elysia",
+        "description": "Blazing-fast JavaScript runtime and type-safe framework. Up to 18x faster than Node.js with end-to-end type safety."
+      },
+      "ipfs": {
+        "name": "IPFS",
+        "description": "Decentralized, content-addressed file storage. Censorship-resistant evidence preservation with cryptographic verification."
+      },
+      "aes": {
+        "name": "AES-256 Encryption",
+        "description": "Military-grade encryption for all sensitive data. Your information is protected at rest and in transit."
+      },
+      "postgres": {
+        "name": "PostgreSQL",
+        "description": "Enterprise relational database for fast querying and reliable data indexing of blockchain records."
+      },
+      "haweya": {
+        "name": "Haweya Integration",
+        "description": "National ID verification for identified submissions. Secure government-grade identity verification."
+      }
+    }
+  },
+  "FAQ": {
+    "title": "Addressing Your",
+    "titleHighlight": "Fears",
+    "subtitle": "We know speaking up is scary. Here is how we engineered safety into the system to protect you.",
+    "questions": {
+      "ip": {
+        "question": "Can my employer track my IP address?",
+        "answer": "No. Your connection is routed through our Privacy Proxy which strips all metadata (IP, User-Agent, Device Info) before it ever reaches our servers. We cannot see who you are, so neither can they."
+      },
+      "hacked": {
+        "question": "What if the database gets hacked?",
+        "answer": "Your anonymous report isn't just in a database—it's hashed on the Hedera public ledger. Even if our servers are compromised, the cryptographic proof of your report exists independently on the blockchain and cannot be altered or deleted."
+      },
+      "defamation": {
+        "question": "Can I be sued for defamation?",
+        "answer": "We employ a strict vetting process. While we protect your identity, we also filter out malicious spam. If your report is made in good faith with evidence, existing whistleblower protection laws (and our anonymity layer) provide a robust shield."
+      },
+      "action": {
+        "question": "How do I know action was taken?",
+        "answer": "You receive a unique tracking code. You can use this to check the status of your report (e.g. 'Under Investigation', 'Resolved') on the public feed without ever logging in or revealing who you are."
+      }
+    }
+  },
+  "Team": {
+    "title": "Meet Our",
+    "titleHighlight": "Team",
+    "subtitle": "A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University."
+  },
+  "ComplaintForm": {
+    "detailsTitle": "Complaint Details",
+    "detailsDescription": "Please provide the essential details of your complaint.",
+    "submissionMode": "Submission Mode",
+    "loginRequired": "Please log in to submit a complaint.",
+    "anonymous": "Anonymous",
+    "anonymousDesc": "Stored on blockchain. Identity encrypted & hidden. You'll get a tracking code.",
+    "identified": "Identified",
+    "identifiedDesc": "Stored in database. Linked to your account. Admin can see who you are.",
+    "visibility": "Visibility Setting",
+    "public": "Public",
+    "publicDesc": "Visible in community feed",
+    "private": "Private",
+    "privateDesc": "Only admin can view",
+    "title": "Title",
+    "titlePlaceholder": "Enter the title",
+    "mainText": "Main Text",
+    "mainTextPlaceholder": "Describe your complaint in detail",
+    "category": "Category",
+    "categoryPlaceholder": "Select a category",
+    "directTitle": "Direct Your Complaint",
+    "directDescription": "Optionally specify which government entity this complaint is directed to. This helps route your complaint to the appropriate administrators.",
+    "directedTo": "Directed To",
+    "directedToPlaceholder": "Select target (optional)",
+    "directedToDescription": "Select whether you want to direct this to a ministry, governorate, or specific center",
+    "notSpecified": "Not Specified",
+    "ministry": "Ministry",
+    "governorate": "Governorate",
+    "center": "Center / Township",
+    "selectMinistry": "Select a ministry",
+    "selectGovernorate": "Select a governorate",
+    "selectCenter": "Select a center",
+    "additionalTitle": "Additional Information",
+    "additionalDescription": "This information is optional but can help us better understand the context.",
+    "area": "Area (Optional)",
+    "areaPlaceholder": "Enter the area",
+    "incidentDate": "Date of Incident (Optional)",
+    "pickDate": "Pick a date",
+    "evidenceTitle": "Supporting Evidence",
+    "evidenceDescription": "Upload any files that support your complaint.",
+    "evidenceLabel": "Evidence (Optional, Multiple Files)",
+    "evidenceHint": "You can select multiple files at once (images, videos, documents)",
+    "submitting": "Submitting...",
+    "submit": "Submit Complaint",
+    "trackingTitle": "Save Your Tracking Code",
+    "trackingDescription": "This is the only way to track your anonymous complaint. Please save it somewhere safe - we cannot recover it for you.",
+    "copyToClipboard": "Copy to Clipboard",
+    "copied": "Copied!",
+    "importantWarning": "⚠️ Important: Write this down!",
+    "trackingHint": "You can use this code at /track to check your complaint status. Your identity is not linked to this code.",
+    "savedCode": "I've Saved My Code"
+  },
+  "Docs": {
+    "sidebarTitle": "Documentation",
+    "hcsTopicTitle": "HCS Topic ID",
+    "hcsTopicHint": "Use this ID to verify messages on any Hedera explorer.",
+    "pageTitle": "Sawtak Documentation",
+    "pageSubtitle": "Learn about the architecture, security, and philosophy behind the Sawtak whistleblowing platform.",
+    "onThisPage": "On this page",
+    "sections": {
+      "overview": "Overview",
+      "architecture": "How it Works",
+      "security": "Encryption & Privacy",
+      "blockchain": "Blockchain Trust",
+      "faq": "FAQ"
+    },
+    "overview": {
+      "intro": "Sawtak is a hybrid whistleblowing platform designed to balance",
+      "anonymity": "absolute anonymity",
+      "with": "with",
+      "accountability": "actionable accountability",
+      "description": "Unlike traditional reporting tools, Sawtak leverages the Hedera Hashgraph network to create an immutable, public audit trail of anonymous complaints. This ensures that once a complaint is filed, it cannot be deleted or altered by anyone—not even system administrators."
+    },
+    "architecture": {
+      "anonymousTitle": "Anonymous Flow",
+      "anonymousStep1": "User submits complaint. Identity is stripped immediately on the client side.",
+      "anonymousStep2": "Data is sent to our privacy proxy, which hashes the content.",
+      "anonymousStep3": "The hash and metadata are published to the Hedera Consensus Service (HCS).",
+      "anonymousStep4": "The complaint appears in the public feed, verified by the blockchain timestamp.",
+      "identifiedTitle": "Identified Flow",
+      "identifiedStep1": "User logs in and submits with \"Identified\" mode.",
+      "identifiedStep2": "Identity and complaint are encrypted with AES-256.",
+      "identifiedStep3": "Stored in our secure PostgreSQL database.",
+      "identifiedStep4": "Only authorized admins can decrypt and view the identity for follow-up."
+    },
+    "security": {
+      "dataAtRest": "Data at Rest",
+      "dataAtRestDesc": "All sensitive fields in our database are encrypted using AES-256-GCM. Database backups are also encrypted.",
+      "dataInTransit": "Data in Transit",
+      "dataInTransitDesc": "All traffic between your browser and our servers is secured via TLS 1.3. We implement HSTS to prevent protocol downgrade attacks.",
+      "zeroKnowledge": "Zero-Knowledge",
+      "zeroKnowledgeDesc": "For anonymous complaints, our servers do not log IP addresses or browser fingerprints associated with the submission."
+    },
+    "blockchain": {
+      "title": "Why Blockchain?",
+      "description": "We use the Hedera Consensus Service (HCS) as a public notary. When you submit an anonymous complaint, we publish a cryptographic hash of your message to a public \"Topic\" on Hedera.",
+      "exampleTitle": "Example HCS Message",
+      "proof": "This proves that the complaint existed at that specific time and has not been altered since. Anyone can verify this by checking the topic on a Hedera explorer like"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "Why are anonymous complaints public?",
+      "a1": "Anonymity implies that the identity is hidden, not necessarily the message. By making the complaint content public and backed by the blockchain, we ensure transparency. It prevents the system (or authorities) from \"burying\" complaints. The public nature is the guarantee that your voice was heard.",
+      "q2": "Can I delete my complaint?",
+      "a2": "Anonymous complaints cannot be deleted because they are recorded on the blockchain immutable ledger. Identified complaints can be withdrawn, but an audit log may remain for administrative purposes.",
+      "q3": "Is it truly anonymous?",
+      "a3": "Yes. When you choose \"Anonymous\" mode, we do not require login, we do not store your IP address, and we do not ask for any PII (Personally Identifiable Information). The tracking code you receive is the only link to your report."
+    },
+    "cta": {
+      "title": "Ready to seek justice?",
+      "fileComplaint": "File a Complaint",
+      "trackStatus": "Track Status"
+    }
+  },
+  "PrivacyPolicy": {
+    "sidebarTitle": "Privacy Policy",
+    "lastUpdated": "Last Updated",
+    "lastUpdatedDate": "December 25, 2024",
+    "pageTitle": "Privacy Policy",
+    "pageSubtitle": "Your privacy is at the core of everything we build. This policy explains how Sawtak handles your data.",
+    "onThisPage": "On this page",
+    "backToHome": "← Back to Home",
+    "viewDocs": "View Documentation",
+    "sections": {
+      "introduction": "Introduction",
+      "dataCollection": "Data We Collect",
+      "anonymousMode": "Anonymous Mode",
+      "identifiedMode": "Identified Mode",
+      "dataSecurity": "Data Security",
+      "dataRetention": "Data Retention",
+      "blockchain": "Blockchain & Immutability",
+      "yourRights": "Your Rights",
+      "thirdParties": "Third Parties",
+      "contact": "Contact Us"
+    },
+    "introduction": {
+      "p1": "Sawtak (\"we,\" \"our,\" or \"us\") is a secure whistleblowing platform designed to enable individuals to report misconduct while maintaining complete anonymity or controlled identification.",
+      "p2": "This Privacy Policy describes how we collect, use, store, and protect your information when you use the Sawtak platform. We are committed to transparency and want you to understand exactly what happens with your data.",
+      "principlesTitle": "Our Core Privacy Principles",
+      "principle1Title": "Anonymity by Design:",
+      "principle1": "Anonymous complaints never require or collect personal identification.",
+      "principle2Title": "Minimal Data Collection:",
+      "principle2": "We only collect what is strictly necessary for the platform to function.",
+      "principle3Title": "Encryption First:",
+      "principle3": "All sensitive data is encrypted using military-grade AES-256 encryption.",
+      "principle4Title": "Transparency:",
+      "principle4": "Blockchain verification ensures complaint integrity without compromising privacy."
+    },
+    "dataCollection": {
+      "intro": "The data we collect depends on how you choose to use Sawtak. We offer two distinct modes: Anonymous Mode and Identified Mode.",
+      "anonymousTitle": "Anonymous Complaints",
+      "anonymous1": "Complaint content and category",
+      "anonymous2": "General location (governorate level only)",
+      "anonymous3": "Attached evidence files (encrypted)",
+      "anonymous4": "Unique tracking code",
+      "anonymousNote": "We do NOT collect: IP addresses, browser fingerprints, device identifiers, or any personal information.",
+      "identifiedTitle": "Identified Complaints",
+      "identified1": "Everything in Anonymous mode, plus:",
+      "identified2": "Name (as provided during login)",
+      "identified3": "Email address (for communication)",
+      "identified4": "Authentication provider data (Google/National ID)",
+      "identifiedNote": "All personal data is encrypted with AES-256 and only accessible to authorized administrators."
+    },
+    "anonymousMode": {
+      "intro": "When you submit an anonymous complaint, Sawtak implements multiple layers of privacy protection:",
+      "noIpTitle": "No IP Logging",
+      "noIpDesc": "Our servers are configured to not log IP addresses for anonymous submissions. We use a privacy proxy that strips identifying metadata before the request reaches our application server.",
+      "noFingerprintTitle": "No Browser Fingerprinting",
+      "noFingerprintDesc": "We do not use browser fingerprinting techniques. No cookies, local storage tokens, or device identifiers are stored for anonymous users.",
+      "noAccountTitle": "No Account Required",
+      "noAccountDesc": "Anonymous complaints can be submitted without creating an account or providing any personal information whatsoever.",
+      "trackingTitle": "Tracking Code Only",
+      "trackingDesc": "You receive a unique tracking code that is the only link between you and your complaint. Keep it safe—we cannot recover it.",
+      "important": "Important: Anonymous complaints are published to the public feed and recorded on the blockchain. While your identity is protected, the complaint content (category and general details) is publicly visible for transparency."
+    },
+    "identifiedMode": {
+      "intro": "When you choose to submit an identified complaint, you provide additional personal information that allows authorities to follow up with you directly.",
+      "protectionTitle": "How Your Data is Protected",
+      "step1": "Your personal data is encrypted using AES-256-GCM before being stored in our database.",
+      "step2": "Encryption keys are managed through a secure key management system with strict access controls.",
+      "step3": "Only authorized administrators can decrypt and view your identity, and all access is logged.",
+      "step4": "Identified complaints are not publicly visible—only status updates (without personal details) may appear."
+    },
+    "dataSecurity": {
+      "atRestTitle": "Encryption at Rest",
+      "atRestDesc": "All sensitive data stored in our PostgreSQL database is encrypted using AES-256-GCM. Database backups are also encrypted and stored securely.",
+      "inTransitTitle": "Encryption in Transit",
+      "inTransitDesc": "All communications between your browser and our servers use TLS 1.3. We enforce HTTPS and implement HSTS to prevent downgrade attacks.",
+      "accessTitle": "Access Controls",
+      "accessDesc": "Administrative access is restricted through role-based access control (RBAC). All access to sensitive data is logged and audited."
+    },
+    "dataRetention": {
+      "anonymousTitle": "Anonymous Complaints",
+      "anonymousDesc": "Anonymous complaints are stored indefinitely as they are part of the public record and recorded on the blockchain. The blockchain record is permanent and cannot be deleted.",
+      "identifiedTitle": "Identified Complaints",
+      "identifiedDesc": "Identified complaint data is retained for up to 5 years after the complaint is resolved, or as required by applicable law. You may request early deletion in certain circumstances (see \"Your Rights\").",
+      "evidenceTitle": "Evidence Files",
+      "evidenceDesc": "Evidence files uploaded to IPFS are encrypted and may persist on the network indefinitely due to the decentralized nature of IPFS. However, without the decryption key, these files are inaccessible."
+    },
+    "blockchain": {
+      "intro": "Sawtak uses the Hedera Consensus Service (HCS) to create an immutable audit trail of anonymous complaints.",
+      "publishedTitle": "What is published to the blockchain:",
+      "published1": "A cryptographic hash of the complaint content (not the content itself)",
+      "published2": "Category of the complaint (e.g., corruption, harassment)",
+      "published3": "General location (governorate level)",
+      "published4": "Consensus timestamp (when the complaint was recorded)",
+      "important": "Important: Data published to the blockchain cannot be deleted or modified by anyone, including Sawtak administrators. This is by design to ensure the integrity and trustworthiness of the platform."
+    },
+    "yourRights": {
+      "intro": "Depending on your jurisdiction, you may have certain rights regarding your personal data:",
+      "identifiedTitle": "For Identified Users",
+      "accessTitle": "Access:",
+      "access": "Request a copy of your personal data",
+      "rectificationTitle": "Rectification:",
+      "rectification": "Correct inaccurate personal data",
+      "erasureTitle": "Erasure:",
+      "erasure": "Request deletion (with limitations)",
+      "portabilityTitle": "Portability:",
+      "portability": "Receive data in a portable format",
+      "anonymousTitle": "For Anonymous Users",
+      "anonymous1": "Since we do not collect personal data for anonymous submissions, we cannot verify your identity to process data requests.",
+      "anonymous2": "Anonymous complaints cannot be deleted due to blockchain immutability."
+    },
+    "thirdParties": {
+      "intro": "We work with a limited number of third-party services essential to platform operation:",
+      "hederaTitle": "Hedera Hashgraph",
+      "hederaDesc": "Public blockchain network for recording complaint hashes. Data published is intentionally public for verification purposes.",
+      "storageTitle": "Cloudflare R2 / IPFS",
+      "storageDesc": "Encrypted evidence storage. Files are encrypted before upload; the storage provider cannot access the content.",
+      "authTitle": "Authentication Providers",
+      "authDesc": "Google OAuth and Haweya (National ID) for identified logins. We receive only basic profile information (name, email) necessary for account creation.",
+      "noSelling": "We do not sell, rent, or share your personal data with advertisers or data brokers."
+    },
+    "contact": {
+      "intro": "If you have questions about this Privacy Policy or wish to exercise your data rights, please contact us:",
+      "emailTitle": "Email",
+      "responseTitle": "Response Time",
+      "responseDesc": "We aim to respond to all privacy-related inquiries within 30 days."
+    },
+    "changes": {
+      "title": "Changes to This Policy",
+      "description": "We may update this Privacy Policy from time to time. When we make significant changes, we will notify users through a prominent notice on the platform. We encourage you to review this policy periodically."
+    }
+  },
+  "Admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage complaints, update status, and review private submissions.",
+    "refresh": "Refresh",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "investigating": "Investigating",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by title, tracking code, or ID...",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "visibility": "Visibility",
+      "allVisibility": "All Visibility",
+      "public": "Public",
+      "private": "Private"
+    },
+    "error": {
+      "title": "Failed to load complaints",
+      "message": "Please verify your connection and permissions.",
+      "retry": "Retry"
+    },
+    "empty": {
+      "title": "No complaints found",
+      "message": "Adjust filters to see more results."
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
+  },
+  "Categories": {
+    "general": "General",
+    "corruption": "Corruption",
+    "misconduct": "Misconduct",
+    "harassment": "Harassment",
+    "discrimination": "Discrimination",
+    "fraud": "Fraud",
+    "safety": "Safety Concerns",
+    "environment": "Environmental Issues",
+    "infrastructure": "Infrastructure Problems",
+    "healthcare": "Healthcare Issues",
+    "education": "Education Issues",
+    "public_services": "Public Services",
+    "other": "Other"
+  },
+  "Statuses": {
+    "submitted": "Pending",
+    "pending": "Pending",
+    "investigating": "Investigating",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed"
+  },
+  "SubmissionModes": {
+    "anonymous": "Anonymous",
+    "anon": "Anon",
+    "public": "Public",
+    "identified": "Identified"
+  },
+  "DirectedTo": {
+    "label": "Directed To",
+    "to": "To:",
+    "notSpecified": "Not Specified",
+    "ministry": "Ministry",
+    "governorate": "Governorate",
+    "center": "Center / Township",
+    "selectMinistry": "Select a ministry",
+    "selectGovernorate": "Select a governorate",
+    "selectCenter": "Select a center"
+  },
+  "ComplaintCard": {
+    "loginRequired": "Login Required",
+    "loginDescription": "You need to be logged in to upvote complaints.",
+    "cancel": "Cancel",
+    "signIn": "Sign In",
+    "verified": "Verified",
+    "protectedByBlockchain": "Protected by Blockchain",
+    "linkCopied": "Link copied!"
+  },
+  "ComplaintFilters": {
+    "searchPlaceholder": "Search complaints...",
+    "filters": "Filters",
+    "refineSearch": "Refine your search results.",
+    "category": "Category",
+    "selectCategory": "Select category",
+    "allCategories": "All Categories",
+    "location": "Location",
+    "enterLocation": "Enter location",
+    "submissionType": "Submission Type",
+    "allTypes": "All Types",
+    "dateRange": "Date Range",
+    "from": "From",
+    "to": "To",
+    "clearFilters": "Clear Filters",
+    "active": "active"
+  },
+  "ComplaintDetail": {
+    "back": "Back",
+    "notFoundTitle": "Complaint Not Found",
+    "notFoundMessage": "This complaint may have been removed or doesn't exist.",
+    "backToFeed": "Back to Feed",
+    "user": "User",
+    "blockchainVerified": "Blockchain Verified",
+    "officialResponse": "Official Response",
+    "adminPanel": "Admin Panel",
+    "userEmail": "User Email",
+    "trackingCode": "Tracking Code",
+    "anonymousIdEncrypted": "Anonymous ID (Encrypted)",
+    "notAvailable": "Not available",
+    "updateStatus": "Update Status",
+    "addPublicResponse": "Add a public response...",
+    "saveChanges": "Save Changes",
+    "statusUpdated": "Status updated successfully",
+    "failedToUpdateStatus": "Failed to update status",
+    "upvoted": "Upvoted!",
+    "voteRemoved": "Vote removed",
+    "failedToVote": "Failed to vote"
+  },
+  "Auth": {
+    "notConfigured": "{provider} Sign-In is not configured",
+    "popupBlocked": "Popup blocked. Please allow popups for this site.",
+    "welcome": "Welcome, {name}!",
+    "signInFailed": "{provider} sign-in failed",
+    "errorDuringSignIn": "An error occurred during sign-in",
+    "signingIn": "Signing in...",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithHaweya": "Continue with Haweya"
+  },
+  "Toasts": {
+    "anonymousSubmitted": "Anonymous complaint submitted successfully!",
+    "identifiedSubmitted": "Complaint submitted successfully!",
+    "submitFailed": "Failed to submit complaint.",
+    "loginRequired": "You must be logged in to submit a complaint.",
+    "uploadFailed": "Failed to upload evidence files. Please try again."
+  }
+}

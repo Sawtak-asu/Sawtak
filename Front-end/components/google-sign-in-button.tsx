@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface GoogleSignInButtonProps {
   className?: string;
@@ -12,11 +13,12 @@ interface GoogleSignInButtonProps {
 export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("Auth");
 
   const handleGoogleLogin = async () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      toast.error("Google Sign-In is not configured");
+      toast.error(t("notConfigured", { provider: "Google" }));
       console.error("Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID");
       return;
     }
@@ -28,7 +30,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
       const redirectUri = `${window.location.origin}/auth/google/callback`;
       const scope = "email profile openid";
       const state = crypto.randomUUID(); // CSRF protection
-      
+
       // Store state for verification after redirect
       sessionStorage.setItem("google_oauth_state", state);
 
@@ -54,7 +56,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
       );
 
       if (!popup) {
-        toast.error("Popup blocked. Please allow popups for this site.");
+        toast.error(t("popupBlocked"));
         setIsLoading(false);
         return;
       }
@@ -63,17 +65,17 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
       const handleMessage = async (event: MessageEvent) => {
         // Verify origin
         if (event.origin !== window.location.origin) return;
-        
+
         if (event.data.type === "google-oauth-success") {
           window.removeEventListener("message", handleMessage);
-          
+
           const { token, user } = event.data;
           login(token, user);
-          toast.success(`Welcome, ${user.name || user.email}!`);
+          toast.success(t("welcome", { name: user.name || user.email }));
           setIsLoading(false);
         } else if (event.data.type === "google-oauth-error") {
           window.removeEventListener("message", handleMessage);
-          toast.error(event.data.error || "Google sign-in failed");
+          toast.error(event.data.error || t("signInFailed", { provider: "Google" }));
           setIsLoading(false);
         }
       };
@@ -91,7 +93,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
 
     } catch (error) {
       console.error("Google sign-in error:", error);
-      toast.error("An error occurred during sign-in");
+      toast.error(t("errorDuringSignIn"));
       setIsLoading(false);
     }
   };
@@ -126,7 +128,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
           />
         </svg>
       )}
-      {isLoading ? "Signing in..." : "Continue with Google"}
+      {isLoading ? t("signingIn") : t("continueWithGoogle")}
     </Button>
   );
 }
