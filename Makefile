@@ -8,8 +8,14 @@
 help:
 	@echo "Sawtak - Available Commands"
 	@echo "============================================"
-	@echo "Development:"
-	@echo "  make dev          - Start development environment"
+	@echo "Development (Database Only):"
+	@echo "  make dev-db       - Start database container for local dev"
+	@echo "  make dev-db-stop  - Stop database container"
+	@echo "  make dev-db-logs  - View database logs"
+	@echo ""
+	@echo "Development (Full Docker):"
+
+	@echo "  make dev          - Start full development environment"
 	@echo "  make build        - Build Docker images"
 	@echo "  make up           - Start all services"
 	@echo "  make down         - Stop all services"
@@ -19,6 +25,8 @@ help:
 	@echo "Database:"
 	@echo "  make migrate      - Run database migrations"
 	@echo "  make db-shell     - Open Postgres shell"
+	@echo "  make backup       - Create database backup"
+	@echo "  make restore      - Restore database from backup"
 	@echo ""
 	@echo "Monitoring (Grafana):"
 	@echo "  make monitor      - Start Prometheus + Grafana"
@@ -31,13 +39,31 @@ help:
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  make clean        - Remove containers and volumes"
-	@echo "  make backup       - Backup database"
 	@echo ""
+
 
 # ============================================
 # Development Commands
 # ============================================
 
+
+# Start only database containers (for local development)
+dev-db:
+	docker-compose -f docker/docker-compose.dev.yml up -d
+	@echo "✅ Development database started"
+	@echo "👉 PostgreSQL: localhost:5432"
+	@echo ""
+	@echo "Now run your apps locally:"
+	@echo "  cd backend && bun run dev"
+	@echo "  cd front-end && bun run dev"
+
+dev-db-stop:
+	docker-compose -f docker/docker-compose.dev.yml down
+
+dev-db-logs:
+	docker-compose -f docker/docker-compose.dev.yml logs -f
+
+# Full Docker development (all services in containers)
 dev:
 	docker-compose -f docker/docker-compose.yml up -d
 	@echo "✅ Development environment started"
@@ -66,6 +92,7 @@ logs-frontend:
 restart:
 	docker-compose -f docker/docker-compose.yml restart
 
+
 # ============================================
 # Database Commands
 # ============================================
@@ -76,11 +103,57 @@ migrate:
 migrate-dev:
 	docker-compose -f docker/docker-compose.yml exec backend bunx prisma migrate dev
 
+# For full docker setup
 db-shell:
 	docker-compose -f docker/docker-compose.yml exec postgres psql -U postgres -d sawtak
 
+# For local dev (database only in Docker)
+db-shell-dev:
+	docker exec -it sawtak-postgres-dev psql -U postgres -d sawtak
+
 db-reset:
 	docker-compose -f docker/docker-compose.yml exec backend bunx prisma migrate reset --force
+
+# Backup database (works with both setups)
+backup:
+	@mkdir -p docker/backups
+	@echo "Creating database backup..."
+	@if docker ps | grep -q sawtak-postgres-dev; then \
+		docker exec sawtak-postgres-dev pg_dump -U postgres sawtak > docker/backups/sawtak_$$(date +%Y%m%d_%H%M%S).sql; \
+	elif docker ps | grep -q sawtak-postgres; then \
+		docker exec sawtak-postgres pg_dump -U postgres sawtak > docker/backups/sawtak_$$(date +%Y%m%d_%H%M%S).sql; \
+	else \
+		echo "No PostgreSQL container found. Start with 'make dev-db' or 'make dev' first."; \
+		exit 1; \
+	fi
+	@echo "✅ Database backed up to docker/backups/"
+	@ls -la docker/backups/*.sql | tail -1
+
+# Restore database from the most recent backup
+restore:
+	@echo "Restoring database from backup..."
+	@BACKUP_FILE=$$(ls -t docker/backups/*.sql 2>/dev/null | head -1); \
+	if [ -z "$$BACKUP_FILE" ]; then \
+		echo "No backup files found in docker/backups/"; \
+		exit 1; \
+	fi; \
+	echo "Using backup: $$BACKUP_FILE"; \
+	if docker ps | grep -q sawtak-postgres-dev; then \
+		docker exec sawtak-postgres-dev psql -U postgres -c "DROP DATABASE IF EXISTS sawtak;"; \
+		docker exec sawtak-postgres-dev psql -U postgres -c "CREATE DATABASE sawtak;"; \
+		docker cp $$BACKUP_FILE sawtak-postgres-dev:/tmp/backup.sql; \
+		docker exec sawtak-postgres-dev psql -U postgres -d sawtak -f /tmp/backup.sql; \
+	elif docker ps | grep -q sawtak-postgres; then \
+		docker exec sawtak-postgres psql -U postgres -c "DROP DATABASE IF EXISTS sawtak;"; \
+		docker exec sawtak-postgres psql -U postgres -c "CREATE DATABASE sawtak;"; \
+		docker cp $$BACKUP_FILE sawtak-postgres:/tmp/backup.sql; \
+		docker exec sawtak-postgres psql -U postgres -d sawtak -f /tmp/backup.sql; \
+	else \
+		echo "No PostgreSQL container found."; \
+		exit 1; \
+	fi
+	@echo "✅ Database restored"
+
 
 # ============================================
 # Production Commands
@@ -126,10 +199,10 @@ clean:
 	docker-compose -f docker/docker-compose.yml down -v --rmi local
 	@echo "✅ Containers and volumes removed"
 
-backup:
-	@mkdir -p backups
-	docker-compose -f docker/docker-compose.yml exec postgres pg_dump -U postgres sawtak > backups/sawtak_$$(date +%Y%m%d_%H%M%S).sql
-	@echo "✅ Database backed up to backups/"
+clean-dev:
+	docker-compose -f docker/docker-compose.dev.yml down -v
+	@echo "✅ Dev containers and volumes removed"
+
 
 # ============================================
 # Health Checks

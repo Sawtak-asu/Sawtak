@@ -1,13 +1,15 @@
 "use client";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/logo";
 import { Menu, X, LogOut, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/auth-context";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,13 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 interface NavbarProps {
   variant?: "floating" | "sticky";
@@ -40,6 +35,8 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const { logout, user, isLoggedIn, isLoading } = useAuth();
   const pathname = usePathname();
+  const t = useTranslations("Navbar");
+  const tCommon = useTranslations("Common");
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -52,23 +49,23 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
   const isFloating = variant === "floating";
 
   const navLinks = [
-    { href: "/feed", label: "Feed" },
-    { href: "/file-complaint", label: "File Complaint" },
-    { href: "/track", label: "Track" },
-    { href: "/docs", label: "Docs" },
+    { href: "/feed", label: t("feed") },
+    { href: "/file-complaint", label: t("fileComplaint") },
+    { href: "/track", label: t("track") },
+    { href: "/docs", label: t("docs") },
   ];
 
   if (isFloating) {
     // Floating navbar for homepage
     return (
-      <header>
+      <header dir="ltr">
         <nav
-          className="fixed z-20 w-full px-2">
+          className="fixed z-20 w-full px-2 h-[5vh]">
           <div
             className={cn(
               "mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12",
               isScrolled ?
-              "bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5" : "bg-transparent"
+                "bg-background/80 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5" : "bg-transparent"
             )}>
             <div className="flex flex-wrap items-center justify-between py-3 lg:py-4">
               <div className="flex w-full items-center justify-between lg:w-auto">
@@ -89,7 +86,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
               </div>
 
               <div className="hidden lg:block relative">
-                <ul className="flex gap-8 text-sm font-medium">
+                <ul className="flex gap-8 text-sm font-medium" dir='auto'>
                   {navLinks.map((link) => (
                     <li key={link.href}>
                       <Link
@@ -111,7 +108,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                 ) : isLoggedIn ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2">
+                      <Button variant="ghost" className="gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">
                             {user?.name?.[0] || user?.email?.[0] || "U"}
@@ -121,42 +118,42 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="flex flex-col items-start">
-                        <span className="font-medium">{truncateName(user?.name)}</span>
-                        <span className="text-xs text-muted-foreground">{user?.email}</span>
-                      </DropdownMenuItem>
+                      <Link href="/profile">
+                        <DropdownMenuItem className="flex flex-col items-start">
+                          <span className="font-medium">{truncateName(user?.name)}</span>
+                          <span className="text-xs text-muted-foreground">{user?.email}</span>
+                        </DropdownMenuItem>
+                      </Link>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="flex items-center">
-                          <FileText className="mr-2 h-4 w-4" />
-                          My Complaints
+                          <FileText className="me-2 h-4 w-4" />
+                          {t("myComplaints")}
                         </Link>
                       </DropdownMenuItem>
                       {user?.role?.toLowerCase() === "admin" && (
                         <DropdownMenuItem asChild>
                           <Link href="/admin" className="flex items-center">
-                            <Shield className="mr-2 h-4 w-4" />
-                            Admin Dashboard
+                            <Shield className="me-2 h-4 w-4" />
+                            {t("adminDashboard")}
                           </Link>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={logout} className="text-red-600">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sign Out
+                        <LogOut className="me-2 h-4 w-4" />
+                        {tCommon("signOut")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href="/login">Login</Link>
-                    </Button>
                     <Button asChild size="sm">
-                      <Link href="/signup">Sign Up</Link>
+                      <Link href="/login">{tCommon("getStarted")}</Link>
                     </Button>
                   </div>
                 )}
+                <LanguageSwitcher />
                 <ModeToggle />
               </div>
 
@@ -192,16 +189,16 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                               <span className="text-xs text-muted-foreground">{user?.email}</span>
                             </div>
                           </div>
-                          
+
                           <Link
                             href="/profile"
                             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                             onClick={() => setMenuState(false)}
                           >
                             <FileText className="h-4 w-4" />
-                            My Complaints
+                            {t("myComplaints")}
                           </Link>
-                          
+
                           {user?.role?.toUpperCase() === "ADMIN" && (
                             <Link
                               href="/admin"
@@ -209,10 +206,10 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                               onClick={() => setMenuState(false)}
                             >
                               <Shield className="h-4 w-4" />
-                              Admin Dashboard
+                              {t("adminDashboard")}
                             </Link>
                           )}
-                          
+
                           <button
                             onClick={() => {
                               logout();
@@ -221,22 +218,22 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                             className="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 w-full text-left"
                           >
                             <LogOut className="h-4 w-4" />
-                            Sign Out
+                            {tCommon("signOut")}
                           </button>
                         </div>
                       ) : (
                         <div className="flex flex-col gap-2 px-3">
-                          <Button asChild variant="outline" className="w-full justify-center">
-                            <Link href="/login" onClick={() => setMenuState(false)}>Login</Link>
-                          </Button>
                           <Button asChild className="w-full justify-center">
-                            <Link href="/signup" onClick={() => setMenuState(false)}>Sign Up</Link>
+                            <Link href="/login" onClick={() => setMenuState(false)}>{tCommon("getStarted")}</Link>
                           </Button>
                         </div>
                       )}
                       <div className="mt-4 px-3 flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Theme</span>
-                        <ModeToggle />
+                        <span className="text-sm text-muted-foreground">{tCommon("theme")}</span>
+                        <div className="flex items-center gap-2">
+                          <LanguageSwitcher />
+                          <ModeToggle />
+                        </div>
                       </div>
                     </div>
                   </nav>
@@ -251,7 +248,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
 
   // Sticky navbar for other pages
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header dir="ltr" className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-6">
         <div className="flex flex-wrap items-center justify-between py-3">
           {/* Logo & Mobile Toggle */}
@@ -269,7 +266,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
+          <nav className="hidden md:flex items-center gap-6 text-sm" dir='auto'>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -291,7 +288,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
             ) : isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" className="gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
                         {user?.name?.[0] || user?.email?.[0] || "U"}
@@ -301,42 +298,42 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="flex flex-col items-start">
-                    <span className="font-medium">{truncateName(user?.name)}</span>
-                    <span className="text-xs text-muted-foreground">{user?.email}</span>
-                  </DropdownMenuItem>
+                  <Link href="/profile">
+                    <DropdownMenuItem className="flex flex-col items-start">
+                      <span className="font-medium">{truncateName(user?.name)}</span>
+                      <span className="text-xs text-muted-foreground">{user?.email}</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="flex items-center">
-                      <FileText className="mr-2 h-4 w-4" />
-                      My Complaints
+                      <FileText className="me-2 h-4 w-4" />
+                      {t("myComplaints")}
                     </Link>
                   </DropdownMenuItem>
                   {user?.role?.toLowerCase() === "admin" && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="flex items-center">
-                        <Shield className="mr-2 h-4 w-4" />
-                        Admin Dashboard
+                        <Shield className="me-2 h-4 w-4" />
+                        {t("adminDashboard")}
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    <LogOut className="me-2 h-4 w-4" />
+                    {tCommon("signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/login">Login</Link>
-                </Button>
                 <Button asChild size="sm">
-                  <Link href="/signup">Sign Up</Link>
+                  <Link href="/login">{tCommon("signIn")}</Link>
                 </Button>
               </div>
             )}
+            <LanguageSwitcher />
             <ModeToggle />
           </div>
 
@@ -372,16 +369,16 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           <span className="text-xs text-muted-foreground">{user?.email}</span>
                         </div>
                       </div>
-                      
+
                       <Link
                         href="/profile"
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                         onClick={() => setMenuState(false)}
                       >
                         <FileText className="h-4 w-4" />
-                        My Complaints
+                        {t("myComplaints")}
                       </Link>
-                      
+
                       {user?.role?.toUpperCase() === "ADMIN" && (
                         <Link
                           href="/admin"
@@ -389,10 +386,10 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           onClick={() => setMenuState(false)}
                         >
                           <Shield className="h-4 w-4" />
-                          Admin Dashboard
+                          {t("adminDashboard")}
                         </Link>
                       )}
-                      
+
                       <button
                         onClick={() => {
                           logout();
@@ -401,22 +398,22 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                         className="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 w-full text-left"
                       >
                         <LogOut className="h-4 w-4" />
-                        Sign Out
+                        {tCommon("signOut")}
                       </button>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 px-3">
-                      <Button asChild variant="outline" className="w-full justify-center">
-                        <Link href="/login" onClick={() => setMenuState(false)}>Login</Link>
-                      </Button>
                       <Button asChild className="w-full justify-center">
-                        <Link href="/signup" onClick={() => setMenuState(false)}>Sign Up</Link>
+                        <Link href="/login" onClick={() => setMenuState(false)}>{tCommon("getStarted")}</Link>
                       </Button>
                     </div>
                   )}
                   <div className="mt-4 px-3 flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Theme</span>
-                    <ModeToggle />
+                    <span className="text-sm text-muted-foreground">{tCommon("theme")}</span>
+                    <div className="flex items-center gap-2">
+                      <LanguageSwitcher />
+                      <ModeToggle />
+                    </div>
                   </div>
                 </div>
               </nav>
@@ -430,4 +427,3 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
 
 // Backwards compatibility alias
 export const HeroHeader = () => <Navbar variant="floating" />;
-

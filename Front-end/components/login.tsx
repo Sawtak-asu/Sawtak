@@ -1,16 +1,17 @@
 "use client";
 
 import { LogoIcon } from '@/components/logo'
-import Link from 'next/link'
-import { GoogleSignInButton } from './google-sign-in-button'
+import { Link } from '@/i18n/navigation';
 import { HaweyaSignInButton } from './haweya-sign-in-button'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
     const { user, isLoading } = useAuth();
     const router = useRouter();
+    const t = useTranslations('Login');
 
     useEffect(() => {
         if (user && !isLoading) {
@@ -38,24 +39,23 @@ export default function LoginPage() {
                         <LogoIcon className="w-12 h-12" />
                     </Link>
                     <h2 className="text-3xl font-semibold text-foreground mb-4">
-                        Report with confidence.
+                        {t('brandHeading')}
                     </h2>
                     <p className="text-muted-foreground text-lg leading-relaxed">
-                        Sawtak provides a secure platform for anonymous whistleblowing 
-                        with blockchain-verified submissions and end-to-end encryption.
+                        {t('brandDescription')}
                     </p>
                     <div className="mt-12 flex gap-8 text-sm text-muted-foreground">
                         <div>
                             <div className="text-2xl font-semibold text-foreground">100%</div>
-                            <div>Anonymous</div>
+                            <div>{t('stat1Label')}</div>
                         </div>
                         <div>
                             <div className="text-2xl font-semibold text-foreground">256-bit</div>
-                            <div>Encryption</div>
+                            <div>{t('stat2Label')}</div>
                         </div>
                         <div>
                             <div className="text-2xl font-semibold text-foreground">Hedera</div>
-                            <div>Blockchain</div>
+                            <div>{t('stat3Label')}</div>
                         </div>
                     </div>
                 </div>
@@ -73,17 +73,17 @@ export default function LoginPage() {
 
                     <div className="mb-8">
                         <h1 className="text-2xl font-semibold text-foreground">
-                            Sign in
+                            {t('title')}
                         </h1>
                         <p className="text-muted-foreground mt-1">
-                            Welcome back. Choose your preferred sign-in method.
+                            {t('subtitle')}
                         </p>
                     </div>
 
                     {/* OAuth login buttons */}
                     <div className="space-y-3">
                         {/* DISABLED - Google Sign In */}
-                        {/* <GoogleSignInButton /> *
+                        {/* <GoogleSignInButton /> */}
                         {/* Haweya  (mock xD) */}
                         <HaweyaSignInButton />
                     </div>
@@ -91,13 +91,13 @@ export default function LoginPage() {
                     {/* Info text */}
                     <div className="mt-8 p-4 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground text-center">
-                            By signing in, you agree to our{' '}
+                            {t('consent')}{' '}
                             <Link href="/terms" className="text-primary hover:underline">
-                                Terms of Service
+                                {t('terms')}
                             </Link>{' '}
-                            and{' '}
-                            <Link href="/privacy" className="text-primary hover:underline">
-                                Privacy Policy
+                            {t('and')}{' '}
+                            <Link href="/privacy-policy" className="text-primary hover:underline">
+                                {t('privacy')}
                             </Link>
                         </p>
                     </div>

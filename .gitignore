@@ -38,4 +38,11 @@ redis_data/
 *.pem
 *.key
 
+# Internal docs
+DEVELOPMENT.md
+
+# Database backups
+docker/backups/
+*.sql
+
 /docs

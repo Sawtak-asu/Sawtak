@@ -37,6 +37,12 @@ interface ComplaintMessage {
   text: string;
   category: string;
   area?: string;
+  directed_to?: {
+    type: "ministry" | "governorate" | "center";
+    ministryId?: string;
+    governorateId?: string;
+    centerId?: string;
+  } | null;
   incident_date?: string;
   evidence?: string[];
   timestamp?: string;
@@ -181,6 +187,7 @@ export class HederaIndexerService {
         title: rawMessage.title,
         text: rawMessage.text,
         category: rawMessage.category,
+        directed_to: rawMessage.directed_to || rawMessage.directedTo,
         area: rawMessage.area,
         incident_date: rawMessage.incident_date,
         evidence: rawMessage.evidence,
@@ -217,6 +224,7 @@ export class HederaIndexerService {
           title: complaint.title,
           complaint_text: complaint.text,
           category: complaint.category,
+          directed_to: complaint.directed_to ?? undefined,
           area: complaint.area || "Unknown",
           severity: "medium", // Default severity
           incident_date: complaint.incident_date ? new Date(complaint.incident_date) : consensusDate,

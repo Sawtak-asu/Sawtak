@@ -20,6 +20,16 @@ export const feedRoutes = new Elysia({ prefix: "/api/feed" })
    */
   .get("/", async ({ query }) => {
     try {
+      // Parse directedTo if provided as JSON string
+      let directedTo: any = undefined;
+      if (query.directedTo) {
+        try {
+          directedTo = JSON.parse(query.directedTo as string);
+        } catch (e) {
+          console.log("[FeedRoutes] Failed to parse directedTo:", e);
+        }
+      }
+
       const result = await feedService.getPublicFeed({
         search: query.search as string | undefined,
         category: query.category as string | undefined,
@@ -29,7 +39,10 @@ export const feedRoutes = new Elysia({ prefix: "/api/feed" })
         sort: (query.sort as "newest" | "oldest") || "newest",
         page: query.page ? parseInt(query.page as string) : 1,
         limit: query.limit ? parseInt(query.limit as string) : 10,
+        submissionMode: query.submissionMode as "anonymous" | "public" | "all" | undefined,
+        directedTo,
       });
+
 
       return {
         success: true,

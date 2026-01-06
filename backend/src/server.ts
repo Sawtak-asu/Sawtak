@@ -17,6 +17,7 @@ import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
+import { openapi } from '@elysiajs/openapi'
 
 const startTime = Date.now();
 
@@ -30,6 +31,7 @@ async function bootstrap() {
   const app = new Elysia()
     .use(swagger())
     .use(cors())
+    .use(openapi())
     .use(requestLogger) // Log all requests
     .use(authRoutes)
     .use(anonymousComplaintRoutes)

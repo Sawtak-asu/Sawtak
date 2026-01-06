@@ -1,11 +1,19 @@
 import { prisma } from "../db";
 
+export type DirectedTo = {
+  type: "ministry" | "governorate" | "center";
+  ministryId?: string;
+  governorateId?: string;
+  centerId?: string;
+} | null;
+
 export interface FeedComplaint {
   id: string;
   title: string;
   text: string;
   category: string;
   area: string;
+  directedTo: DirectedTo;
   incidentDate: string;
   createdAt: string;
   status: string;
@@ -31,6 +39,8 @@ export interface FeedFilters {
   sort?: "newest" | "oldest";
   page?: number;
   limit?: number;
+  submissionMode?: "anonymous" | "public" | "all";
+  directedTo?: DirectedTo;
 }
 
 export interface FeedResult {
@@ -105,6 +115,50 @@ export class FeedService {
       anonymousWhere.consensus_timestamp = { ...anonymousWhere.consensus_timestamp, lte: dateTo };
     }
 
+    // Filter by directedTo if specified
+    if (filters.directedTo) {
+      const directedToFilter: any = {
+        path: ["type"],
+        equals: filters.directedTo.type,
+      };
+
+      // Add specific ID filtering based on type
+      if (filters.directedTo.type === "ministry" && filters.directedTo.ministryId) {
+        identifiedWhere.AND = [
+          ...(identifiedWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "ministry" } },
+          { directed_to: { path: ["ministryId"], equals: filters.directedTo.ministryId } },
+        ];
+        anonymousWhere.AND = [
+          ...(anonymousWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "ministry" } },
+          { directed_to: { path: ["ministryId"], equals: filters.directedTo.ministryId } },
+        ];
+      } else if (filters.directedTo.type === "governorate" && filters.directedTo.governorateId) {
+        identifiedWhere.AND = [
+          ...(identifiedWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "governorate" } },
+          { directed_to: { path: ["governorateId"], equals: filters.directedTo.governorateId } },
+        ];
+        anonymousWhere.AND = [
+          ...(anonymousWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "governorate" } },
+          { directed_to: { path: ["governorateId"], equals: filters.directedTo.governorateId } },
+        ];
+      } else if (filters.directedTo.type === "center" && filters.directedTo.centerId) {
+        identifiedWhere.AND = [
+          ...(identifiedWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "center" } },
+          { directed_to: { path: ["centerId"], equals: filters.directedTo.centerId } },
+        ];
+        anonymousWhere.AND = [
+          ...(anonymousWhere.AND || []),
+          { directed_to: { path: ["type"], equals: "center" } },
+          { directed_to: { path: ["centerId"], equals: filters.directedTo.centerId } },
+        ];
+      }
+    }
+
     // Fetch both types of complaints
     const [identifiedComplaints, anonymousComplaints, identifiedCount, anonymousCount] =
       await Promise.all([
@@ -132,13 +186,28 @@ export class FeedService {
         prisma.indexedComplaint.count({ where: anonymousWhere }),
       ]);
 
+    // If submissionMode filter is set, only use that type
+    let finalIdentified = identifiedComplaints;
+    let finalAnonymous = anonymousComplaints;
+    let finalIdentifiedCount = identifiedCount;
+    let finalAnonymousCount = anonymousCount;
+
+    if (filters.submissionMode === "public") {
+      finalAnonymous = [];
+      finalAnonymousCount = 0;
+    } else if (filters.submissionMode === "anonymous") {
+      finalIdentified = [];
+      finalIdentifiedCount = 0;
+    }
+
     // Transform to unified format
-    const identifiedFormatted: FeedComplaint[] = identifiedComplaints.map((c) => ({
+    const identifiedFormatted: FeedComplaint[] = finalIdentified.map((c) => ({
       id: c.id,
       title: c.title,
       text: c.text,
       category: c.category,
       area: c.area,
+      directedTo: c.directed_to as DirectedTo,
       incidentDate: c.incident_date.toISOString(),
       createdAt: c.created_at.toISOString(),
       status: c.status,
@@ -147,12 +216,13 @@ export class FeedService {
       evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
     }));
 
-    const anonymousFormatted: FeedComplaint[] = anonymousComplaints.map((c) => ({
+    const anonymousFormatted: FeedComplaint[] = finalAnonymous.map((c) => ({
       id: c.hcs_hash,
       title: c.title,
       text: c.complaint_text,
       category: c.category,
       area: c.area,
+      directedTo: c.directed_to as DirectedTo,
       incidentDate: c.incident_date.toISOString(),
       createdAt: c.consensus_timestamp.toISOString(),
       status: c.status,
@@ -173,7 +243,7 @@ export class FeedService {
 
     // Paginate
     const paginatedComplaints = allComplaints.slice(skip, skip + limit);
-    const total = identifiedCount + anonymousCount;
+    const total = finalIdentifiedCount + finalAnonymousCount;
 
     // Fetch upvote counts for public identified complaints only
     // Anonymous complaints don't have upvotes
@@ -299,6 +369,12 @@ export class FeedService {
         text: identified.text,
         category: identified.category,
         area: identified.area,
+        directedTo: identified.directed_to as {
+          type: "ministry" | "governorate" | "center";
+          ministryId?: string;
+          governorateId?: string;
+          centerId?: string;
+        } | null,
         incidentDate: identified.incident_date.toISOString(),
         createdAt: identified.created_at.toISOString(),
         status: identified.status,
@@ -320,6 +396,7 @@ export class FeedService {
         text: anonymous.complaint_text,
         category: anonymous.category,
         area: anonymous.area,
+        directedTo: anonymous.directed_to as DirectedTo,
         incidentDate: anonymous.incident_date.toISOString(),
         createdAt: anonymous.consensus_timestamp.toISOString(),
         status: anonymous.status,
