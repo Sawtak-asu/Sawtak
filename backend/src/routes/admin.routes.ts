@@ -1,9 +1,15 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { prisma } from "../db";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 
-export const adminRoutes = new Elysia({ prefix: "/api/admin" })
+export const adminRoutes = new Elysia({ 
+  prefix: "/api/admin",
+  detail: {
+    tags: ["Admin"],
+    description: "Admin endpoints for managing complaints and viewing statistics"
+  }
+})
   .use(authMiddleware)
 
   /**
@@ -158,6 +164,67 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       set.status = 500;
       return { success: false, error: error.message };
     }
+  }, {
+    query: t.Object({
+      page: t.Optional(t.String({ description: "Page number (default: 1)" })),
+      limit: t.Optional(t.String({ description: "Items per page (default: 20)" })),
+      search: t.Optional(t.String({ description: "Search in title and description" })),
+      status: t.Optional(t.String({ description: "Filter by status: submitted, investigating, resolved, dismissed, or all" })),
+      visibility: t.Optional(t.String({ description: "Filter by visibility: public, private, or all" }))
+    }),
+    detail: {
+      summary: "Get All Complaints",
+      description: `Get all complaints for admin review, including private ones. Supports filtering, search, and pagination.
+
+**Includes:**
+- Identified complaints with user information
+- Anonymous complaints with blockchain data
+- Unified format for easy processing`,
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Paginated complaint list with stats",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      complaints: { type: "array", items: { type: "object" } },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          page: { type: "integer" },
+                          limit: { type: "integer" },
+                          total: { type: "integer" },
+                          totalPages: { type: "integer" }
+                        }
+                      },
+                      stats: {
+                        type: "object",
+                        properties: {
+                          total: { type: "integer" },
+                          pending: { type: "integer" },
+                          investigating: { type: "integer" },
+                          resolved: { type: "integer" },
+                          dismissed: { type: "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" },
+        500: { description: "Server error" }
+      }
+    }
   })
 
   /**
@@ -229,6 +296,56 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       set.status = 500;
       return { success: false, error: error.message };
     }
+  }, {
+    params: t.Object({
+      id: t.String({ description: "Complaint ID (UUID or HCS hash)" })
+    }),
+    body: t.Object({
+      status: t.String({ description: "New status: submitted, investigating, resolved, or dismissed" }),
+      note: t.Optional(t.String({ description: "Public note about the status change" }))
+    }),
+    detail: {
+      summary: "Update Complaint Status",
+      description: `Update the status of a complaint. Works for both identified and anonymous complaints.
+
+**Valid statuses:**
+- \`submitted\` - Initial status, awaiting review
+- \`investigating\` - Under active investigation
+- \`resolved\` - Issue has been addressed
+- \`dismissed\` - Complaint rejected (spam, invalid, etc.)
+
+**Note:** For anonymous complaints, status updates may also be published to the blockchain for transparency.`,
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Status updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  message: { type: "string" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      status: { type: "string" },
+                      type: { type: "string", enum: ["identified", "anonymous"] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        400: { description: "Invalid status value" },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" },
+        404: { description: "Complaint not found" },
+        500: { description: "Update failed" }
+      }
+    }
   })
 
   /**
@@ -272,5 +389,42 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
     } catch (error: any) {
       set.status = 500;
       return { success: false, error: error.message };
+    }
+  }, {
+    detail: {
+      summary: "Get Admin Statistics",
+      description: "Get aggregate dashboard statistics including total complaints, breakdown by type, and status distribution.",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Dashboard statistics",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      total: { type: "integer", description: "Total complaint count" },
+                      identified: { type: "integer", description: "Identified complaints count" },
+                      anonymous: { type: "integer", description: "Anonymous complaints count" },
+                      byStatus: {
+                        type: "object",
+                        description: "Count per status",
+                        additionalProperties: { type: "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" },
+        500: { description: "Server error" }
+      }
     }
   });
