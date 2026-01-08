@@ -46,3 +46,4 @@ docker/backups/
 *.sql
 
 /docs
+/ignore
