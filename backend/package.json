@@ -21,7 +21,7 @@
     "date-fns": "latest",
     "elysia": "latest",
     "google-auth-library": "^10.5.0",
-    "ioredis": "latest",
+    "ioredis": "^5.9.1",
     "web3.storage": "latest",
     "zod": "latest"
   },

@@ -2,7 +2,7 @@
 # Sawtak - Production Docker Compose
 # ============================================
 # Usage: docker-compose -f docker-compose.prod.yml up -d
-# Architecture: 3 containers + Traefik + Optional Monitoring
+# Architecture: 4 containers + Traefik + Optional Monitoring
 # ============================================
 
 services:
@@ -29,6 +29,25 @@ services:
     # No ports exposed - internal only
 
   # ==========================================
+  # Redis - Rate Limiting & Caching
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: sawtak-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No ports exposed - internal only
+
+  # ==========================================
   # Backend Service (Monolith API)
   # ==========================================
   backend:
@@ -40,11 +59,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 8000
       FRONTEND_URL: ${FRONTEND_URL}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sawtak}?schema=public
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      
+      # Rate Limiting
+      RATE_LIMIT_ANONYMOUS_HOURLY: ${RATE_LIMIT_ANONYMOUS_HOURLY:-5}
+      RATE_LIMIT_IDENTIFIED_HOURLY: ${RATE_LIMIT_IDENTIFIED_HOURLY:-20}
+      RATE_LIMIT_API_HOURLY: ${RATE_LIMIT_API_HOURLY:-100}
       
       # JWT & Encryption
       JWT_SECRET: ${JWT_SECRET}
@@ -209,6 +240,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
   letsencrypt_data:
     driver: local

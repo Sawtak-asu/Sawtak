@@ -1,0 +1,104 @@
+# Sawtak - Alertmanager Configuration
+# Routes and receivers for alert notifications
+
+global:
+  # How long to wait before sending a notification again for the same alert
+  resolve_timeout: 5m
+
+# The root route - all alerts start here
+route:
+  # Group alerts by alertname and instance
+  group_by: ['alertname', 'instance']
+  # How long to wait to buffer alerts of the same group
+  group_wait: 30s
+  # How long to wait before sending notifications about new alerts in a group
+  group_interval: 5m
+  # How long to wait before resending a notification
+  repeat_interval: 4h
+  # Default receiver
+  receiver: 'email-notifications'
+  
+  # Child routes for different severity levels
+  routes:
+    # Critical alerts go to all channels immediately
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      repeat_interval: 1h
+    
+    # Warning alerts use default settings
+    - match:
+        severity: warning
+      receiver: 'email-notifications'
+
+# Receivers define how alerts are sent
+receivers:
+  # Email notifications (configure SMTP)
+  - name: 'email-notifications'
+    email_configs:
+      - to: '${ALERT_EMAIL:-admin@sawtak.app}'
+        from: '${ALERT_FROM:-alerts@sawtak.app}'
+        smarthost: '${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}'
+        auth_username: '${SMTP_USER}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true
+        send_resolved: true
+        html: |
+          {{ range .Alerts }}
+          <h2>{{ .Status | toUpper }}: {{ .Labels.alertname }}</h2>
+          <p><strong>Severity:</strong> {{ .Labels.severity }}</p>
+          <p><strong>Summary:</strong> {{ .Annotations.summary }}</p>
+          <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+          <p><strong>Instance:</strong> {{ .Labels.instance }}</p>
+          <p><strong>Started:</strong> {{ .StartsAt }}</p>
+          {{ if .EndsAt }}<p><strong>Ended:</strong> {{ .EndsAt }}</p>{{ end }}
+          <hr>
+          {{ end }}
+
+  # Critical alerts - multiple channels
+  - name: 'critical-alerts'
+    email_configs:
+      - to: '${ALERT_EMAIL:-admin@sawtak.app}'
+        from: '${ALERT_FROM:-alerts@sawtak.app}'
+        smarthost: '${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}'
+        auth_username: '${SMTP_USER}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true
+        send_resolved: true
+    # Uncomment and configure for Slack/Discord/PagerDuty
+    # slack_configs:
+    #   - api_url: '${SLACK_WEBHOOK_URL}'
+    #     channel: '#sawtak-alerts'
+    #     send_resolved: true
+    #     title: '{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+  # Webhook receiver for custom integrations
+  - name: 'webhook'
+    webhook_configs:
+      - url: '${WEBHOOK_URL:-http://localhost:8000/api/webhooks/alerts}'
+        send_resolved: true
+
+# Inhibition rules - suppress less important alerts when critical ones fire
+inhibit_rules:
+  # If service is down, don't alert about high latency
+  - source_match:
+      alertname: 'BackendDown'
+    target_match_re:
+      alertname: 'High(Latency|ErrorRate)'
+    equal: ['instance']
+  
+  # If Redis is down, don't alert about rate limiting
+  - source_match:
+      alertname: 'RedisDown'
+    target_match:
+      alertname: 'RateLimitViolationsHigh'
+    equal: ['instance']
+
+  # If Postgres is down, don't alert about slow queries
+  - source_match:
+      alertname: 'PostgresDown'
+    target_match:
+      alertname: 'PostgresSlowQueries'
+    equal: ['instance']
