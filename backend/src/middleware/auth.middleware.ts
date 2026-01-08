@@ -14,6 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
  *   // user contains: { userId, email, role }
  * })
  */
+
 export const authMiddleware = new Elysia()
   .use(jwt({ name: "jwt", secret: JWT_SECRET }))
   .derive(async ({ headers, jwt, set }: any) => {
