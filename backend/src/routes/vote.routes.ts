@@ -1,10 +1,15 @@
 import { Elysia, t } from "elysia";
 import { VoteService } from "../services/vote.service";
-import { authMiddleware } from "../middleware/auth.middleware";
 
 const voteService = new VoteService();
 
-export const voteRoutes = new Elysia({ prefix: "/api/vote" })
+export const voteRoutes = new Elysia({ 
+  prefix: "/api/vote",
+  detail: {
+    tags: ["Voting"],
+    description: "Upvote system for public identified complaints"
+  }
+})
   /**
    * POST /api/vote
    * Toggle upvote on a public identified complaint
@@ -86,8 +91,40 @@ export const voteRoutes = new Elysia({ prefix: "/api/vote" })
     },
     {
       body: t.Object({
-        complaintId: t.String(),
+        complaintId: t.String({ description: "ID of the identified complaint to vote on" }),
       }),
+      detail: {
+        summary: "Toggle Vote",
+        description: `Toggle your upvote on a public identified complaint. If you haven't voted, adds a vote. If you've already voted, removes it.
+
+**Note:** Only public identified complaints can be voted on. Anonymous complaints cannot receive votes.`,
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Vote toggled successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        voted: { type: "boolean", description: "True if vote was added, false if removed" },
+                        newCount: { type: "integer", description: "Updated vote count" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          401: { description: "Authentication required" },
+          404: { description: "Complaint not found or not public" },
+          500: { description: "Server error" }
+        }
+      }
     }
   )
 
@@ -135,6 +172,37 @@ export const voteRoutes = new Elysia({ prefix: "/api/vote" })
           success: false,
           error: error.message || "Failed to get vote count",
         };
+      }
+    },
+    {
+      params: t.Object({
+        complaintId: t.String({ description: "Complaint ID" })
+      }),
+      detail: {
+        summary: "Get Vote Count",
+        description: "Get the vote count for a specific complaint. If authenticated, also returns whether the current user has voted.",
+        responses: {
+          200: {
+            description: "Vote information",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        voteCount: { type: "integer" },
+                        hasVoted: { type: "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   )
@@ -189,6 +257,37 @@ export const voteRoutes = new Elysia({ prefix: "/api/vote" })
           success: false,
           error: error.message || "Failed to get vote status",
         };
+      }
+    },
+    {
+      query: t.Object({
+        complaintId: t.String({ description: "Complaint ID to check" })
+      }),
+      detail: {
+        summary: "Get Vote Status (Query)",
+        description: "Alternative endpoint to get vote status using query parameters instead of path parameters.",
+        responses: {
+          200: {
+            description: "Vote status",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        voteCount: { type: "integer" },
+                        hasVoted: { type: "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   )
@@ -247,7 +346,36 @@ export const voteRoutes = new Elysia({ prefix: "/api/vote" })
     },
     {
       body: t.Object({
-        complaintIds: t.Array(t.String()),
+        complaintIds: t.Array(t.String(), { description: "Array of complaint IDs to fetch vote counts for" }),
       }),
+      detail: {
+        summary: "Batch Get Votes",
+        description: "Efficiently get vote counts for multiple complaints in a single request. Useful for feed pages.",
+        responses: {
+          200: {
+            description: "Vote counts for all requested complaints",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean" },
+                    data: {
+                      type: "object",
+                      additionalProperties: {
+                        type: "object",
+                        properties: {
+                          voteCount: { type: "integer" },
+                          hasVoted: { type: "boolean" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   );

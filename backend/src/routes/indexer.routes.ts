@@ -1,8 +1,14 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { getIndexer, startIndexer, stopIndexer } from "../services/hedera-indexer.service";
 import { authMiddleware } from "../middleware/auth.middleware";
 
-export const indexerRoutes = new Elysia({ prefix: "/api/indexer" })
+export const indexerRoutes = new Elysia({ 
+  prefix: "/api/indexer",
+  detail: {
+    tags: ["Indexer"],
+    description: "Hedera blockchain indexer management endpoints"
+  }
+})
   /**
    * GET /api/indexer/status
    * Get the current indexer status (public)
@@ -13,6 +19,36 @@ export const indexerRoutes = new Elysia({ prefix: "/api/indexer" })
       success: true,
       data: indexer.getStatus(),
     };
+  }, {
+    detail: {
+      summary: "Get Indexer Status",
+      description: "Get the current status of the Hedera HCS indexer. This is a public endpoint for monitoring.",
+      responses: {
+        200: {
+          description: "Indexer status",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      isRunning: { type: "boolean", description: "Whether the indexer is actively polling" },
+                      lastTimestamp: { type: "string", description: "Last processed consensus timestamp" },
+                      messagesProcessed: { type: "integer", description: "Total messages processed" },
+                      lastError: { type: "string", description: "Last error message if any" },
+                      pollingIntervalMs: { type: "integer", description: "Polling interval in milliseconds" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   })
 
   /**
@@ -36,6 +72,31 @@ export const indexerRoutes = new Elysia({ prefix: "/api/indexer" })
       message: "Indexer started",
       data: getIndexer().getStatus(),
     };
+  }, {
+    detail: {
+      summary: "Start Indexer",
+      description: "Start the Hedera HCS indexer. Requires admin privileges.",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Indexer started",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  message: { type: "string" },
+                  data: { type: "object" }
+                }
+              }
+            }
+          }
+        },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" }
+      }
+    }
   })
 
   /**
@@ -54,6 +115,31 @@ export const indexerRoutes = new Elysia({ prefix: "/api/indexer" })
       message: "Indexer stopped",
       data: getIndexer().getStatus(),
     };
+  }, {
+    detail: {
+      summary: "Stop Indexer",
+      description: "Stop the Hedera HCS indexer. Requires admin privileges.",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Indexer stopped",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  message: { type: "string" },
+                  data: { type: "object" }
+                }
+              }
+            }
+          }
+        },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" }
+      }
+    }
   })
 
   /**
@@ -80,4 +166,35 @@ export const indexerRoutes = new Elysia({ prefix: "/api/indexer" })
       message: `Reindexing from ${timestamp}`,
       data: indexer.getStatus(),
     };
+  }, {
+    body: t.Object({
+      timestamp: t.String({ description: "Consensus timestamp to reindex from (e.g., 1699999999.000000000)" })
+    }),
+    detail: {
+      summary: "Reindex from Timestamp",
+      description: `Force reindex of HCS messages from a specific timestamp. Useful for recovering from missed messages or re-processing.
+
+**Warning:** This may cause duplicate processing. Use with caution.`,
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Reindex started",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  message: { type: "string" },
+                  data: { type: "object" }
+                }
+              }
+            }
+          }
+        },
+        400: { description: "Timestamp is required" },
+        401: { description: "Authentication required" },
+        403: { description: "Admin access required" }
+      }
+    }
   });
