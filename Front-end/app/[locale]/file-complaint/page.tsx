@@ -17,7 +17,7 @@ export default function ComplaintPage() {
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isLoading, isLoggedIn, router]);
 
