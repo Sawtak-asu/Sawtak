@@ -14,7 +14,11 @@ import {
   ChevronRight,
   Server,
   Key,
-  Globe
+  Globe,
+  Eye,
+  Users,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -28,6 +32,7 @@ export default function DocsPage() {
     { id: "architecture", title: t("sections.architecture"), icon: Server },
     { id: "security", title: t("sections.security"), icon: Lock },
     { id: "blockchain", title: t("sections.blockchain"), icon: Hash },
+    { id: "moderation", title: t("sections.moderation"), icon: Eye },
     { id: "faq", title: t("sections.faq"), icon: Database },
   ];
 
@@ -270,6 +275,109 @@ export default function DocsPage() {
                       <Globe className="h-3 w-3" />
                     </a>.
                   </p>
+                </div>
+              </section>
+
+              {/* Trust & Moderation */}
+              <section id="moderation" className="scroll-mt-24 space-y-6">
+                <div className="flex items-center gap-2 text-primary mb-2">
+                  <Eye className="h-6 w-6" />
+                  <h2 className="text-2xl font-semibold">{t("moderation.title")}</h2>
+                </div>
+                <div className="prose prose-gray dark:prose-invert max-w-none">
+                  <p className="text-muted-foreground mb-6">
+                    {t("moderation.intro")}
+                  </p>
+                </div>
+
+                {/* Key Principle */}
+                <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-full bg-primary/10 p-3">
+                      <Hash className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t("moderation.immutablePrinciple")}</h3>
+                      <p className="text-muted-foreground">
+                        {t("moderation.immutableDescription")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Admin Flagging */}
+                  <div className="rounded-xl border border-border/50 bg-card/50 p-6">
+                    <h3 className="font-medium mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      {t("moderation.adminFlaggingTitle")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t("moderation.adminFlaggingIntro")}
+                    </p>
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-medium text-amber-500">1</span>
+                        <span>{t("moderation.adminStep1")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-medium text-amber-500">2</span>
+                        <span>{t("moderation.adminStep2")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-medium text-amber-500">3</span>
+                        <span>{t("moderation.adminStep3")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-medium text-amber-500">4</span>
+                        <span>{t("moderation.adminStep4")}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Community Moderation */}
+                  <div className="rounded-xl border border-border/50 bg-card/50 p-6">
+                    <h3 className="font-medium mb-3 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      {t("moderation.communityTitle")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t("moderation.communityIntro")}
+                    </p>
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">1</span>
+                        <span>{t("moderation.communityStep1")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">2</span>
+                        <span>{t("moderation.communityStep2")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">3</span>
+                        <span>{t("moderation.communityStep3")}</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">4</span>
+                        <span>{t("moderation.communityStep4")}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Transparency Guarantee */}
+                <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-6 mt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-full bg-green-500/10 p-3">
+                      <CheckCircle className="h-6 w-6 text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t("moderation.transparencyTitle")}</h3>
+                      <p className="text-muted-foreground">
+                        {t("moderation.transparencyDescription")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </section>
 

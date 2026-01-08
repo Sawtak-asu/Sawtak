@@ -292,6 +292,7 @@
       "architecture": "How it Works",
       "security": "Encryption & Privacy",
       "blockchain": "Blockchain Trust",
+      "moderation": "Trust & Moderation",
       "faq": "FAQ"
     },
     "overview": {
@@ -326,6 +327,26 @@
       "description": "We use the Hedera Consensus Service (HCS) as a public notary. When you submit an anonymous complaint, we publish a cryptographic hash of your message to a public \"Topic\" on Hedera.",
       "exampleTitle": "Example HCS Message",
       "proof": "This proves that the complaint existed at that specific time and has not been altered since. Anyone can verify this by checking the topic on a Hedera explorer like"
+    },
+    "moderation": {
+      "title": "Trust & Moderation",
+      "intro": "While blockchain provides immutability, we recognize that not all content belongs in the public feed. Sawtak implements a transparent moderation system that balances free speech with responsible content management—without ever deleting blockchain records.",
+      "immutablePrinciple": "The Immutability Principle",
+      "immutableDescription": "Flagged complaints are hidden from the public feed, but they are NEVER deleted from the blockchain. Anyone can still verify a flagged complaint exists by checking its transaction hash on Hedera. This means moderation is transparent and reversible, while the original record remains forever tamper-proof.",
+      "adminFlaggingTitle": "Admin Flagging",
+      "adminFlaggingIntro": "Trained administrators can flag content that violates platform guidelines. Here's how it works:",
+      "adminStep1": "Admin reviews a complaint and determines it violates guidelines (spam, fake, illegal content, etc.).",
+      "adminStep2": "Admin flags the complaint with a reason. The complaint is hidden from the public feed.",
+      "adminStep3": "The flag action and reason are logged in an immutable admin audit trail.",
+      "adminStep4": "Users can still find the complaint via its blockchain hash—proving it existed and was flagged, not deleted.",
+      "communityTitle": "Community Moderation (Coming Soon)",
+      "communityIntro": "In the spirit of transparency, we're building a community-driven moderation system inspired by X's Community Notes:",
+      "communityStep1": "Community members can submit \"notes\" on complaints they believe are misleading or fake.",
+      "communityStep2": "Other users vote on whether the note is helpful or accurate.",
+      "communityStep3": "Notes with sufficient helpful votes are displayed alongside the complaint.",
+      "communityStep4": "This creates a crowdsourced fact-checking layer that doesn't require central censorship.",
+      "transparencyTitle": "Our Transparency Guarantee",
+      "transparencyDescription": "Every moderation action is logged and auditable. We publish regular transparency reports showing how many complaints were flagged, for what reasons, and how many were later unflagged. The blockchain ensures we cannot hide our moderation decisions."
     },
     "faq": {
       "title": "Frequently Asked Questions",
