@@ -17,6 +17,7 @@ import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
+import { rateLimiter } from "./services/rate-limiter.service";
 import { openapi } from '@elysiajs/openapi'
 
 const startTime = Date.now();
@@ -27,6 +28,12 @@ const startTime = Date.now();
 async function bootstrap() {
   // Initialize telemetry/metrics
   await initTelemetry();
+
+  // Initialize Redis connection for rate limiting
+  const redisConnected = await rateLimiter.connect();
+  if (!redisConnected) {
+    console.warn("⚠️ Starting without Redis - rate limiting disabled");
+  }
 
   const app = new Elysia()
     .use(swagger())
@@ -44,14 +51,18 @@ async function bootstrap() {
     .use(voteRoutes)
     .get("/", () => "Sawtak backend :p")
     // Health check endpoint for Docker/Kubernetes
-    .get("/api/health", () => ({
-      status: "healthy",
-      service: "sawtak-backend",
-      version: process.env.npm_package_version || "1.0.0",
-      environment: process.env.NODE_ENV || "development",
-      uptime: Math.floor((Date.now() - startTime) / 1000),
-      timestamp: new Date().toISOString(),
-    }))
+    .get("/api/health", async () => {
+      const redisHealth = await rateLimiter.healthCheck();
+      return {
+        status: "healthy",
+        service: "sawtak-backend",
+        version: process.env.npm_package_version || "1.0.0",
+        environment: process.env.NODE_ENV || "development",
+        uptime: Math.floor((Date.now() - startTime) / 1000),
+        timestamp: new Date().toISOString(),
+        redis: redisHealth,
+      };
+    })
     // Prometheus metrics endpoint for Grafana
     .get("/metrics", ({ set }) => {
       set.headers["content-type"] = "text/plain; charset=utf-8";
