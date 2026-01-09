@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 
-export const adminRoutes = new Elysia({ 
+export const adminRoutes = new Elysia({
   prefix: "/api/admin",
   detail: {
     tags: ["Admin"],
@@ -77,12 +77,12 @@ export const adminRoutes = new Elysia({
           orderBy: { created_at: "desc" },
         }),
         // Only include anonymous if not filtering by visibility=private
-        visibility === "private" 
+        visibility === "private"
           ? Promise.resolve([])
           : prisma.indexedComplaint.findMany({
-              where: anonymousWhere,
-              orderBy: { consensus_timestamp: "desc" },
-            }),
+            where: anonymousWhere,
+            orderBy: { consensus_timestamp: "desc" },
+          }),
       ]);
 
       // Transform to unified format
@@ -129,7 +129,7 @@ export const adminRoutes = new Elysia({
 
       // Merge and sort
       let allComplaints = [...identifiedFormatted, ...anonymousFormatted];
-      allComplaints.sort((a, b) => 
+      allComplaints.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
@@ -256,7 +256,7 @@ export const adminRoutes = new Elysia({
       if (identified) {
         await prisma.identifiedComplaint.update({
           where: { id },
-          data: { 
+          data: {
             status,
             updated_at: new Date(),
           },
@@ -426,5 +426,197 @@ export const adminRoutes = new Elysia({
         403: { description: "Admin access required" },
         500: { description: "Server error" }
       }
+    }
+  })
+
+  /**
+   * GET /api/admin/users
+   * Get all users with pagination and search
+   */
+  .get("/users", async ({ query, user, set }: any) => {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+    const search = query.search as string | undefined;
+    const blocked = query.blocked === "true";
+
+    try {
+      const where: any = {};
+
+      if (search) {
+        where.OR = [
+          { email: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      if (blocked) {
+        where.is_blocked = true;
+      }
+
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { created_at: "desc" },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            picture: true,
+            role: true,
+            is_blocked: true,
+            auth_provider: true,
+            created_at: true,
+            _count: {
+              select: {
+                complaints_identified: true,
+              },
+            },
+          },
+        }),
+        prisma.user.count({ where }),
+      ]);
+
+      return {
+        success: true,
+        data: {
+          users,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        },
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Users fetch error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    query: t.Object({
+      page: t.Optional(t.String()),
+      limit: t.Optional(t.String()),
+      search: t.Optional(t.String()),
+      blocked: t.Optional(t.String()),
+    }),
+    detail: {
+      summary: "Get All Users",
+      description: "Get all users with pagination and optional search filter",
+      security: [{ bearerAuth: [] }],
+    }
+  })
+
+  /**
+   * PATCH /api/admin/users/:id/block
+   * Block a user
+   */
+  .patch("/users/:id/block", async ({ params, user, set }: any) => {
+    const { id } = params;
+
+    try {
+      const targetUser = await prisma.user.findUnique({ where: { id } });
+
+      if (!targetUser) {
+        set.status = 404;
+        return { success: false, error: "User not found" };
+      }
+
+      if (targetUser.role === "admin") {
+        set.status = 403;
+        return { success: false, error: "Cannot block admin users" };
+      }
+
+      await prisma.user.update({
+        where: { id },
+        data: {
+          is_blocked: true,
+          // blocked_at: new Date(),
+          // blocked_by: user?.userId,
+        },
+      });
+
+      // Log the action
+      await prisma.adminAudit.create({
+        data: {
+          admin_id: user?.userId,
+          action_type: "BLOCK_USER",
+          target_id: id,
+          reason: "Blocked by admin",
+        },
+      });
+
+      return {
+        success: true,
+        message: "User blocked successfully",
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Block user error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    params: t.Object({
+      id: t.String(),
+    }),
+    detail: {
+      summary: "Block User",
+      description: "Block a user from submitting complaints",
+      security: [{ bearerAuth: [] }],
+    }
+  })
+
+  /**
+   * PATCH /api/admin/users/:id/unblock
+   * Unblock a user
+   */
+  .patch("/users/:id/unblock", async ({ params, user, set }: any) => {
+    const { id } = params;
+
+    try {
+      const targetUser = await prisma.user.findUnique({ where: { id } });
+
+      if (!targetUser) {
+        set.status = 404;
+        return { success: false, error: "User not found" };
+      }
+
+      await prisma.user.update({
+        where: { id },
+        data: {
+          is_blocked: false,
+        },
+      });
+
+      // Log the action
+      await prisma.adminAudit.create({
+        data: {
+          admin_id: user?.userId,
+          action_type: "UNBLOCK_USER",
+          target_id: id,
+          reason: "Unblocked by admin",
+        },
+      });
+
+      return {
+        success: true,
+        message: "User unblocked successfully",
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Unblock user error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    params: t.Object({
+      id: t.String(),
+    }),
+    detail: {
+      summary: "Unblock User",
+      description: "Unblock a previously blocked user",
+      security: [{ bearerAuth: [] }],
     }
   });

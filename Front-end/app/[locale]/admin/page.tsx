@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-    Shield,
     Search,
     RefreshCw,
     Clock,
     CheckCircle,
     XCircle,
     AlertCircle,
-    FileText
+    FileText,
+    TrendingUp,
+    Users,
+    Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +33,8 @@ import {
     CardDescription,
     CardContent
 } from "@/components/ui/card";
-import { toast } from "sonner";
 import { ComplaintCard, Complaint } from "@/components/complaint-card";
+import { AdminLayout } from "@/components/admin-layout";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -61,23 +61,12 @@ interface AdminFeedResponse {
 
 export default function AdminDashboard() {
     const { user, isLoggedIn, token, isLoading: isAuthLoading } = useAuth();
-    const router = useRouter();
     const t = useTranslations("Admin");
 
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [visibilityFilter, setVisibilityFilter] = useState("all");
-
-    // Protect Route
-    useEffect(() => {
-        if (!isAuthLoading) {
-            const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
-            if (!isLoggedIn || !isAdmin) {
-                router.replace("/");
-            }
-        }
-    }, [isAuthLoading, isLoggedIn, user, router]);
 
     const { data, isLoading, isError, refetch } = useQuery({
         queryKey: ["admin-complaints", { page, search, statusFilter, visibilityFilter }],
@@ -96,14 +85,9 @@ export default function AdminDashboard() {
                 },
             });
             if (!res.ok) {
-                if (res.status === 401 || res.status === 403) {
-                    // handled by useEffect usually, but extra safety
-                }
                 throw new Error("Failed to fetch complaints");
             }
-            const jsonData = await res.json() as AdminFeedResponse;
-
-            return jsonData;
+            return await res.json() as AdminFeedResponse;
         },
         enabled: isLoggedIn && !!token && user?.role?.toUpperCase() === 'ADMIN',
     });
@@ -112,53 +96,16 @@ export default function AdminDashboard() {
     const stats = data?.data?.stats;
     const pagination = data?.data?.pagination;
 
-    if (isAuthLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-        );
-    }
-
-    if (!isLoggedIn || user?.role?.toUpperCase() !== 'ADMIN') {
-        return null;
-    }
-
     return (
-        <div className="min-h-screen bg-background" dir="ltr">
-            <Navbar />
-
-            {/* Header */}
-            <div className="border-b border-border bg-muted/30">
-                <div className="container max-w-7xl mx-auto px-6 py-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    <Shield className="h-6 w-6 text-primary" />
-                                </div>
-                                <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-                            </div>
-                            <p className="text-muted-foreground">
-                                {t("subtitle")}
-                            </p>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-                                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                                {t("refresh")}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="container max-w-7xl mx-auto px-6 py-8">
+        <AdminLayout breadcrumbs={[{ label: "Dashboard" }]}>
+            <div className="p-6 space-y-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <Card className="bg-card/50 backdrop-blur-sm">
                         <CardHeader className="pb-2">
-                            <CardDescription>{t("stats.total")}</CardDescription>
+                            <CardDescription className="flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" /> {t("stats.total")}
+                            </CardDescription>
                             <CardTitle className="text-3xl">{stats?.total || 0}</CardTitle>
                         </CardHeader>
                     </Card>
@@ -196,8 +143,51 @@ export default function AdminDashboard() {
                     </Card>
                 </div>
 
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-yellow-500/10 rounded-lg">
+                                    <Clock className="h-5 w-5 text-yellow-600" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-base">Pending Review</CardTitle>
+                                    <CardDescription>{stats?.pending || 0} complaints need attention</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                    </Card>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/10 rounded-lg">
+                                    <Users className="h-5 w-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-base">User Management</CardTitle>
+                                    <CardDescription>Manage users and permissions</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                    </Card>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-500/10 rounded-lg">
+                                    <Shield className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-base">Admin Team</CardTitle>
+                                    <CardDescription>View admin activity</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                    </Card>
+                </div>
+
                 {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-muted/30 rounded-xl border border-border/50">
+                <div className="flex flex-col md:flex-row gap-4 p-4 bg-muted/30 rounded-xl border border-border/50">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -229,39 +219,46 @@ export default function AdminDashboard() {
                             <SelectItem value="private">{t("filters.private")}</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                        {t("refresh")}
+                    </Button>
                 </div>
 
-                {/* Content Grid */}
-                {isLoading ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                            <Skeleton key={i} className="h-[250px] w-full rounded-xl" />
-                        ))}
-                    </div>
-                ) : isError ? (
-                    <div className="text-center p-12 bg-red-500/5 rounded-xl border border-red-500/20">
-                        <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-                        <h3 className="text-lg font-semibold text-red-500">{t("error.title")}</h3>
-                        <p className="text-sm text-red-400">{t("error.message")}</p>
-                        <Button variant="outline" className="mt-4 border-red-500/20 hover:bg-red-500/10" onClick={() => refetch()}>{t("error.retry")}</Button>
-                    </div>
-                ) : complaints.length === 0 ? (
-                    <div className="text-center p-16 border border-dashed border-border rounded-xl">
-                        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">{t("empty.title")}</h3>
-                        <p className="text-muted-foreground">{t("empty.message")}</p>
-                    </div>
-                ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {complaints.map((complaint) => (
-                            <ComplaintCard key={complaint.id} complaint={complaint} />
-                        ))}
-                    </div>
-                )}
+                {/* Recent Complaints */}
+                <div>
+                    <h2 className="text-lg font-semibold mb-4">Recent Complaints</h2>
+                    {isLoading ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <Skeleton key={i} className="h-[250px] w-full rounded-xl" />
+                            ))}
+                        </div>
+                    ) : isError ? (
+                        <div className="text-center p-12 bg-red-500/5 rounded-xl border border-red-500/20">
+                            <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+                            <h3 className="text-lg font-semibold text-red-500">{t("error.title")}</h3>
+                            <p className="text-sm text-red-400">{t("error.message")}</p>
+                            <Button variant="outline" className="mt-4 border-red-500/20 hover:bg-red-500/10" onClick={() => refetch()}>{t("error.retry")}</Button>
+                        </div>
+                    ) : complaints.length === 0 ? (
+                        <div className="text-center p-16 border border-dashed border-border rounded-xl">
+                            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-medium">{t("empty.title")}</h3>
+                            <p className="text-muted-foreground">{t("empty.message")}</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {complaints.slice(0, 6).map((complaint) => (
+                                <ComplaintCard key={complaint.id} complaint={complaint} />
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                    <div className="flex justify-center gap-2 mt-8">
+                    <div className="flex justify-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"
@@ -284,6 +281,6 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </div>
-        </div>
+        </AdminLayout>
     );
 }

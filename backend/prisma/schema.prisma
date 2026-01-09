@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -9,20 +9,21 @@ datasource db {
 }
 
 model User {
-  id                   String   @id @default(uuid())
-  email                String   @unique
-  password             String?  // Optional for OAuth users
-  name                 String?  // User's display name (from OAuth)
-  picture              String?  // Profile picture URL (from OAuth)
-  anonymous_identifier String   @unique
-  role                 String   @default("user") // user, admin, moderator
-  
-  // OAuth / Future Identity Provider fields
-  auth_provider        String   @default("email") // email, google, github, civil_id
-  auth_provider_id     String?  // The ID from the external provider
+  id                   String  @id @default(uuid())
+  email                String  @unique
+  password             String? // Optional for OAuth users
+  name                 String? // User's display name (from OAuth)
+  picture              String? // Profile picture URL (from OAuth)
+  anonymous_identifier String  @unique
+  role                 String  @default("user") // user, admin, moderator
+  is_blocked           Boolean @default(false) // Block user from platform
 
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
+  // OAuth / Future Identity Provider fields
+  auth_provider    String  @default("email") // email, google, github, civil_id
+  auth_provider_id String? // The ID from the external provider
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   complaints_identified IdentifiedComplaint[]
   admin_audits          AdminAudit[]
@@ -30,19 +31,19 @@ model User {
 }
 
 model IdentifiedComplaint {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   user_id       String
   title         String
   text          String
   category      String
   area          String
-  directed_to   Json?    // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
-  incident_date DateTime @default(now())
-  status        String   @default("submitted")
-  visibility    String   @default("private") // private, public
-  evidence_urls Json?    // Array of URLs
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  directed_to   Json? // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
+  incident_date DateTime  @default(now())
+  status        String    @default("submitted")
+  visibility    String    @default("private") // private, public
+  evidence_urls Json? // Array of URLs
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
   deleted_at    DateTime?
 
   user  User            @relation(fields: [user_id], references: [id])
@@ -52,16 +53,15 @@ model IdentifiedComplaint {
   @@index([category])
 }
 
-
 model IndexedComplaint {
   hcs_hash             String   @id
   anonymous_identifier String
-  tracking_hash        String?  // Hashed tracking code for user lookup
+  tracking_hash        String? // Hashed tracking code for user lookup
   title                String
   complaint_text       String
   category             String
   area                 String
-  directed_to          Json?    // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
+  directed_to          Json? // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
   severity             String
   incident_date        DateTime
   evidence_cids        Json?
@@ -94,9 +94,9 @@ model IndexedStatusUpdate {
 model AdminAudit {
   id          String   @id @default(uuid())
   admin_id    String
-  action_type String   // "BAN_USER" or "DELETE_COMPLAINT"
-  target_id   String   // Complaint ID that was acted upon
-  reason      String?  // Optional reason for the action
+  action_type String // "BAN_USER" or "DELETE_COMPLAINT"
+  target_id   String // Complaint ID that was acted upon
+  reason      String? // Optional reason for the action
   timestamp   DateTime @default(now())
 
   admin User @relation(fields: [admin_id], references: [id])
@@ -106,8 +106,8 @@ model AdminAudit {
 // Anonymous complaints cannot be upvoted, and users must be logged in to vote
 model ComplaintVote {
   id           String   @id @default(uuid())
-  complaint_id String   // ID of the IdentifiedComplaint
-  voter_id     String   // User ID (required - must be logged in)
+  complaint_id String // ID of the IdentifiedComplaint
+  voter_id     String // User ID (required - must be logged in)
   created_at   DateTime @default(now())
 
   // Relations
