@@ -145,16 +145,11 @@ export function ComplaintForm() {
         "Authorization": `Bearer ${token}`,
       };
 
-      // Debug: Log what we're sending
-      console.log("[ComplaintForm] Sending payload:", JSON.stringify(data.payload, null, 2));
-      console.log("[ComplaintForm] Endpoint:", endpoint);
-
       const response = await fetch(endpoint, {
         method: "POST",
         headers,
         body: JSON.stringify(data.payload),
       });
-      console.log("[ComplaintForm] Response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -173,7 +168,6 @@ export function ComplaintForm() {
       } else {
         toast.success(tToasts("identifiedSubmitted"));
       }
-      console.log("Submission successful:", data);
       form.reset();
     },
     onError: (error) => {

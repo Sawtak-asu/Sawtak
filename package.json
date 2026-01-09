@@ -1,14 +1,19 @@
 {
-  "name": "Sawtak",
+  "name": "sawtak",
   "version": "1.0.0",
-  "description": "Sawtak - Aplikacja do zarządzania reklamacjami",
+  "description": "Sawtak - Secure, Transparent Blockchain based reporting platform",
   "scripts": {
     "dev": "concurrently \"bun run --cwd backend dev\" \"bun run --cwd Front-end dev\""
   },
   "keywords": [
     "Sawtak",
-    "reklamacje",
-    "aplikacja"
+    "reporting",
+    "blockchain",
+    "transparent",
+    "secure",
+    "complaint",
+    "management",
+    "system"
   ],
   "devDependencies": {
     "concurrently": "^9.2.1"
