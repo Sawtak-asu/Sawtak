@@ -24,7 +24,6 @@ export class AnonymousComplaintController {
       }
 
       const {
-        userId,
         anonymousIdentifier,
         title,
         text,
@@ -37,7 +36,6 @@ export class AnonymousComplaintController {
 
       // Submit to blockchain via service
       const result = await this.submissionService.submitAnonymousComplaint({
-        userId,
         anonymousIdentifier,
         title,
         text,

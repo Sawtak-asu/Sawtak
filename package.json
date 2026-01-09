@@ -1,0 +1,16 @@
+{
+  "name": "Sawtak",
+  "version": "1.0.0",
+  "description": "Sawtak - Aplikacja do zarządzania reklamacjami",
+  "scripts": {
+    "dev": "concurrently \"bun run --cwd backend dev\" \"bun run --cwd Front-end dev\""
+  },
+  "keywords": [
+    "Sawtak",
+    "reklamacje",
+    "aplikacja"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

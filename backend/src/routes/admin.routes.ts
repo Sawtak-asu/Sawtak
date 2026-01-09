@@ -119,11 +119,11 @@ export const adminRoutes = new Elysia({
           topicId: HEDERA_CONFIG.TOPIC_ID_COMPLAINTS,
           evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
         };
-        console.log('[AdminRoutes] Anonymous complaint formatted:', {
-          id: formatted.id,
-          encryptedAnonId: formatted.encryptedAnonId,
-          hasAnonId: !!c.anonymous_identifier
-        });
+        // console.log('[AdminRoutes] Anonymous complaint formatted:', {
+        //   id: formatted.id,
+        //   encryptedAnonId: formatted.encryptedAnonId,
+        //   hasAnonId: !!c.anonymous_identifier
+        // });
         return formatted;
       });
 

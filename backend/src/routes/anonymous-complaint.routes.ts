@@ -5,7 +5,7 @@ import { authMiddleware } from "../middleware/auth.middleware";
 // Initialize controller
 const controller = new AnonymousComplaintController();
 
-export const anonymousComplaintRoutes = new Elysia({ 
+export const anonymousComplaintRoutes = new Elysia({
   prefix: "/api/complaints/anonymous",
   detail: {
     tags: ["Anonymous Complaints"],
@@ -21,24 +21,24 @@ export const anonymousComplaintRoutes = new Elysia({
     return controller.submitComplaint(body, set);
   }, {
     body: t.Object({
-      anonymousIdentifier: t.String({ 
-        description: "Client-generated anonymous identifier (hashed)" 
+      anonymousIdentifier: t.String({
+        description: "Client-generated anonymous identifier (hashed)"
       }),
-      title: t.String({ 
+      title: t.String({
         description: "Brief title of the complaint",
         minLength: 5,
         maxLength: 200
       }),
-      text: t.String({ 
+      text: t.String({
         description: "Detailed description of the complaint",
         minLength: 20,
         maxLength: 10000
       }),
-      category: t.String({ 
-        description: "Complaint category (corruption, harassment, fraud, etc.)" 
+      category: t.String({
+        description: "Complaint category (corruption, harassment, fraud, etc.)"
       }),
-      area: t.Optional(t.String({ 
-        description: "Geographic area where the incident occurred" 
+      area: t.Optional(t.String({
+        description: "Geographic area where the incident occurred"
       })),
       directedTo: t.Optional(t.Object({
         type: t.String({ description: "Target type: ministry, governorate, or center" }),
@@ -46,11 +46,11 @@ export const anonymousComplaintRoutes = new Elysia({
         governorateId: t.Optional(t.String()),
         centerId: t.Optional(t.String())
       }, { description: "Optional: Direct complaint to specific authority" })),
-      incidentDate: t.Optional(t.String({ 
-        description: "Date of incident (ISO 8601 format)" 
+      incidentDate: t.Optional(t.String({
+        description: "Date of incident (ISO 8601 format)"
       })),
-      evidenceCids: t.Optional(t.Array(t.String(), { 
-        description: "Array of IPFS CIDs for uploaded evidence" 
+      evidenceCids: t.Optional(t.Array(t.String(), {
+        description: "Array of IPFS CIDs for uploaded evidence"
       }))
     }),
     detail: {
