@@ -5,7 +5,7 @@ import { authMiddleware } from "../middleware/auth.middleware";
 // Initialize controller
 const controller = new IdentifiedComplaintController();
 
-export const identifiedComplaintRoutes = new Elysia({ 
+export const identifiedComplaintRoutes = new Elysia({
   prefix: "/api/complaints/identified",
   detail: {
     tags: ["Identified Complaints"],
@@ -21,21 +21,24 @@ export const identifiedComplaintRoutes = new Elysia({
     return controller.submitComplaint(body, set);
   }, {
     body: t.Object({
-      title: t.String({ 
+      userId: t.String({
+        description: "User ID of the complaint submitter"
+      }),
+      title: t.String({
         description: "Brief title of the complaint",
         minLength: 5,
         maxLength: 200
       }),
-      text: t.String({ 
+      text: t.String({
         description: "Detailed description of the complaint",
         minLength: 20,
         maxLength: 10000
       }),
-      category: t.String({ 
-        description: "Complaint category (corruption, harassment, fraud, etc.)" 
+      category: t.String({
+        description: "Complaint category (corruption, harassment, fraud, etc.)"
       }),
-      area: t.Optional(t.String({ 
-        description: "Geographic area where the incident occurred" 
+      area: t.Optional(t.String({
+        description: "Geographic area where the incident occurred"
       })),
       directedTo: t.Optional(t.Object({
         type: t.String({ description: "Target type: ministry, governorate, or center" }),
@@ -43,18 +46,18 @@ export const identifiedComplaintRoutes = new Elysia({
         governorateId: t.Optional(t.String()),
         centerId: t.Optional(t.String())
       }, { description: "Optional: Direct complaint to specific authority" })),
-      incidentDate: t.Optional(t.String({ 
-        description: "Date of incident (ISO 8601 format)" 
+      incidentDate: t.Optional(t.String({
+        description: "Date of incident (ISO 8601 format)"
       })),
-      evidenceUrls: t.Optional(t.Array(t.String(), { 
-        description: "Array of public URLs for uploaded evidence" 
+      evidenceUrls: t.Optional(t.Array(t.String(), {
+        description: "Array of public URLs for uploaded evidence"
       })),
       visibility: t.Optional(t.Union([
         t.Literal("public"),
         t.Literal("private")
-      ], { 
+      ], {
         default: "public",
-        description: "Visibility: 'public' (visible in feed) or 'private' (admin only)" 
+        description: "Visibility: 'public' (visible in feed) or 'private' (admin only)"
       }))
     }),
     detail: {
@@ -100,7 +103,7 @@ export const identifiedComplaintRoutes = new Elysia({
       }
     }
   })
-  
+
   /**
    * GET /api/complaints/identified/user/:userId
    * Get all complaints for a specific user

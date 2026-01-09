@@ -103,16 +103,6 @@ export default function AdminDashboard() {
             }
             const jsonData = await res.json() as AdminFeedResponse;
 
-            // Debug: Check if anonymous complaints have encryptedAnonId
-            const anonComplaints = jsonData.data?.complaints.filter(c => c.submissionMode === 'anonymous');
-            if (anonComplaints && anonComplaints.length > 0) {
-                console.log('[AdminPage] Anonymous complaints received:', anonComplaints.map(c => ({
-                    id: c.id,
-                    encryptedAnonId: c.encryptedAnonId,
-                    hasField: 'encryptedAnonId' in c
-                })));
-            }
-
             return jsonData;
         },
         enabled: isLoggedIn && !!token && user?.role?.toUpperCase() === 'ADMIN',

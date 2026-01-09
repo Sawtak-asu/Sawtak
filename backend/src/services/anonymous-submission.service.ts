@@ -7,7 +7,6 @@ import { DirectedTo } from "../data/egypt-locations";
 import crypto from "crypto";
 
 interface AnonymousSubmission {
-  userId: string;
   anonymousIdentifier: string;
   title: string;
   text: string;

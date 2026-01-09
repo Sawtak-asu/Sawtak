@@ -61,7 +61,7 @@ function validateDirectedToField(data: any): ValidationResult {
  * Validate anonymous complaint payload
 **/
 export function validateAnonymousComplaint(data: any): ValidationResult {
-  const required = ["userId", "anonymousIdentifier", "title", "text", "category"];
+  const required = ["anonymousIdentifier", "title", "text", "category"];
 
   for (const field of required) {
     if (!data[field]) {

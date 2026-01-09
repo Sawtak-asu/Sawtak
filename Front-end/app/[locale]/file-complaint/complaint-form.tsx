@@ -62,11 +62,15 @@ import {
 } from "@/lib/egypt-locations";
 
 const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
+  title: z.string().min(5, {
+    message: "Title must be at least 5 characters.",
+  }).max(200, {
+    message: "Title must be at most 200 characters.",
   }),
-  mainText: z.string().min(10, {
-    message: "Main text must be at least 10 characters.",
+  mainText: z.string().min(20, {
+    message: "Main text must be at least 20 characters.",
+  }).max(5000, {
+    message: "Main text must be at most 5000 characters.",
   }),
   category: z.string().nonempty("Please select a category."),
   directedToType: z.enum(["none", "ministry", "governorate", "center"]).optional(),
@@ -149,6 +153,7 @@ export function ComplaintForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("[ComplaintForm] Backend error response:", errorData);
         throw new Error(errorData.error || "Failed to submit complaint.");
       }
 
@@ -163,7 +168,6 @@ export function ComplaintForm() {
       } else {
         toast.success(tToasts("identifiedSubmitted"));
       }
-      console.log("Submission successful:", data);
       form.reset();
     },
     onError: (error) => {
@@ -230,7 +234,6 @@ export function ComplaintForm() {
         directedTo.centerId = values.directedToCenter;
       }
     }
-
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
       userId: user.id,
@@ -244,7 +247,7 @@ export function ComplaintForm() {
       visibility: values.visibility, // public = visible in feed, private = admin only
     } : {
       // Anonymous complaint payload - matches anonymous-complaint.controller.ts
-      userId: user.id,
+      // userId: user.id,
       anonymousIdentifier: user.anonymousIdentifier,
       title: values.title,
       text: values.mainText,
