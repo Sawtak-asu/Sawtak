@@ -51,7 +51,7 @@ A secure, resilient, and trustworthy platform that allows citizens to anonymousl
 │                                                             │
 │  Cache (Redis)                     Storage                  │
 │  ├── Sessions                      ├── IPFS (Anonymous)     │
-│  ├── Rate Limiting                 └── Supabase (Identified)│
+│  ├── Rate Limiting                 └── CloudflareR2 (Identified)│
 │  └── Job Queue                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
