@@ -4,6 +4,7 @@ import * as React from "react"
 import { ChevronsUpDown, Building2, MapPin, Shield } from "lucide-react"
 import { useAdmin } from "@/lib/admin-context"
 import { Badge } from "@/components/ui/badge"
+import { useTranslations } from "next-intl"
 
 import {
   DropdownMenu,
@@ -30,6 +31,8 @@ export function TeamSwitcher() {
     switchTeam,
     isLoading
   } = useAdmin()
+  const t = useTranslations("Sidebar.switcher")
+  const tRoles = useTranslations("Admin.teams.roles")
 
   // Platform admin view - no team switching
   if (isPlatformAdmin) {
@@ -41,8 +44,8 @@ export function TeamSwitcher() {
               <Shield className="size-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">Platform Admin</span>
-              <span className="truncate text-xs text-muted-foreground">Global Access</span>
+              <span className="truncate font-medium">{t("platformAdmin")}</span>
+              <span className="truncate text-xs text-muted-foreground">{t("globalAccess")}</span>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -59,7 +62,7 @@ export function TeamSwitcher() {
             <SidebarMenuButton size="lg" className="cursor-default">
               <div className="bg-muted flex aspect-square size-8 items-center justify-center rounded-lg animate-pulse" />
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium text-muted-foreground">Loading...</span>
+                <span className="truncate font-medium text-muted-foreground">{t("loading")}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -74,8 +77,8 @@ export function TeamSwitcher() {
               <Building2 className="size-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium text-muted-foreground">No Teams</span>
-              <span className="truncate text-xs text-muted-foreground">Contact admin</span>
+              <span className="truncate font-medium text-muted-foreground">{t("noTeams")}</span>
+              <span className="truncate text-xs text-muted-foreground">{t("contactAdmin")}</span>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -114,10 +117,10 @@ export function TeamSwitcher() {
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {selectedTeam?.displayName || "Select Team"}
+                  {selectedTeam?.displayName || t("selectTeam")}
                 </span>
                 <span className="truncate text-xs capitalize">
-                  {selectedTeamRole?.replace("_", " ") || "—"}
+                  {selectedTeamRole ? tRoles(selectedTeamRole === "team_admin" ? "teamAdmin" : selectedTeamRole) : "—"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -130,7 +133,7 @@ export function TeamSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              My Teams
+              {t("myTeams")}
             </DropdownMenuLabel>
             {teamMemberships.map((membership) => {
               const Icon = getTeamIcon(membership.team.type)
@@ -146,14 +149,14 @@ export function TeamSwitcher() {
                   </div>
                   <div className="flex-1 truncate">{membership.team.displayName}</div>
                   <Badge variant={getRoleBadgeVariant(membership.role) as any} className="text-xs capitalize">
-                    {membership.role.replace("_", " ")}
+                    {tRoles(membership.role === "team_admin" ? "teamAdmin" : membership.role)}
                   </Badge>
                 </DropdownMenuItem>
               )
             })}
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs text-muted-foreground">
-              {teamMemberships.length} team{teamMemberships.length !== 1 ? "s" : ""}
+              {t("teamsCount", { count: teamMemberships.length })}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

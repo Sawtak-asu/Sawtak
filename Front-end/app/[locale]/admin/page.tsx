@@ -173,11 +173,11 @@ export default function AdminDashboard() {
     });
 
     return (
-        <AdminLayout breadcrumbs={[{ label: "Dashboard" }]}>
+        <AdminLayout breadcrumbs={[{ label: t("dashboard.title") }]}>
             <div className="p-6 space-y-6">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-                    {selectedTeam && <p className="text-muted-foreground">Overview for {selectedTeam.displayName}</p>}
+                    <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.title")}</h1>
+                    {selectedTeam && <p className="text-muted-foreground">{t("dashboard.overviewFor", { team: selectedTeam.displayName })}</p>}
                 </div>
 
                 {/* Stats Cards */}
@@ -235,12 +235,12 @@ export default function AdminDashboard() {
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-4 p-4 bg-muted/30 rounded-xl border border-border/50">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder={t("filters.searchPlaceholder")}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-9 bg-background"
+                            className="ps-9 bg-background"
                         />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -257,7 +257,7 @@ export default function AdminDashboard() {
                         </SelectContent>
                     </Select>
                     <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-4 w-4 me-2 ${isLoading ? 'animate-spin' : ''}`} />
                         {t("refresh")}
                     </Button>
                 </div>
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                 {/* Complaint List */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold">Recent Complaints</h2>
+                        <h2 className="text-lg font-semibold">{t("dashboard.recentComplaints")}</h2>
                     </div>
                     {isLoading ? (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -297,10 +297,10 @@ export default function AdminDashboard() {
                             disabled={page === 1}
                             onClick={() => setPage(p => p - 1)}
                         >
-                            Previous
+                            {t("pagination.previous")}
                         </Button>
                         <span className="flex items-center px-4 text-sm font-mono text-muted-foreground">
-                            Page {page} of {pagination.totalPages}
+                            {t("pagination.pageOf", { page, total: pagination.totalPages })}
                         </span>
                         <Button
                             variant="outline"
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
                             disabled={page === pagination.totalPages}
                             onClick={() => setPage(p => p + 1)}
                         >
-                            Next
+                            {t("pagination.next")}
                         </Button>
                     </div>
                 )}
@@ -317,13 +317,13 @@ export default function AdminDashboard() {
                 <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Close Complaint</DialogTitle>
-                            <DialogDescription>Reason for closing this ticket?</DialogDescription>
+                            <DialogTitle>{t("dashboard.closeComplaint")}</DialogTitle>
+                            <DialogDescription>{t("dashboard.closeReason")}</DialogDescription>
                         </DialogHeader>
-                        <div className="py-2"><Textarea value={closeNote} onChange={e => setCloseNote(e.target.value)} placeholder="Note..." /></div>
+                        <div className="py-2"><Textarea value={closeNote} onChange={e => setCloseNote(e.target.value)} placeholder={t("dashboard.note")} /></div>
                         <DialogFooter>
-                            <Button variant="ghost" onClick={() => setCloseDialogOpen(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={() => closeMutation.mutate()} disabled={closeMutation.isPending}>Close</Button>
+                            <Button variant="ghost" onClick={() => setCloseDialogOpen(false)}>{t("dashboard.cancel")}</Button>
+                            <Button variant="destructive" onClick={() => closeMutation.mutate()} disabled={closeMutation.isPending}>{t("dashboard.close")}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -331,23 +331,23 @@ export default function AdminDashboard() {
                 <Dialog open={escalateDialogOpen} onOpenChange={setEscalateDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Escalate</DialogTitle>
-                            <DialogDescription>Select priority</DialogDescription>
+                            <DialogTitle>{t("dashboard.escalate")}</DialogTitle>
+                            <DialogDescription>{t("dashboard.selectPriority")}</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
                             <Select onValueChange={setEscalatePriority} defaultValue="medium">
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="medium">Medium</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="low">{t("dashboard.low")}</SelectItem>
+                                    <SelectItem value="medium">{t("dashboard.medium")}</SelectItem>
+                                    <SelectItem value="high">{t("dashboard.high")}</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Textarea value={escalateNote} onChange={e => setEscalateNote(e.target.value)} placeholder="Internal note..." />
+                            <Textarea value={escalateNote} onChange={e => setEscalateNote(e.target.value)} placeholder={t("dashboard.internalNote")} />
                         </div>
                         <DialogFooter>
-                            <Button variant="ghost" onClick={() => setEscalateDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={() => escalateMutation.mutate()} disabled={escalateMutation.isPending}>Escalate</Button>
+                            <Button variant="ghost" onClick={() => setEscalateDialogOpen(false)}>{t("dashboard.cancel")}</Button>
+                            <Button onClick={() => escalateMutation.mutate()} disabled={escalateMutation.isPending}>{t("dashboard.escalate")}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

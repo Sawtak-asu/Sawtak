@@ -19,6 +19,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 export function NavMain({
   items,
   general
@@ -39,9 +40,10 @@ export function NavMain({
     icon: LucideIcon
   }[]
 }) {
+  const t = useTranslations("Sidebar.sections")
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>General</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("general")}</SidebarGroupLabel>
       <SidebarMenu>
         {general.map((item) => (
           <Link key={item.title} href={item.url}>
@@ -54,7 +56,7 @@ export function NavMain({
       </SidebarMenu>
       <div className="h-7" />
 
-      <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("dashboard")}</SidebarGroupLabel>
       <SidebarMenu>
         {items[0].map((item) => (
           <Link key={item.title} href={item.url}>
@@ -67,7 +69,7 @@ export function NavMain({
       </SidebarMenu>
       <div className="h-7" />
 
-      <SidebarGroupLabel>{items[1][0].title == "Users" ? "Users" : "Complaints"}</SidebarGroupLabel>
+      <SidebarGroupLabel>{items[1][0].title.toLowerCase().includes("user") || items[1][0].title.includes("مستخدم") ? t("users") : t("complaints")}</SidebarGroupLabel>
       <SidebarMenu>
         {items[1].map((item) => (
           <Collapsible

@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Search, Filter, Ban, ArrowUpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -46,6 +47,7 @@ function ComplaintsQueueContent() {
     const { token } = useAuth();
     const { selectedTeam, isPlatformAdmin } = useAdmin();
     const queryClient = useQueryClient();
+    const t = useTranslations("Admin.complaintsQueue");
 
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [searchQuery, setSearchQuery] = useState("");
@@ -146,26 +148,26 @@ function ComplaintsQueueContent() {
     });
 
     return (
-        <AdminLayout breadcrumbs={[{ label: "Complaints Queue" }]}>
+        <AdminLayout breadcrumbs={[{ label: t("title") }]}>
             <div className="space-y-6 max-w-7xl mx-auto p-6">
 
                 {/* Header & Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Complaints Queue</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
                         <p className="text-muted-foreground">
-                            {selectedTeam ? `Managing complaints for ${selectedTeam.displayName}` : "Viewing all complaints"}
+                            {selectedTeam ? t("managingFor", { team: selectedTeam.displayName }) : t("viewingAll")}
                         </p>
                     </div>
 
                     <div className="flex gap-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-64">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search complaints..."
+                                placeholder={t("searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9"
+                                className="ps-9"
                             />
                         </div>
                     </div>
@@ -178,8 +180,8 @@ function ComplaintsQueueContent() {
                     </div>
                 ) : complaints.length === 0 ? (
                     <div className="text-center p-12 border rounded-lg bg-muted/10">
-                        <h3 className="text-lg font-semibold">No complaints found</h3>
-                        <p className="text-muted-foreground">Try adjusting your filters.</p>
+                        <h3 className="text-lg font-semibold">{t("noComplaints")}</h3>
+                        <p className="text-muted-foreground">{t("adjustFilters")}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -197,29 +199,29 @@ function ComplaintsQueueContent() {
                 <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Close Complaint</DialogTitle>
+                            <DialogTitle>{t("closeComplaint")}</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to close this complaint? This normally implies it's invalid or duplicate.
+                                {t("closeDescription")}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Reason / Note (Required)</label>
+                                <label className="text-sm font-medium">{t("reasonRequired")}</label>
                                 <Textarea
-                                    placeholder="Why is this being closed?"
+                                    placeholder={t("whyClosing")}
                                     value={closeNote}
                                     onChange={(e) => setCloseNote(e.target.value)}
                                 />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="ghost" onClick={() => setCloseDialogOpen(false)}>Cancel</Button>
+                            <Button variant="ghost" onClick={() => setCloseDialogOpen(false)}>{t("cancel")}</Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => closeMutation.mutate()}
                                 disabled={!closeNote || closeMutation.isPending}
                             >
-                                {closeMutation.isPending ? "Closing..." : "Close Complaint"}
+                                {closeMutation.isPending ? t("closing") : t("closeComplaint")}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -229,42 +231,42 @@ function ComplaintsQueueContent() {
                 <Dialog open={escalateDialogOpen} onOpenChange={setEscalateDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Escalate to Manager</DialogTitle>
+                            <DialogTitle>{t("escalateToManager")}</DialogTitle>
                             <DialogDescription>
-                                Flag this complaint for higher-level review. It will be marked as In Progress.
+                                {t("escalateDescription")}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Priority</label>
+                                <label className="text-sm font-medium">{t("priority")}</label>
                                 <Select value={escalatePriority} onValueChange={setEscalatePriority}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="low">{t("low")}</SelectItem>
+                                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                                        <SelectItem value="high">{t("high")}</SelectItem>
+                                        <SelectItem value="urgent">{t("urgent")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Note (Optional)</label>
+                                <label className="text-sm font-medium">{t("noteOptional")}</label>
                                 <Textarea
-                                    placeholder="Add context for the manager..."
+                                    placeholder={t("addContext")}
                                     value={escalateNote}
                                     onChange={(e) => setEscalateNote(e.target.value)}
                                 />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="ghost" onClick={() => setEscalateDialogOpen(false)}>Cancel</Button>
+                            <Button variant="ghost" onClick={() => setEscalateDialogOpen(false)}>{t("cancel")}</Button>
                             <Button
                                 onClick={() => escalateMutation.mutate()}
                                 disabled={escalateMutation.isPending}
                             >
-                                {escalateMutation.isPending ? "Escalating..." : "Confirm Escalation"}
+                                {escalateMutation.isPending ? t("escalating") : t("confirmEscalation")}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
