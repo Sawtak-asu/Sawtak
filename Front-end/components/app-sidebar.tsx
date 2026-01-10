@@ -13,7 +13,8 @@ import {
   BookOpenText,
   Home,
   SquarePen,
-  NotebookText
+  NotebookText,
+  UserSearch
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -43,6 +44,16 @@ const platformAdminNav = [
       title: "Teams",
       url: "/admin/teams",
       icon: Shield,
+    },
+    {
+      title: "Identity Reveal Requests",
+      url: "/admin/reveal-requests",
+      icon: UserSearch,
+    },
+    {
+      title: "Audit Logs",
+      url: "/admin/audits",
+      icon: History,
     }
   ],
   [{
@@ -101,6 +112,11 @@ const managerNav = [
       url: "/admin/team",
       icon: Users,
     },
+    {
+      title: "Audit Logs",
+      url: "/admin/audits",
+      icon: History,
+    },
   ], [
     {
       title: "Complaints Queue",
@@ -130,6 +146,16 @@ const teamAdminNav = [
       title: "Team Members",
       url: "/admin/team-members",
       icon: Users,
+    },
+    {
+      title: "My Reveal Requests",
+      url: "/admin/my-reveal-requests",
+      icon: UserSearch,
+    },
+    {
+      title: "Audit Logs",
+      url: "/admin/audits",
+      icon: History,
     },
   ], [
     {

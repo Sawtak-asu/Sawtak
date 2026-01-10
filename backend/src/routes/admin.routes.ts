@@ -1013,25 +1013,31 @@ export const adminRoutes = new Elysia({
   })
 
   /**
-   * POST /api/admin/complaints/:id/reveal-identity
-   * Reveal identity of an anonymous complainant (Team Admin+)
+   * POST /api/admin/complaints/:id/request-identity-reveal
+   * Request identity reveal for an anonymous complainant (Team Admin only)
+   * Creates a pending request for Platform Admin approval
    * Only for flagged complaints
    */
-  .post("/complaints/:id/reveal-identity", async ({ params, user, set }: any) => {
+  .post("/complaints/:id/request-identity-reveal", async ({ params, body, user, set }: any) => {
     const { id } = params;
+    const { reason } = body;
+
+    if (!reason || reason.trim().length < 10) {
+      set.status = 400;
+      return { success: false, error: "A detailed reason (at least 10 characters) is required" };
+    }
 
     try {
-      // Check roles
+      // Check roles - only team admins can request
       const userMemberships = await prisma.teamMember.findMany({
         where: { user_id: user?.userId },
         select: { role: true }
       });
       const isTeamAdmin = userMemberships.some(m => m.role === "team_admin");
-      const isPlatformAdmin = user?.role === "platform_admin";
 
-      if (!isTeamAdmin && !isPlatformAdmin) {
+      if (!isTeamAdmin) {
         set.status = 403;
-        return { success: false, error: "Only team admins can reveal anonymous identities" };
+        return { success: false, error: "Only team admins can request identity reveals" };
       }
 
       // Find the complaint (must be anonymous/indexed)
@@ -1045,16 +1051,238 @@ export const adminRoutes = new Elysia({
       // Check status - must be flagged
       if (indexed.status !== "flagged" && indexed.status !== "flagged_legal" && indexed.status !== "flagged_inaccurate") {
         set.status = 400;
-        return { success: false, error: "Identity can only be revealed for flagged complaints" };
+        return { success: false, error: "Identity reveal can only be requested for flagged complaints" };
       }
 
-      // Decrypt the identifier
+      // Check if there's already a pending request
+      const existingRequest = await prisma.identityRevealRequest.findFirst({
+        where: {
+          complaint_id: id,
+          status: "pending"
+        }
+      });
+
+      if (existingRequest) {
+        set.status = 400;
+        return { success: false, error: "A pending reveal request already exists for this complaint" };
+      }
+
+      // Create the request
+      const request = await prisma.identityRevealRequest.create({
+        data: {
+          complaint_id: id,
+          complaint_type: "anonymous",
+          requested_by: user?.userId,
+          reason: reason.trim()
+        }
+      });
+
+      // Log the action
+      await prisma.complaintHistory.create({
+        data: {
+          complaint_id: id,
+          complaint_type: "anonymous",
+          action: "identity_reveal_request",
+          performed_by: user?.userId,
+          note: `Identity reveal requested. Reason: ${reason.trim()}`
+        }
+      });
+
+      return {
+        success: true,
+        message: "Identity reveal request submitted. A platform admin will review it.",
+        data: { requestId: request.id }
+      };
+
+    } catch (error: any) {
+      console.error("[AdminRoutes] Request reveal error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    params: t.Object({
+      id: t.String({ description: "Complaint ID (HCS Hash)" })
+    }),
+    body: t.Object({
+      reason: t.String({ description: "Justification for requesting identity reveal (min 10 chars)" })
+    }),
+    detail: {
+      summary: "Request Identity Reveal (Team Admin)",
+      description: "Creates a request to reveal the identity of an anonymous complainant. Only team admins can submit requests, and only for FLAGGED complaints. A platform admin must approve and manually enter the decryption key.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * GET /api/admin/identity-reveal-requests
+   * Get all identity reveal requests (Platform Admin only)
+   */
+  .get("/identity-reveal-requests", async ({ query, user, set }: any) => {
+    // Check if platform admin
+    if (user?.role !== "platform_admin") {
+      set.status = 403;
+      return { success: false, error: "Only platform admins can view reveal requests" };
+    }
+
+    const status = query.status as string | undefined;
+    const search = query.search as string | undefined;
+    const entity = query.entity as string | undefined;
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    try {
+      const where: any = {};
+      if (status && status !== "all") {
+        where.status = status;
+      }
+
+      // If searching by complaint ID, filter by complaint_id
+      if (search) {
+        where.complaint_id = { contains: search, mode: "insensitive" };
+      }
+
+      const [requests, total] = await Promise.all([
+        prisma.identityRevealRequest.findMany({
+          where,
+          include: {
+            requester: {
+              select: { id: true, name: true, email: true, picture: true }
+            },
+            reviewer: {
+              select: { id: true, name: true, email: true }
+            }
+          },
+          orderBy: { created_at: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.identityRevealRequest.count({ where })
+      ]);
+
+      // Fetch complaint details for context
+      const complaintIds = requests.map(r => r.complaint_id);
+      
+      // Build complaint filter
+      const complaintWhere: any = { hcs_hash: { in: complaintIds } };
+      
+      // If filtering by entity, we need to filter complaints by directed_to
+      if (entity) {
+        if (entity.startsWith("min_")) {
+          complaintWhere.AND = [
+            { directed_to: { path: ["type"], equals: "ministry" } },
+            { directed_to: { path: ["ministryId"], equals: entity } }
+          ];
+        } else if (entity.startsWith("gov_")) {
+          complaintWhere.AND = [
+            { directed_to: { path: ["type"], equals: "governorate" } },
+            { directed_to: { path: ["governorateId"], equals: entity } }
+          ];
+        }
+      }
+
+      const complaints = await prisma.indexedComplaint.findMany({
+        where: complaintWhere,
+        select: { hcs_hash: true, title: true, status: true, directed_to: true }
+      });
+      const complaintMap = new Map(complaints.map(c => [c.hcs_hash, c]));
+
+      // Filter requests to only those whose complaints match the entity filter
+      let filteredRequests = requests;
+      if (entity) {
+        filteredRequests = requests.filter(r => complaintMap.has(r.complaint_id));
+      }
+
+      const enrichedRequests = filteredRequests.map(r => ({
+        ...r,
+        complaint: complaintMap.get(r.complaint_id) || null
+      }));
+
+      return {
+        success: true,
+        data: {
+          requests: enrichedRequests,
+          pagination: {
+            page,
+            limit,
+            total: entity ? enrichedRequests.length : total,
+            totalPages: Math.ceil((entity ? enrichedRequests.length : total) / limit)
+          }
+        }
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Get reveal requests error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    query: t.Object({
+      status: t.Optional(t.String({ description: "Filter by status: pending, approved, rejected, or all" })),
+      search: t.Optional(t.String({ description: "Search by complaint ID" })),
+      entity: t.Optional(t.String({ description: "Filter by entity ID (e.g. min_justice, gov_cairo)" })),
+      page: t.Optional(t.String({ description: "Page number (default: 1)" })),
+      limit: t.Optional(t.String({ description: "Items per page (default: 20)" }))
+    }),
+    detail: {
+      summary: "Get Identity Reveal Requests (Platform Admin)",
+      description: "List all identity reveal requests submitted by team admins. Only platform admins can access this endpoint. Supports search by complaint ID and filter by entity.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * POST /api/admin/identity-reveal-requests/:id/approve
+   * Approve an identity reveal request with manual decryption key (Platform Admin only)
+   */
+  .post("/identity-reveal-requests/:id/approve", async ({ params, body, user, set }: any) => {
+    const { id } = params;
+    const { decryptionKey, note } = body;
+
+    // Check if platform admin
+    if (user?.role !== "platform_admin") {
+      set.status = 403;
+      return { success: false, error: "Only platform admins can approve reveal requests" };
+    }
+
+    if (!decryptionKey) {
+      set.status = 400;
+      return { success: false, error: "Decryption key is required" };
+    }
+
+    try {
+      // Find the request
+      const request = await prisma.identityRevealRequest.findUnique({
+        where: { id }
+      });
+
+      if (!request) {
+        set.status = 404;
+        return { success: false, error: "Reveal request not found" };
+      }
+
+      if (request.status !== "pending") {
+        set.status = 400;
+        return { success: false, error: `Request has already been ${request.status}` };
+      }
+
+      // Find the complaint
+      const indexed = await prisma.indexedComplaint.findUnique({
+        where: { hcs_hash: request.complaint_id }
+      });
+
+      if (!indexed) {
+        set.status = 404;
+        return { success: false, error: "Associated complaint not found" };
+      }
+
+      // Decrypt the identifier with the manually provided key
+      const { decryptWithKey } = require("../utils/crypto.utils");
       let decryptedAnonId: string;
       try {
-        decryptedAnonId = decrypt(indexed.anonymous_identifier);
-      } catch (err) {
-        set.status = 500;
-        return { success: false, error: "Failed to decrypt anonymous identifier" };
+        decryptedAnonId = decryptWithKey(indexed.anonymous_identifier, decryptionKey);
+      } catch (err: any) {
+        set.status = 400;
+        return { success: false, error: `Decryption failed: ${err.message}` };
       }
 
       // Find the user
@@ -1068,19 +1296,44 @@ export const adminRoutes = new Elysia({
         return { success: false, error: "User associated with this anonymous ID not found" };
       }
 
+      // Update the request with revealed info
+      await prisma.identityRevealRequest.update({
+        where: { id },
+        data: {
+          status: "approved",
+          reviewed_by: user?.userId,
+          review_note: note || null,
+          revealed_user_id: targetUser.id,
+          revealed_user_name: targetUser.name,
+          revealed_user_email: targetUser.email,
+          reviewed_at: new Date()
+        }
+      });
+
       // Log the action
       await prisma.complaintHistory.create({
         data: {
-          complaint_id: id,
+          complaint_id: request.complaint_id,
           complaint_type: "anonymous",
-          action: "identity_reveal",
+          action: "identity_reveal_approved",
           performed_by: user?.userId,
-          note: "Identity revealed due to flagged status"
+          note: `Platform admin approved identity reveal. User: ${targetUser.email}`
+        }
+      });
+
+      // Admin audit log
+      await prisma.adminAudit.create({
+        data: {
+          admin_id: user?.userId,
+          action_type: "IDENTITY_REVEAL",
+          target_id: request.complaint_id,
+          reason: `Approved reveal request. Revealed user: ${targetUser.email}. ${note || ""}`
         }
       });
 
       return {
         success: true,
+        message: "Identity reveal approved",
         data: {
           user: targetUser,
           decryptedId: decryptedAnonId
@@ -1088,17 +1341,454 @@ export const adminRoutes = new Elysia({
       };
 
     } catch (error: any) {
-      console.error("[AdminRoutes] Reveal identity error:", error);
+      console.error("[AdminRoutes] Approve reveal error:", error);
       set.status = 500;
       return { success: false, error: error.message };
     }
   }, {
     params: t.Object({
-      id: t.String({ description: "Complaint ID (HCS Hash)" })
+      id: t.String({ description: "Reveal Request ID" })
+    }),
+    body: t.Object({
+      decryptionKey: t.String({ description: "The 64-character hex decryption key (32 bytes)" }),
+      note: t.Optional(t.String({ description: "Optional note from platform admin" }))
     }),
     detail: {
-      summary: "Reveal Anonymous Identity",
-      description: "Decrypts and reveals the identity of an anonymous complainant. Only available to Team Admins for FLAGGED complaints. Action is strictly audited.",
+      summary: "Approve Identity Reveal (Platform Admin)",
+      description: "Approve an identity reveal request by manually entering the decryption key. Only platform admins can approve requests. The key must be 64 hex characters (32 bytes). This action is strictly audited.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * POST /api/admin/identity-reveal-requests/:id/reject
+   * Reject an identity reveal request (Platform Admin only)
+   */
+  .post("/identity-reveal-requests/:id/reject", async ({ params, body, user, set }: any) => {
+    const { id } = params;
+    const { note } = body;
+
+    // Check if platform admin
+    if (user?.role !== "platform_admin") {
+      set.status = 403;
+      return { success: false, error: "Only platform admins can reject reveal requests" };
+    }
+
+    if (!note || note.trim().length < 10) {
+      set.status = 400;
+      return { success: false, error: "A reason for rejection (at least 10 characters) is required" };
+    }
+
+    try {
+      const request = await prisma.identityRevealRequest.findUnique({
+        where: { id }
+      });
+
+      if (!request) {
+        set.status = 404;
+        return { success: false, error: "Reveal request not found" };
+      }
+
+      if (request.status !== "pending") {
+        set.status = 400;
+        return { success: false, error: `Request has already been ${request.status}` };
+      }
+
+      await prisma.identityRevealRequest.update({
+        where: { id },
+        data: {
+          status: "rejected",
+          reviewed_by: user?.userId,
+          review_note: note.trim(),
+          reviewed_at: new Date()
+        }
+      });
+
+      // Log the action
+      await prisma.complaintHistory.create({
+        data: {
+          complaint_id: request.complaint_id,
+          complaint_type: "anonymous",
+          action: "identity_reveal_rejected",
+          performed_by: user?.userId,
+          note: `Platform admin rejected identity reveal. Reason: ${note.trim()}`
+        }
+      });
+
+      return {
+        success: true,
+        message: "Identity reveal request rejected"
+      };
+
+    } catch (error: any) {
+      console.error("[AdminRoutes] Reject reveal error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    params: t.Object({
+      id: t.String({ description: "Reveal Request ID" })
+    }),
+    body: t.Object({
+      note: t.String({ description: "Reason for rejection (min 10 characters)" })
+    }),
+    detail: {
+      summary: "Reject Identity Reveal (Platform Admin)",
+      description: "Reject an identity reveal request with a reason. Only platform admins can reject requests.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * GET /api/admin/identity-reveal-requests/:id
+   * Get details of a specific reveal request
+   */
+  .get("/identity-reveal-requests/:id", async ({ params, user, set }: any) => {
+    const { id } = params;
+
+    // Platform admin or the requester can view
+    const isPlatformAdmin = user?.role === "platform_admin";
+
+    try {
+      const request = await prisma.identityRevealRequest.findUnique({
+        where: { id },
+        include: {
+          requester: {
+            select: { id: true, name: true, email: true, picture: true }
+          },
+          reviewer: {
+            select: { id: true, name: true, email: true }
+          }
+        }
+      });
+
+      if (!request) {
+        set.status = 404;
+        return { success: false, error: "Reveal request not found" };
+      }
+
+      // Check access
+      if (!isPlatformAdmin && request.requested_by !== user?.userId) {
+        set.status = 403;
+        return { success: false, error: "Access denied" };
+      }
+
+      // Get complaint details
+      const complaint = await prisma.indexedComplaint.findUnique({
+        where: { hcs_hash: request.complaint_id },
+        select: { hcs_hash: true, title: true, status: true, complaint_text: true, category: true }
+      });
+
+      return {
+        success: true,
+        data: {
+          request,
+          complaint
+        }
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Get reveal request error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    params: t.Object({
+      id: t.String({ description: "Reveal Request ID" })
+    }),
+    detail: {
+      summary: "Get Reveal Request Details",
+      description: "Get details of a specific identity reveal request. Platform admins can view all requests, team admins can only view their own requests.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * GET /api/admin/my-reveal-requests
+   * Get reveal requests made by the current user (Team Admin)
+   */
+  .get("/my-reveal-requests", async ({ query, user, set }: any) => {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    try {
+      const [requests, total] = await Promise.all([
+        prisma.identityRevealRequest.findMany({
+          where: { requested_by: user?.userId },
+          include: {
+            reviewer: {
+              select: { id: true, name: true, email: true }
+            }
+          },
+          orderBy: { created_at: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.identityRevealRequest.count({
+          where: { requested_by: user?.userId }
+        })
+      ]);
+
+      // Fetch complaint titles
+      const complaintIds = requests.map(r => r.complaint_id);
+      const complaints = await prisma.indexedComplaint.findMany({
+        where: { hcs_hash: { in: complaintIds } },
+        select: { hcs_hash: true, title: true, status: true }
+      });
+      const complaintMap = new Map(complaints.map(c => [c.hcs_hash, c]));
+
+      const enrichedRequests = requests.map(r => ({
+        ...r,
+        complaint: complaintMap.get(r.complaint_id) || null
+      }));
+
+      return {
+        success: true,
+        data: {
+          requests: enrichedRequests,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+          }
+        }
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Get my reveal requests error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    query: t.Object({
+      page: t.Optional(t.String()),
+      limit: t.Optional(t.String())
+    }),
+    detail: {
+      summary: "Get My Reveal Requests",
+      description: "Get identity reveal requests submitted by the current user.",
+      security: [{ bearerAuth: [] }]
+    }
+  })
+
+  /**
+   * GET /api/admin/audits
+   * Get audit logs with role-based access control
+   * 
+   * Access levels:
+   * - Platform Admin: sees ALL audits, can filter by entity
+   * - Team Admin: sees audits from managers and reviewers in their teams
+   * - Manager: sees audits from reviewers in their teams
+   * - Reviewer: no access (can't see anyone's audits)
+   */
+  .get("/audits", async ({ query, user, set }: any) => {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+    const search = query.search as string | undefined;
+    const entity = query.entity as string | undefined;
+    const action = query.action as string | undefined;
+    const performedBy = query.performedBy as string | undefined;
+
+    try {
+      const isPlatformAdmin = user?.role === "platform_admin";
+
+      // Get user's team memberships
+      const userMemberships = await prisma.teamMember.findMany({
+        where: { user_id: user?.userId },
+        include: { team: true }
+      });
+
+      const userRoles = userMemberships.map(m => m.role);
+      const isTeamAdmin = userRoles.includes("team_admin");
+      const isManager = userRoles.includes("manager");
+      const isReviewer = userRoles.includes("reviewer") && !isManager && !isTeamAdmin;
+
+      // Reviewers have no access
+      if (isReviewer && !isPlatformAdmin) {
+        set.status = 403;
+        return { success: false, error: "Reviewers cannot access audit logs" };
+      }
+
+      // If not platform admin and has no team membership, deny access
+      if (!isPlatformAdmin && userMemberships.length === 0) {
+        set.status = 403;
+        return { success: false, error: "You do not have access to audit logs" };
+      }
+
+      // Build the where clause based on role
+      let where: any = {};
+      
+      // Search by complaint ID
+      if (search) {
+        where.complaint_id = { contains: search, mode: "insensitive" };
+      }
+
+      // Filter by action type
+      if (action && action !== "all") {
+        where.action = action;
+      }
+
+      // Filter by specific performer
+      if (performedBy) {
+        where.performed_by = performedBy;
+      }
+
+      // For non-platform-admin, filter to only show audits from lower roles
+      if (!isPlatformAdmin) {
+        const teamIds = userMemberships.map(m => m.team_id);
+        
+        // Get all team members from user's teams
+        const teamMembers = await prisma.teamMember.findMany({
+          where: { team_id: { in: teamIds } },
+          select: { user_id: true, role: true }
+        });
+
+        // Determine which users' audits this user can see
+        let visibleUserIds: string[] = [];
+        
+        if (isTeamAdmin) {
+          // Team admins can see managers and reviewers
+          visibleUserIds = teamMembers
+            .filter(m => m.role === "manager" || m.role === "reviewer")
+            .map(m => m.user_id);
+        } else if (isManager) {
+          // Managers can only see reviewers
+          visibleUserIds = teamMembers
+            .filter(m => m.role === "reviewer")
+            .map(m => m.user_id);
+        }
+
+        if (visibleUserIds.length === 0) {
+          return {
+            success: true,
+            data: {
+              audits: [],
+              pagination: { page, limit, total: 0, totalPages: 0 }
+            }
+          };
+        }
+
+        where.performed_by = { in: visibleUserIds };
+      }
+
+      // For platform admin with entity filter, we need to filter by complaints directed to that entity
+      if (isPlatformAdmin && entity) {
+        // Get all complaints directed to this entity
+        const entityWhere: any = {};
+        if (entity.startsWith("min_")) {
+          entityWhere.AND = [
+            { directed_to: { path: ["type"], equals: "ministry" } },
+            { directed_to: { path: ["ministryId"], equals: entity } }
+          ];
+        } else if (entity.startsWith("gov_")) {
+          entityWhere.AND = [
+            { directed_to: { path: ["type"], equals: "governorate" } },
+            { directed_to: { path: ["governorateId"], equals: entity } }
+          ];
+        }
+
+        // Get complaints matching entity
+        const entityComplaints = await prisma.indexedComplaint.findMany({
+          where: entityWhere,
+          select: { hcs_hash: true }
+        });
+        const identifiedEntityComplaints = await prisma.identifiedComplaint.findMany({
+          where: entityWhere.AND ? { AND: entityWhere.AND } : {},
+          select: { id: true }
+        });
+
+        const complaintIds = [
+          ...entityComplaints.map(c => c.hcs_hash),
+          ...identifiedEntityComplaints.map(c => c.id)
+        ];
+
+        if (complaintIds.length > 0) {
+          where.complaint_id = { in: complaintIds };
+        } else {
+          // No complaints for this entity
+          return {
+            success: true,
+            data: {
+              audits: [],
+              pagination: { page, limit, total: 0, totalPages: 0 }
+            }
+          };
+        }
+      }
+
+      // Fetch audits
+      const [audits, total] = await Promise.all([
+        prisma.complaintHistory.findMany({
+          where,
+          include: {
+            performer: {
+              select: { id: true, name: true, email: true, picture: true }
+            }
+          },
+          orderBy: { created_at: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.complaintHistory.count({ where })
+      ]);
+
+      // Enrich with performer's team role (if applicable)
+      const performerIds = [...new Set(audits.map(a => a.performed_by))];
+      const performerMemberships = await prisma.teamMember.findMany({
+        where: { user_id: { in: performerIds } },
+        include: { team: true }
+      });
+
+      const performerRoleMap = new Map<string, { role: string; teamName: string }[]>();
+      for (const m of performerMemberships) {
+        const existing = performerRoleMap.get(m.user_id) || [];
+        existing.push({ role: m.role, teamName: m.team.entity_id });
+        performerRoleMap.set(m.user_id, existing);
+      }
+
+      const enrichedAudits = audits.map(a => ({
+        ...a,
+        performerRoles: performerRoleMap.get(a.performed_by) || []
+      }));
+
+      return {
+        success: true,
+        data: {
+          audits: enrichedAudits,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+          }
+        }
+      };
+    } catch (error: any) {
+      console.error("[AdminRoutes] Get audits error:", error);
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  }, {
+    query: t.Object({
+      page: t.Optional(t.String({ description: "Page number (default: 1)" })),
+      limit: t.Optional(t.String({ description: "Items per page (default: 50)" })),
+      search: t.Optional(t.String({ description: "Search by complaint ID" })),
+      entity: t.Optional(t.String({ description: "Filter by entity ID (Platform Admin only)" })),
+      action: t.Optional(t.String({ description: "Filter by action type (e.g. status_change, escalate, identity_reveal_request)" })),
+      performedBy: t.Optional(t.String({ description: "Filter by performer user ID" }))
+    }),
+    detail: {
+      summary: "Get Audit Logs",
+      description: `Get audit logs with role-based access control.
+
+**Access Levels:**
+- Platform Admin: sees ALL audits, can filter by entity
+- Team Admin: sees audits from managers and reviewers in their teams
+- Manager: sees audits from reviewers in their teams
+- Reviewer: no access
+
+Audits are read-only and cannot be deleted.`,
       security: [{ bearerAuth: [] }]
     }
   });

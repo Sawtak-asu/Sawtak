@@ -112,9 +112,6 @@ export const teamRoutes = new Elysia({
     .post("/", async (context: any) => {
         const { body, user, set } = context;
 
-        // Debug: see context keys
-        console.log("[TeamRoutes] Context keys:", Object.keys(context));
-        console.log("[TeamRoutes] Create team - User from JWT:", user);
 
         if (!user || !user.userId) {
             set.status = 401;
@@ -126,8 +123,6 @@ export const teamRoutes = new Elysia({
             where: { id: user.userId },
             select: { id: true, role: true, email: true }
         });
-
-        console.log("[TeamRoutes] User from DB:", dbUser);
 
         if (!dbUser) {
             set.status = 401;

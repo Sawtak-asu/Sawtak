@@ -32,6 +32,8 @@ model User {
   complaint_actions     ComplaintHistory[]
   escalations_from      Escalation[]          @relation("EscalatedFrom")
   escalations_to        Escalation[]          @relation("EscalatedTo")
+  reveal_requests_made     IdentityRevealRequest[] @relation("RevealRequester")
+  reveal_requests_reviewed IdentityRevealRequest[] @relation("RevealReviewer")
 }
 
 model IdentifiedComplaint {
@@ -186,5 +188,29 @@ model Escalation {
 
   @@index([complaint_id])
   @@index([to_user_id])
+  @@index([status])
+}
+
+// Identity Reveal Request - Team Admin requests, Platform Admin approves
+model IdentityRevealRequest {
+  id             String    @id @default(uuid())
+  complaint_id   String    // HCS hash of the anonymous complaint
+  complaint_type String    @default("anonymous") // Always anonymous for reveal requests
+  requested_by   String    // Team Admin who requested
+  reason         String    // Justification for reveal
+  status         String    @default("pending") // "pending" | "approved" | "rejected"
+  reviewed_by    String?   // Platform Admin who reviewed
+  review_note    String?   // Optional note from platform admin
+  revealed_user_id    String?  // User ID if revealed (after approval)
+  revealed_user_name  String?  // User name if revealed
+  revealed_user_email String?  // User email if revealed
+  created_at     DateTime  @default(now())
+  reviewed_at    DateTime?
+
+  requester User  @relation("RevealRequester", fields: [requested_by], references: [id])
+  reviewer  User? @relation("RevealReviewer", fields: [reviewed_by], references: [id])
+
+  @@index([complaint_id])
+  @@index([requested_by])
   @@index([status])
 }

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
-import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText, Clock, Loader2, Eye, AlertTriangle } from "lucide-react";
+import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText, Clock, Loader2, Eye, AlertTriangle, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -93,41 +93,40 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const [managerNote, setManagerNote] = useState("");
     const [isSubmittingManagerAction, setIsSubmittingManagerAction] = useState(false);
 
-    // Identity Reveal State
-    const [isRevealing, setIsRevealing] = useState(false);
-    const [showRevealDialog, setShowRevealDialog] = useState(false);
-    const [revealedUser, setRevealedUser] = useState<{
-        id: string | null;
-        name: string | null;
-        email: string | null;
-        picture: string | null;
-    } | null>(null);
+    // Identity Reveal Request State
+    const [isRequestingReveal, setIsRequestingReveal] = useState(false);
+    const [showRevealRequestDialog, setShowRevealRequestDialog] = useState(false);
+    const [revealReason, setRevealReason] = useState("");
+    const [revealRequestSubmitted, setRevealRequestSubmitted] = useState(false);
 
-    const handleRevealIdentity = async () => {
+    const handleRequestReveal = async () => {
         if (!token || !complaint) return;
-        setIsRevealing(true);
+        if (revealReason.trim().length < 10) {
+            toast.error("Please provide a detailed justification (at least 10 characters)");
+            return;
+        }
+        setIsRequestingReveal(true);
         try {
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/reveal-identity`, {
+            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/request-identity-reveal`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
+                body: JSON.stringify({ reason: revealReason.trim() }),
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to reveal identity");
+            if (!res.ok) throw new Error(data.error || "Failed to submit reveal request");
 
             if (data.success) {
-                setRevealedUser(data.data.user);
-                toast.success("Identity revealed");
+                setRevealRequestSubmitted(true);
+                toast.success("Identity reveal request submitted for platform admin review");
             }
         } catch (error: any) {
             toast.error(error.message);
-            // Close dialog on error so user can retry or cancel
-            setShowRevealDialog(false);
         } finally {
-            setIsRevealing(false);
+            setIsRequestingReveal(false);
         }
     };
 
@@ -776,18 +775,20 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     </Button>
                                 )}
 
-                                {/* Reveal Identity Button (Team Admin Only, Flagged Anonymous Complaints) */}
+                                {/* Request Identity Reveal Button (Team Admin Only, Flagged Anonymous Complaints) */}
                                 {(selectedTeamRole === "team_admin") && isAnonymous && complaint.status?.includes("flagged") && (
                                     <Button
                                         size="sm"
-                                        className="h-8 px-3 ml-auto bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                                        className="h-8 px-3 ml-auto bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setShowRevealDialog(true);
+                                            setRevealReason("");
+                                            setRevealRequestSubmitted(false);
+                                            setShowRevealRequestDialog(true);
                                         }}
                                     >
                                         <Eye className="h-3.5 w-3.5 mr-1.5" />
-                                        Reveal Identity
+                                        Request Reveal
                                     </Button>
                                 )}
                             </div>
@@ -797,79 +798,87 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
             </motion.div>
 
             {/* Reveal Identity Dialog */}
-            <Dialog open={showRevealDialog} onOpenChange={(open) => {
-                setShowRevealDialog(open);
+            {/* Request Identity Reveal Dialog */}
+            <Dialog open={showRevealRequestDialog} onOpenChange={(open) => {
+                setShowRevealRequestDialog(open);
                 if (!open) {
-                    if (revealedUser) {
-                        setRevealedUser(null);
-                    }
+                    setRevealReason("");
+                    setRevealRequestSubmitted(false);
                 }
             }}>
                 <DialogContent>
-                    {!revealedUser ? (
+                    {!revealRequestSubmitted ? (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2 text-red-500">
-                                    <AlertTriangle className="h-5 w-5" />
-                                    Reveal Anonymous Identity?
+                                <DialogTitle className="flex items-center gap-2 text-amber-500">
+                                    <Eye className="h-5 w-5" />
+                                    Request Identity Reveal
                                 </DialogTitle>
                                 <DialogDescription className="space-y-3 pt-3">
                                     <p className="font-medium text-foreground">
-                                        This action will decrypt the user's identity and reveal it to you.
+                                        This will submit a request to reveal the anonymous user's identity.
                                     </p>
                                     <p>
-                                        This should only be done for complaints that have been flagged for serious violations (e.g. legal issues, serious threats).
+                                        A <strong>Platform Administrator</strong> must review and approve this request with the decryption key.
                                     </p>
-                                    <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg border border-red-200 dark:border-red-900/50 text-xs text-red-600 dark:text-red-400">
-                                        <strong>Audit Log:</strong> This action will be permanently recorded in the complaint history associated with your account.
+                                    <div className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-900/50 text-xs text-amber-600 dark:text-amber-400">
+                                        <strong>Note:</strong> You will be able to track the status of your request in the "My Reveal Requests" page.
                                     </div>
                                 </DialogDescription>
                             </DialogHeader>
+                            <div className="space-y-2 py-4">
+                                <Label>Justification <span className="text-red-500">*</span></Label>
+                                <Textarea
+                                    placeholder="Explain why this identity needs to be revealed (min 10 characters)..."
+                                    value={revealReason}
+                                    onChange={(e) => setRevealReason(e.target.value)}
+                                    rows={4}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Characters: {revealReason.length} / 10 minimum
+                                </p>
+                            </div>
                             <DialogFooter>
-                                <Button variant="ghost" onClick={() => setShowRevealDialog(false)}>Cancel</Button>
+                                <Button variant="ghost" onClick={() => setShowRevealRequestDialog(false)}>Cancel</Button>
                                 <Button
-                                    variant="destructive"
-                                    onClick={handleRevealIdentity}
-                                    disabled={isRevealing}
+                                    onClick={handleRequestReveal}
+                                    disabled={isRequestingReveal || revealReason.trim().length < 10}
                                 >
-                                    {isRevealing ? "Revealing..." : "Confirm & Reveal"}
+                                    {isRequestingReveal ? "Submitting..." : "Submit Request"}
                                 </Button>
                             </DialogFooter>
                         </>
                     ) : (
                         <>
                             <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2 text-primary">
-                                    <Eye className="h-5 w-5" />
-                                    Identity Revealed
+                                <DialogTitle className="flex items-center gap-2 text-green-500">
+                                    <Check className="h-5 w-5" />
+                                    Request Submitted
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="py-6">
-                                <div className="flex flex-col items-center gap-4 p-6 bg-muted/30 rounded-xl border border-border">
-                                    <Avatar className="h-20 w-20 ring-4 ring-background shadow-xl">
-                                        <AvatarImage src={revealedUser.picture || undefined} />
-                                        <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                                            {revealedUser.name?.[0] || "U"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="text-center space-y-1">
-                                        <h3 className="text-xl font-bold">{revealedUser.name}</h3>
-                                        <p className="text-muted-foreground font-mono bg-muted px-2 py-1 rounded text-sm">
-                                            {revealedUser.email}
+                                <div className="flex flex-col items-center gap-4 p-6 bg-green-50 dark:bg-green-950/20 rounded-xl border border-green-200 dark:border-green-900/50">
+                                    <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                        <Clock className="h-8 w-8 text-green-600 dark:text-green-400" />
+                                    </div>
+                                    <div className="text-center space-y-2">
+                                        <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">Awaiting Platform Admin Review</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Your request has been submitted. A platform administrator will review it and manually enter the decryption key if approved.
                                         </p>
-                                        <p className="text-muted-foreground font-mono bg-muted px-2 py-1 rounded text-sm">
-                                            {revealedUser.id}
+                                        <p className="text-xs text-muted-foreground mt-4">
+                                            Track your request in <strong>My Reveal Requests</strong>
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button onClick={() => setShowRevealDialog(false)}>Close</Button>
+                                <Button onClick={() => setShowRevealRequestDialog(false)}>Close</Button>
                             </DialogFooter>
                         </>
                     )}
                 </DialogContent>
-            </Dialog >
+            </Dialog>
         </>
     );
 }
