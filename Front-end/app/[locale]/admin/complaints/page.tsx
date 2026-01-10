@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
@@ -30,7 +30,16 @@ import { Loader2, Search, Filter, Ban, ArrowUpCircle } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Wrapper component with Suspense boundary
 export default function ComplaintsQueuePage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+            <ComplaintsQueueContent />
+        </Suspense>
+    );
+}
+
+function ComplaintsQueueContent() {
     const searchParams = useSearchParams();
     const initialStatus = searchParams.get("status") || "all";
 

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { AdminLayout } from "@/components/admin-layout";
@@ -16,6 +16,7 @@ import {
     Calendar,
     Shield,
     AlertCircle,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,16 @@ interface UsersResponse {
     error?: string;
 }
 
+// Wrapper component with Suspense boundary
 export default function UsersPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+            <UsersPageContent />
+        </Suspense>
+    );
+}
+
+function UsersPageContent() {
     const { token } = useAuth();
     const queryClient = useQueryClient();
     const searchParams = useSearchParams();
