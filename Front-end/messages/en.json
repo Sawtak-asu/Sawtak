@@ -226,7 +226,8 @@
   "Team": {
     "title": "Meet Our",
     "titleHighlight": "Team",
-    "subtitle": "A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University."
+    "subtitle": "A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University.",
+    "ProfessorHighlight": "Supervising Professors"    
   },
   "ComplaintForm": {
     "detailsTitle": "Complaint Details",
@@ -499,11 +500,10 @@
     "refresh": "Refresh",
     "stats": {
       "total": "Total",
-      "submitted": "Submitted",
+      "pending": "Pending",
       "investigating": "Investigating",
-      "closed": "Closed",
       "resolved": "Resolved",
-      "flagged": "Flagged"
+      "dismissed": "Dismissed"
     },
     "filters": {
       "searchPlaceholder": "Search by title, tracking code, or ID...",
@@ -545,12 +545,10 @@
     "other": "Other"
   },
   "Statuses": {
-    "submitted": "Submitted",
+    "submitted": "Pending",
     "pending": "Pending",
     "investigating": "Investigating",
-    "closed": "Closed",
     "resolved": "Resolved",
-    "flagged": "Flagged",
     "dismissed": "Dismissed"
   },
   "SubmissionModes": {

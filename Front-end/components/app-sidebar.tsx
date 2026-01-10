@@ -97,9 +97,9 @@ const managerNav = [
       icon: LayoutDashboard,
     },
     {
-      title: "Team Activity",
-      url: "/admin/activity",
-      icon: History,
+      title: "Team",
+      url: "/admin/team",
+      icon: Users,
     },
   ], [
     {
