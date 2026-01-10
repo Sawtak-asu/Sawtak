@@ -76,7 +76,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -114,6 +114,7 @@ export default function TeamDetailPage() {
     const teamId = params.id as string;
     const { token, user } = useAuth();
     const locale = useLocale();
+    const t = useTranslations("Admin.teams");
     const queryClient = useQueryClient();
 
     // Check if user is platform admin
@@ -279,7 +280,7 @@ export default function TeamDetailPage() {
 
     if (isLoading) {
         return (
-            <AdminLayout breadcrumbs={[{ label: "Teams", href: `/${locale}/admin/teams` }, { label: "Loading..." }]}>
+            <AdminLayout breadcrumbs={[{ label: t("title"), href: `/${locale}/admin/teams` }, { label: t("loading") }]}>
                 <div className="p-6 space-y-6">
                     <Skeleton className="h-10 w-48" />
                     <Skeleton className="h-32 w-full" />
@@ -291,13 +292,13 @@ export default function TeamDetailPage() {
 
     if (isError || !team) {
         return (
-            <AdminLayout breadcrumbs={[{ label: "Teams", href: `/${locale}/admin/teams` }, { label: "Error" }]}>
+            <AdminLayout breadcrumbs={[{ label: t("title"), href: `/${locale}/admin/teams` }, { label: t("error") }]}>
                 <div className="p-6">
                     <div className="text-center p-12 bg-red-500/5 rounded-xl border border-red-500/20">
                         <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-                        <h3 className="text-lg font-semibold text-red-500">Failed to load team</h3>
+                        <h3 className="text-lg font-semibold text-red-500">{t("failedToLoad")}</h3>
                         <Button variant="outline" className="mt-4" onClick={() => refetch()}>
-                            Try Again
+                            {t("tryAgain")}
                         </Button>
                     </div>
                 </div>
@@ -306,7 +307,7 @@ export default function TeamDetailPage() {
     }
 
     return (
-        <AdminLayout breadcrumbs={[{ label: "Teams", href: `/${locale}/admin/teams` }, { label: team.displayName }]}>
+        <AdminLayout breadcrumbs={[{ label: t("title"), href: `/${locale}/admin/teams` }, { label: team.displayName }]}>
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -328,8 +329,8 @@ export default function TeamDetailPage() {
                         </p>
                     </div>
                     <Button variant="outline" onClick={() => refetch()}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                        <RefreshCw className="h-4 w-4 me-2" />
+                        {t("refresh")}
                     </Button>
                 </div>
 
@@ -338,17 +339,17 @@ export default function TeamDetailPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Users className="h-5 w-5" />
-                            Team Members ({team.members.length})
+                            {t("teamMembersCount", { count: team.members.length })}
                         </CardTitle>
                         <CardDescription>
-                            Add reviewers, managers, or admins to handle complaints for this entity.
+                            {t("addMembersDescription")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {isPlatformAdmin && (
                             <Button onClick={() => setAddMemberDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Member
+                                <Plus className="h-4 w-4 me-2" />
+                                {t("addMember")}
                             </Button>
                         )}
                     </CardContent>
@@ -357,16 +358,16 @@ export default function TeamDetailPage() {
                 {/* Role Legend */}
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                        <Badge variant="secondary"><Eye className="h-3 w-3 mr-1" />Reviewer</Badge>
-                        <span>Close or escalate with priority</span>
+                        <Badge variant="secondary"><Eye className="h-3 w-3 me-1" />{t("roles.reviewer")}</Badge>
+                        <span>{t("roles.reviewerDesc")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Badge><FileCheck className="h-3 w-3 mr-1" />Manager</Badge>
-                        <span>Investigate, resolve, or flag</span>
+                        <Badge><FileCheck className="h-3 w-3 me-1" />{t("roles.manager")}</Badge>
+                        <span>{t("roles.managerDesc")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Badge variant="destructive" className="text-black font-semibold"><Shield className="h-3 w-3 mr-1 text-black" />Team Admin</Badge>
-                        <span>Legal escalation & audits</span>
+                        <Badge variant="destructive" className="text-black font-semibold"><Shield className="h-3 w-3 me-1 text-black" />{t("roles.teamAdmin")}</Badge>
+                        <span>{t("roles.teamAdminDesc")}</span>
                     </div>
                 </div>
 
@@ -374,16 +375,16 @@ export default function TeamDetailPage() {
                 {team.members.length === 0 ? (
                     <div className="text-center p-16 border border-dashed border-border rounded-xl">
                         <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">No members yet</h3>
+                        <h3 className="text-lg font-medium">{t("noMembersYet")}</h3>
                         <p className="text-muted-foreground mb-4">
                             {isPlatformAdmin
-                                ? "Add team members to handle complaints."
-                                : "No members have been assigned yet."}
+                                ? t("noMembersDescription")
+                                : t("noMembersAssigned")}
                         </p>
                         {isPlatformAdmin && (
                             <Button onClick={() => setAddMemberDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add First Member
+                                <Plus className="h-4 w-4 me-2" />
+                                {t("addFirstMember")}
                             </Button>
                         )}
                     </div>
@@ -392,10 +393,10 @@ export default function TeamDetailPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Member</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Team Role</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead>{t("member")}</TableHead>
+                                    <TableHead>{t("email")}</TableHead>
+                                    <TableHead>{t("teamRole")}</TableHead>
+                                    <TableHead className="text-end">{t("actions")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -418,7 +419,7 @@ export default function TeamDetailPage() {
                                         <TableCell>
                                             <Badge variant={getRoleBadgeVariant(member.role) as any}>
                                                 {getRoleIcon(member.role)}
-                                                <span className="ml-1 capitalize">{member.role}</span>
+                                                <span className="ms-1">{t(`roles.${member.role === "team_admin" ? "teamAdmin" : member.role}`)}</span>
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -429,7 +430,7 @@ export default function TeamDetailPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                                                     {isPlatformAdmin && (
                                                         <>
                                                             <DropdownMenuSeparator />
@@ -440,8 +441,8 @@ export default function TeamDetailPage() {
                                                                     setChangeRoleDialogOpen(true);
                                                                 }}
                                                             >
-                                                                <RefreshCw className="h-4 w-4 mr-2" />
-                                                                Change Role
+                                                                <RefreshCw className="h-4 w-4 me-2" />
+                                                                {t("changeRole")}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
                                                                 className="text-red-600"
@@ -450,8 +451,8 @@ export default function TeamDetailPage() {
                                                                     setRemoveMemberDialogOpen(true);
                                                                 }}
                                                             >
-                                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                                Remove from Team
+                                                                <Trash2 className="h-4 w-4 me-2" />
+                                                                {t("removeFromTeam")}
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}
@@ -470,16 +471,16 @@ export default function TeamDetailPage() {
             <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Add Team Member</DialogTitle>
+                        <DialogTitle>{t("addTeamMember")}</DialogTitle>
                         <DialogDescription>
-                            Search for a user and assign them a role in this team.
+                            {t("searchUserDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Search User (Email or Name)</label>
+                            <label className="text-sm font-medium">{t("searchUser")}</label>
                             <Input
-                                placeholder="Type to search..."
+                                placeholder={t("typeToSearch")}
                                 value={userSearch}
                                 onChange={(e) => {
                                     setUserSearch(e.target.value);
@@ -491,7 +492,7 @@ export default function TeamDetailPage() {
                             {userSearch && (
                                 <div className="border rounded-md mt-2 max-h-48 overflow-y-auto">
                                     {isSearching ? (
-                                        <div className="p-2 text-sm text-center text-muted-foreground">Searching...</div>
+                                        <div className="p-2 text-sm text-center text-muted-foreground">{t("searching")}</div>
                                     ) : searchResults.length > 0 ? (
                                         <div className="flex flex-col">
                                             {searchResults.map((user: any) => (
@@ -515,15 +516,15 @@ export default function TeamDetailPage() {
                                                         <span className="text-xs text-muted-foreground">{user.email}</span>
                                                     </div>
                                                     {user.role === "user" && (
-                                                        <span className="ml-auto text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
-                                                            Will promote
+                                                        <span className="ms-auto text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
+                                                            {t("willPromote")}
                                                         </span>
                                                     )}
                                                 </button>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="p-2 text-sm text-center text-muted-foreground">No users found</div>
+                                        <div className="p-2 text-sm text-center text-muted-foreground">{t("noUsersFound")}</div>
                                     )}
                                 </div>
                             )}
@@ -532,11 +533,11 @@ export default function TeamDetailPage() {
                         {selectedUserId && (
                             <div className="p-2 bg-muted/50 rounded-md flex items-center gap-2 border border-primary/20">
                                 <Check className="h-4 w-4 text-green-500" />
-                                <span className="text-sm">User selected</span>
+                                <span className="text-sm">{t("userSelected")}</span>
                             </div>
                         )}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Role</label>
+                            <label className="text-sm font-medium">{t("role")}</label>
                             <Select value={selectedRole} onValueChange={(v: any) => setSelectedRole(v)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -545,19 +546,19 @@ export default function TeamDetailPage() {
                                     <SelectItem value="reviewer">
                                         <div className="flex items-center gap-2">
                                             <Eye className="h-4 w-4" />
-                                            Reviewer - Close or escalate with priority
+                                            {t("roles.reviewer")} - {t("roles.reviewerDesc")}
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="manager">
                                         <div className="flex items-center gap-2">
                                             <FileCheck className="h-4 w-4" />
-                                            Manager - Investigate, resolve, or flag
+                                            {t("roles.manager")} - {t("roles.managerDesc")}
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="team_admin">
                                         <div className="flex items-center gap-2">
                                             <Shield className="h-4 w-4" />
-                                            Team Admin - Legal escalation & audits
+                                            {t("roles.teamAdmin")} - {t("roles.teamAdminDesc")}
                                         </div>
                                     </SelectItem>
                                 </SelectContent>
@@ -566,13 +567,13 @@ export default function TeamDetailPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setAddMemberDialogOpen(false)}>
-                            Cancel
+                            {t("cancel")}
                         </Button>
                         <Button
                             onClick={() => addMemberMutation.mutate({ userId: selectedUserId, role: selectedRole })}
                             disabled={!selectedUserId || addMemberMutation.isPending}
                         >
-                            {addMemberMutation.isPending ? "Adding..." : "Add Member"}
+                            {addMemberMutation.isPending ? t("adding") : t("addMember")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -582,18 +583,18 @@ export default function TeamDetailPage() {
             <AlertDialog open={removeMemberDialogOpen} onOpenChange={setRemoveMemberDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                        <AlertDialogTitle>{t("removeMember")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to remove {selectedMember?.user.name || selectedMember?.user.email} from this team?
+                            {t("removeConfirmation", { name: selectedMember?.user.name || selectedMember?.user.email || "" })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => selectedMember && removeMemberMutation.mutate(selectedMember.user.id)}
                             className="bg-red-600 hover:bg-red-700 font-semibold"
                         >
-                            {removeMemberMutation.isPending ? "Removing..." : "Remove"}
+                            {removeMemberMutation.isPending ? t("removing") : t("remove")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -603,14 +604,14 @@ export default function TeamDetailPage() {
             <Dialog open={changeRoleDialogOpen} onOpenChange={setChangeRoleDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Change Member Role</DialogTitle>
+                        <DialogTitle>{t("changeMemberRole")}</DialogTitle>
                         <DialogDescription>
-                            Update the role for {selectedMember?.user.name || selectedMember?.user.email}.
+                            {t("updateRoleDescription", { name: selectedMember?.user.name || selectedMember?.user.email || "" })}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">New Role</label>
+                            <label className="text-sm font-medium">{t("newRole")}</label>
                             <Select value={selectedRole} onValueChange={(v: any) => setSelectedRole(v)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -619,19 +620,19 @@ export default function TeamDetailPage() {
                                     <SelectItem value="reviewer">
                                         <div className="flex items-center gap-2">
                                             <Eye className="h-4 w-4" />
-                                            Reviewer - Close or escalate with priority
+                                            {t("roles.reviewer")} - {t("roles.reviewerDesc")}
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="manager">
                                         <div className="flex items-center gap-2">
                                             <FileCheck className="h-4 w-4" />
-                                            Manager - Investigate, resolve, or flag
+                                            {t("roles.manager")} - {t("roles.managerDesc")}
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="team_admin">
                                         <div className="flex items-center gap-2">
                                             <Shield className="h-4 w-4" />
-                                            Team Admin - Legal escalation & audits
+                                            {t("roles.teamAdmin")} - {t("roles.teamAdminDesc")}
                                         </div>
                                     </SelectItem>
                                 </SelectContent>
@@ -640,13 +641,13 @@ export default function TeamDetailPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setChangeRoleDialogOpen(false)}>
-                            Cancel
+                            {t("cancel")}
                         </Button>
                         <Button
                             onClick={() => selectedMember && updateMemberRoleMutation.mutate({ userId: selectedMember.user.id, role: selectedRole })}
                             disabled={updateMemberRoleMutation.isPending}
                         >
-                            {updateMemberRoleMutation.isPending ? "Updating..." : "Update Role"}
+                            {updateMemberRoleMutation.isPending ? t("updating") : t("updateRole")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

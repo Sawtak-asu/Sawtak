@@ -4,6 +4,7 @@ import { useState, Suspense, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
+import { useTranslations } from "next-intl";
 import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +79,7 @@ function RevealRequestsContent() {
     const { isPlatformAdmin } = useAdmin();
     const queryClient = useQueryClient();
     const router = useRouter();
+    const t = useTranslations("Admin.revealRequests");
 
     const [statusFilter, setStatusFilter] = useState("pending");
     const [searchQuery, setSearchQuery] = useState("");
@@ -150,7 +152,7 @@ function RevealRequestsContent() {
             return data;
         },
         onSuccess: (data) => {
-            toast.success("Identity reveal approved");
+            toast.success(t("approveSuccess"));
             setRevealedUser(data.data?.user || null);
             queryClient.invalidateQueries({ queryKey: ["reveal-requests"] });
         },
@@ -173,12 +175,12 @@ function RevealRequestsContent() {
             });
             if (!res.ok) {
                 const err = await res.json();
-                throw new Error(err.error || "Failed to reject request");
+                throw new Error(err.error || t("failedToReject"));
             }
             return res.json();
         },
         onSuccess: () => {
-            toast.success("Identity reveal request rejected");
+            toast.success(t("rejectSuccess"));
             setRejectDialogOpen(false);
             setRejectNote("");
             setSelectedRequest(null);
@@ -213,11 +215,11 @@ function RevealRequestsContent() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "pending":
-                return <Badge variant="outline" className="text-yellow-600 border-yellow-600"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+                return <Badge variant="outline" className="text-yellow-600 border-yellow-600"><Clock className="w-3 h-3 mr-1" />{t("pending")}</Badge>;
             case "approved":
-                return <Badge variant="outline" className="text-green-600 border-green-600"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
+                return <Badge variant="outline" className="text-green-600 border-green-600"><Check className="w-3 h-3 mr-1" />{t("approved")}</Badge>;
             case "rejected":
-                return <Badge variant="outline" className="text-red-600 border-red-600"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
+                return <Badge variant="outline" className="text-red-600 border-red-600"><X className="w-3 h-3 mr-1" />{t("rejected")}</Badge>;
             default:
                 return <Badge variant="outline">{status}</Badge>;
         }
@@ -231,9 +233,9 @@ function RevealRequestsContent() {
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Identity Reveal Requests</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
                             <p className="text-muted-foreground">
-                                Review and approve identity reveal requests from team admins
+                                {t("subtitle")}
                             </p>
                         </div>
                     </div>
@@ -242,19 +244,19 @@ function RevealRequestsContent() {
                     <div className="flex flex-col sm:flex-row gap-3">
                         {/* Search */}
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by complaint ID..."
+                                placeholder={t("searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9"
+                                className="ps-9"
                             />
                         </div>
 
                         {/* Entity Filter */}
                         <Select value={entityFilter} onValueChange={setEntityFilter}>
                             <SelectTrigger className="w-48">
-                                <SelectValue placeholder="Filter by entity" />
+                                <SelectValue placeholder={t("filterEntity")} />
                             </SelectTrigger>
                             <SelectContent className="max-h-60">
                                 {entityOptions.map(opt => (
@@ -266,13 +268,13 @@ function RevealRequestsContent() {
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="w-40">
-                                <SelectValue placeholder="Filter by status" />
+                                <SelectValue placeholder={t("filterStatus")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Requests</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="approved">Approved</SelectItem>
-                                <SelectItem value="rejected">Rejected</SelectItem>
+                                <SelectItem value="all">{t("allRequests")}</SelectItem>
+                                <SelectItem value="pending">{t("pending")}</SelectItem>
+                                <SelectItem value="approved">{t("approved")}</SelectItem>
+                                <SelectItem value="rejected">{t("rejected")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -282,10 +284,9 @@ function RevealRequestsContent() {
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5" />
                     <div>
-                        <h3 className="font-medium text-yellow-800 dark:text-yellow-400">Security Notice</h3>
+                        <h3 className="font-medium text-yellow-800 dark:text-yellow-400">{t("securityNotice")}</h3>
                         <p className="text-sm text-yellow-700 dark:text-yellow-500">
-                            Approving an identity reveal request requires you to manually enter the decryption key. 
-                            This key is not stored in the system and must be kept secure. All approvals are audited.
+                            {t("securityNoticeText")}
                         </p>
                     </div>
                 </div>
@@ -297,7 +298,7 @@ function RevealRequestsContent() {
                     </div>
                 ) : requests.length === 0 ? (
                     <div className="text-center p-12 border rounded-lg bg-muted/10">
-                        <h3 className="text-lg font-semibold">No reveal requests found</h3>
+                        <h3 className="text-lg font-semibold">{t("noRequests")}</h3>
                         <p className="text-muted-foreground">
                             {statusFilter === "pending" 
                                 ? "There are no pending identity reveal requests."
@@ -340,13 +341,13 @@ function RevealRequestsContent() {
                                     </div>
 
                                     <div>
-                                        <span className="text-sm text-muted-foreground">Justification:</span>
+                                        <span className="text-sm text-muted-foreground">{t("justification")}:</span>
                                         <p className="mt-1 p-3 bg-muted/50 rounded-md text-sm">{request.reason}</p>
                                     </div>
 
                                     {request.status === "approved" && request.revealed_user_email && (
                                         <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md border border-green-200 dark:border-green-800">
-                                            <span className="text-sm font-medium text-green-700 dark:text-green-400">Revealed Identity:</span>
+                                            <span className="text-sm font-medium text-green-700 dark:text-green-400">{t("revealedUser")}:</span>
                                             <p className="mt-1 text-sm">
                                                 <strong>{request.revealed_user_name}</strong> ({request.revealed_user_email})
                                             </p>
@@ -370,15 +371,15 @@ function RevealRequestsContent() {
                                             size="sm"
                                             onClick={() => handleReject(request)}
                                         >
-                                            <X className="h-4 w-4 mr-1" />
-                                            Reject
+                                            <X className="h-4 w-4 me-1" />
+                                            {t("reject")}
                                         </Button>
                                         <Button
                                             size="sm"
                                             onClick={() => handleApprove(request)}
                                         >
-                                            <Key className="h-4 w-4 mr-1" />
-                                            Approve with Key
+                                            <Key className="h-4 w-4 me-1" />
+                                            {t("approve")}
                                         </Button>
                                     </CardFooter>
                                 )}
@@ -391,7 +392,7 @@ function RevealRequestsContent() {
                 <Dialog open={approveDialogOpen} onOpenChange={(open) => !open && closeApproveDialog()}>
                     <DialogContent className="max-w-lg">
                         <DialogHeader>
-                            <DialogTitle>Approve Identity Reveal</DialogTitle>
+                            <DialogTitle>{t("approveRequest")}</DialogTitle>
                             <DialogDescription>
                                 To reveal the identity, you must enter the decryption key. This action is irreversible and will be audited.
                             </DialogDescription>
@@ -400,7 +401,7 @@ function RevealRequestsContent() {
                         {revealedUser ? (
                             <div className="space-y-4">
                                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                                    <h3 className="font-medium text-green-700 dark:text-green-400 mb-2">Identity Revealed Successfully</h3>
+                                    <h3 className="font-medium text-green-700 dark:text-green-400 mb-2">{t("actionSuccessful")}</h3>
                                     <div className="space-y-2 text-sm">
                                         <p><strong>Name:</strong> {revealedUser.name || "N/A"}</p>
                                         <p><strong>Email:</strong> {revealedUser.email}</p>
@@ -423,19 +424,19 @@ function RevealRequestsContent() {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium flex items-center gap-2">
                                         <Key className="h-4 w-4" />
-                                        Decryption Key (64 hex characters / 32 bytes)
+                                        {t("decryptionKey")}
                                     </label>
                                     <div className="relative">
                                         <Input
                                             type={showKey ? "text" : "password"}
-                                            placeholder="Enter the 64-character hex key..."
+                                            placeholder={t("decryptionKeyPlaceholder")}
                                             value={decryptionKey}
                                             onChange={(e) => setDecryptionKey(e.target.value)}
-                                            className="font-mono pr-10"
+                                            className="font-mono pe-10"
                                         />
                                         <button
                                             type="button"
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                             onClick={() => setShowKey(!showKey)}
                                         >
                                             {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -447,9 +448,9 @@ function RevealRequestsContent() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Note (Optional)</label>
+                                    <label className="text-sm font-medium">{t("approvalNote")} (Optional)</label>
                                     <Textarea
-                                        placeholder="Add a note about this approval..."
+                                        placeholder={t("notePlaceholder")}
                                         value={approveNote}
                                         onChange={(e) => setApproveNote(e.target.value)}
                                     />
@@ -461,17 +462,7 @@ function RevealRequestsContent() {
                                         onClick={() => approveMutation.mutate()}
                                         disabled={decryptionKey.length !== 64 || approveMutation.isPending}
                                     >
-                                        {approveMutation.isPending ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                Decrypting...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Approve & Reveal
-                                            </>
-                                        )}
+                                        {approveMutation.isPending ? t("pending") : t("approve")}
                                     </Button>
                                 </DialogFooter>
                             </div>
@@ -483,16 +474,16 @@ function RevealRequestsContent() {
                 <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Reject Identity Reveal Request</DialogTitle>
+                            <DialogTitle>{t("rejectRequest")}</DialogTitle>
                             <DialogDescription>
                                 Provide a reason for rejecting this request. The team admin will be notified.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Reason for Rejection (Required)</label>
+                                <label className="text-sm font-medium">{t("rejectionNote")}</label>
                                 <Textarea
-                                    placeholder="Why is this request being rejected? (min 10 characters)"
+                                    placeholder={t("notePlaceholder")}
                                     value={rejectNote}
                                     onChange={(e) => setRejectNote(e.target.value)}
                                 />
@@ -505,7 +496,7 @@ function RevealRequestsContent() {
                                 onClick={() => rejectMutation.mutate()}
                                 disabled={rejectNote.trim().length < 10 || rejectMutation.isPending}
                             >
-                                {rejectMutation.isPending ? "Rejecting..." : "Reject Request"}
+                                {rejectMutation.isPending ? t("pending") : t("reject")}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

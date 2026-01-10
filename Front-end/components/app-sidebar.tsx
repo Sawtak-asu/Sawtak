@@ -30,157 +30,159 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/lib/auth-context"
 import { useAdmin } from "@/lib/admin-context"
+import { useTranslations } from "next-intl"
 
-// Platform Admin navigation - full access
-const platformAdminNav = [
-  [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-
-    },
-    {
-      title: "Teams",
-      url: "/admin/teams",
-      icon: Shield,
-    },
-    {
-      title: "Identity Reveal Requests",
-      url: "/admin/reveal-requests",
-      icon: UserSearch,
-    },
-    {
-      title: "Audit Logs",
-      url: "/admin/audits",
-      icon: History,
-    }
-  ],
-  [{
-    title: "Users",
-    url: "/admin/users",
-    icon: Users,
-    isActive: true,
-    items: [
-      { title: "All Users", url: "/admin/users" },
-      { title: "Blocked Users", url: "/admin/users?blocked=true" },
-    ],
-  },]
-]
-
-// Reviewer navigation - view queue, escalate
-const reviewerNav = [
-  [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-
-    },
-    {
-      title: "Team Members",
-      url: "/admin/team",
-      icon: Users,
-    },
-
-  ],
-  [
-    {
-      title: "Complaints Queue",
-      url: "/admin/complaints",
-      icon: ClipboardList,
-      isActive: true,
-      items: [
-        { title: "Incoming (Pending)", url: "/admin/complaints?status=submitted" },
-        { title: "Escalated", url: "/admin/complaints?status=investigating" },
-        { title: "Closed History", url: "/admin/complaints?status=closed" },
-      ],
-    },
-  ]
-]
-
-// Manager navigation - investigate, resolve, flag
-const managerNav = [
-  [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Team",
-      url: "/admin/team",
-      icon: Users,
-    },
-    {
-      title: "Audit Logs",
-      url: "/admin/audits",
-      icon: History,
-    },
-  ], [
-    {
-      title: "Complaints Queue",
-      url: "/admin/complaints",
-      icon: ClipboardList,
-      isActive: true,
-      items: [
-        { title: "In Progress", url: "/admin/complaints?status=investigating" },
-        { title: "Resolved", url: "/admin/complaints?status=resolved" },
-        { title: "Closed History", url: "/admin/complaints?status=closed" },
-        { title: "Flagged Inaccurate", url: "/admin/complaints?status=flagged" },
-      ],
-    },
-  ]
-]
-
-
-// Team Admin navigation - legal escalation, audits
-const teamAdminNav = [
-  [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Team Members",
-      url: "/admin/team-members",
-      icon: Users,
-    },
-    {
-      title: "My Reveal Requests",
-      url: "/admin/my-reveal-requests",
-      icon: UserSearch,
-    },
-    {
-      title: "Audit Logs",
-      url: "/admin/audits",
-      icon: History,
-    },
-  ], [
-    {
-      title: "Complaints Queue",
-      url: "/admin/complaints",
-      icon: FileText,
-      isActive: true,
-      items: [
-        // { title: "All", url: "/admin/complaints" },
-        { title: "Flagged Complaints", url: "/admin/complaints?status=flagged" },
-      ],
-    },
-  ]
-
-]
-
-const general = [
-  { title: "Home page", url: "/", icon: Home },
-  { title: "Feed", url: "/feed", icon: NotebookText },
-  { title: "File Complaint", url: "/file-complaint", icon: SquarePen },
-  { title: "Documents", url: "/docs", icon: BookOpenText }
-];
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth()
   const { isPlatformAdmin, selectedTeamRole } = useAdmin()
+  const t = useTranslations("Sidebar")
+
+  // Platform Admin navigation - full access
+  const platformAdminNav = [
+    [
+      {
+        title: t("nav.dashboard"),
+        url: "/admin",
+        icon: LayoutDashboard,
+
+      },
+      {
+        title: t("nav.teams"),
+        url: "/admin/teams",
+        icon: Shield,
+      },
+      {
+        title: t("nav.revealRequests"),
+        url: "/admin/reveal-requests",
+        icon: UserSearch,
+      },
+      {
+        title: t("nav.auditLogs"),
+        url: "/admin/audits",
+        icon: History,
+      }
+    ],
+    [{
+      title: t("nav.users"),
+      url: "/admin/users",
+      icon: Users,
+      isActive: true,
+      items: [
+        { title: t("nav.allUsers"), url: "/admin/users" },
+        { title: t("nav.blockedUsers"), url: "/admin/users?blocked=true" },
+      ],
+    },]
+  ]
+
+  // Reviewer navigation - view queue, escalate
+  const reviewerNav = [
+    [
+      {
+        title: t("nav.dashboard"),
+        url: "/admin",
+        icon: LayoutDashboard,
+
+      },
+      {
+        title: t("nav.teamMembers"),
+        url: "/admin/team",
+        icon: Users,
+      },
+
+    ],
+    [
+      {
+        title: t("nav.complaintsQueue"),
+        url: "/admin/complaints",
+        icon: ClipboardList,
+        isActive: true,
+        items: [
+          { title: t("nav.incoming"), url: "/admin/complaints?status=submitted" },
+          { title: t("nav.escalated"), url: "/admin/complaints?status=investigating" },
+          { title: t("nav.closedHistory"), url: "/admin/complaints?status=closed" },
+        ],
+      },
+    ]
+  ]
+
+  // Manager navigation - investigate, resolve, flag
+  const managerNav = [
+    [
+      {
+        title: t("nav.dashboard"),
+        url: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        title: t("nav.teamMembers"),
+        url: "/admin/team",
+        icon: Users,
+      },
+      {
+        title: t("nav.auditLogs"),
+        url: "/admin/audits",
+        icon: History,
+      },
+    ], [
+      {
+        title: t("nav.complaintsQueue"),
+        url: "/admin/complaints",
+        icon: ClipboardList,
+        isActive: true,
+        items: [
+          { title: t("nav.inProgress"), url: "/admin/complaints?status=investigating" },
+          { title: t("nav.resolved"), url: "/admin/complaints?status=resolved" },
+          { title: t("nav.closedHistory"), url: "/admin/complaints?status=closed" },
+          { title: t("nav.flaggedInaccurate"), url: "/admin/complaints?status=flagged" },
+        ],
+      },
+    ]
+  ]
+
+
+  // Team Admin navigation - legal escalation, audits
+  const teamAdminNav = [
+    [
+      {
+        title: t("nav.dashboard"),
+        url: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        title: t("nav.teamMembers"),
+        url: "/admin/team",
+        icon: Users,
+      },
+      {
+        title: t("nav.myRevealRequests"),
+        url: "/admin/my-reveal-requests",
+        icon: UserSearch,
+      },
+      {
+        title: t("nav.auditLogs"),
+        url: "/admin/audits",
+        icon: History,
+      },
+    ], [
+      {
+        title: t("nav.complaintsQueue"),
+        url: "/admin/complaints",
+        icon: FileText,
+        isActive: true,
+        items: [
+          { title: t("nav.flaggedComplaints"), url: "/admin/complaints?status=flagged" },
+        ],
+      },
+    ]
+
+  ]
+
+  const general = [
+    { title: t("nav.home"), url: "/", icon: Home },
+    { title: t("nav.feed"), url: "/feed", icon: NotebookText },
+    { title: t("nav.fileComplaint"), url: "/file-complaint", icon: SquarePen },
+    { title: t("nav.documents"), url: "/docs", icon: BookOpenText }
+  ];
 
   // Determine which navigation to show based on role
   const getNavItems = () => {

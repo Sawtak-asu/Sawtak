@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useAdmin } from "@/lib/admin-context";
 import { AdminLayout } from "@/components/admin-layout";
+import { useTranslations, useLocale } from "next-intl";
 import {
     Table,
     TableBody,
@@ -21,6 +22,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function MyTeamPage() {
     const { token } = useAuth();
     const { selectedTeam } = useAdmin();
+    const t = useTranslations("Admin.myTeam");
+    const tRoles = useTranslations("Admin.teams.roles");
+    const tCommon = useTranslations("Admin.teams"); // For "member", "email", "role", "teamAdmin", etc. use existing keys if possible or duplicate. Actually "member", "email" are in Admin.teams
+    const locale = useLocale();
 
     const { data, isLoading } = useQuery({
         queryKey: ["admin-team-members", selectedTeam?.id],
@@ -39,13 +44,14 @@ export default function MyTeamPage() {
     const members = teamData?.members || [];
 
     const getRoleBadge = (role: string) => {
+        const roleName = tRoles(role === "team_admin" ? "teamAdmin" : role);
         switch (role) {
             case "team_admin":
-                return <Badge variant="destructive" className="flex w-fit items-center gap-1"><Shield className="h-3 w-3" /> Team Admin</Badge>;
+                return <Badge variant="destructive" className="flex w-fit items-center gap-1"><Shield className="h-3 w-3" /> {roleName}</Badge>;
             case "manager":
-                return <Badge variant="secondary" className="flex w-fit items-center gap-1"><FileCheck className="h-3 w-3" /> Manager</Badge>;
+                return <Badge variant="secondary" className="flex w-fit items-center gap-1"><FileCheck className="h-3 w-3" /> {roleName}</Badge>;
             case "reviewer":
-                return <Badge variant="outline" className="flex w-fit items-center gap-1"><Eye className="h-3 w-3" /> Reviewer</Badge>;
+                return <Badge variant="outline" className="flex w-fit items-center gap-1"><Eye className="h-3 w-3" /> {roleName}</Badge>;
             default:
                 return <Badge variant="outline">{role}</Badge>;
         }
@@ -53,12 +59,12 @@ export default function MyTeamPage() {
 
     if (!selectedTeam) {
         return (
-            <AdminLayout breadcrumbs={[{ label: "My Team" }]}>
+            <AdminLayout breadcrumbs={[{ label: t("title") }]}>
                 <div className="flex flex-col items-center justify-center h-[50vh] text-center p-6 bg-muted/10 rounded-lg mx-6 mt-6 border border-dashed">
                     <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">No Team Selected</h2>
+                    <h2 className="text-xl font-semibold mb-2">{t("noTeamSelected")}</h2>
                     <p className="text-muted-foreground max-w-md">
-                        Please select a team from the sidebar (top-left) to view your colleagues and team structure.
+                        {t("selectTeamHint")}
                     </p>
                 </div>
             </AdminLayout>
@@ -66,11 +72,11 @@ export default function MyTeamPage() {
     }
 
     return (
-        <AdminLayout breadcrumbs={[{ label: "My Team", href: "/admin/my-team" }]}>
+        <AdminLayout breadcrumbs={[{ label: t("title"), href: "/admin/my-team" }]}>
             <div className="p-6 max-w-6xl mx-auto space-y-6">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight mb-2">{selectedTeam.displayName}</h1>
-                    <p className="text-muted-foreground">Team Members & Roles</p>
+                    <p className="text-muted-foreground">{t("teamMembersRoles")}</p>
                 </div>
 
                 <div className="rounded-md border bg-card">
@@ -82,16 +88,16 @@ export default function MyTeamPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Member</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Email</TableHead>
+                                    <TableHead className="text-start">{tCommon("member")}</TableHead>
+                                    <TableHead className="text-start">{tCommon("role")}</TableHead>
+                                    <TableHead className="text-start">{tCommon("email")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {members.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                                            No members found
+                                            {t("noMembersFound")}
                                         </TableCell>
                                     </TableRow>
                                 ) : (

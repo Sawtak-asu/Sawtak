@@ -63,7 +63,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -96,6 +96,7 @@ interface AvailableEntity {
 export default function TeamsPage() {
     const { token, user } = useAuth();
     const locale = useLocale();
+    const t = useTranslations("Admin.teams");
     const queryClient = useQueryClient();
     const [search, setSearch] = useState("");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -230,39 +231,39 @@ export default function TeamsPage() {
     };
 
     return (
-        <AdminLayout breadcrumbs={[{ label: "Teams" }]}>
+        <AdminLayout breadcrumbs={[{ label: t("title") }]}>
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold">Teams Management</h1>
+                        <h1 className="text-2xl font-semibold">{t("teamsManagement")}</h1>
                         <p className="text-muted-foreground">
-                            Manage complaint routing entities and their admin teams
+                            {t("teamsSubtitle")}
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                            Refresh
+                            <RefreshCw className={`h-4 w-4 me-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            {t("refresh")}
                         </Button>
                         {isPlatformAdmin && (
                             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Create Team
+                                        <Plus className="h-4 w-4 me-2" />
+                                        {t("createTeam")}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
-                                        <DialogTitle>Create New Team</DialogTitle>
+                                        <DialogTitle>{t("createNewTeam")}</DialogTitle>
                                         <DialogDescription>
-                                            Select an entity (ministry or governorate) to create a team for complaint routing.
+                                            {t("createTeamDescription")}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium">Entity Type</label>
+                                            <label className="text-sm font-medium">{t("entityType")}</label>
                                             <Select
                                                 value={selectedEntityType}
                                                 onValueChange={(v: "ministry" | "governorate") => {
@@ -274,16 +275,16 @@ export default function TeamsPage() {
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="ministry">Ministry</SelectItem>
-                                                    <SelectItem value="governorate">Governorate</SelectItem>
+                                                    <SelectItem value="ministry">{t("ministry")}</SelectItem>
+                                                    <SelectItem value="governorate">{t("governorate")}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium">Entity</label>
+                                            <label className="text-sm font-medium">{t("entity")}</label>
                                             <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select an entity..." />
+                                                    <SelectValue placeholder={t("selectEntity")} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {(selectedEntityType === "ministry" ? availableMinistries : availableGovernorates).map(entity => (
@@ -297,10 +298,10 @@ export default function TeamsPage() {
                                     </div>
                                     <DialogFooter>
                                         <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                                            Cancel
+                                            {t("cancel")}
                                         </Button>
                                         <Button onClick={handleCreateTeam} disabled={createMutation.isPending}>
-                                            {createMutation.isPending ? "Creating..." : "Create Team"}
+                                            {createMutation.isPending ? t("creating") : t("createTeam")}
                                         </Button>
                                     </DialogFooter>
                                 </DialogContent>
@@ -312,12 +313,12 @@ export default function TeamsPage() {
                 {/* Search */}
                 <div className="flex gap-4 p-4 bg-muted/30 rounded-xl border border-border/50">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search teams..."
+                            placeholder={t("searchTeams")}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-9 bg-background"
+                            className="ps-9 bg-background"
                         />
                     </div>
                 </div>
@@ -332,24 +333,24 @@ export default function TeamsPage() {
                 ) : isError ? (
                     <div className="text-center p-12 bg-red-500/5 rounded-xl border border-red-500/20">
                         <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-                        <h3 className="text-lg font-semibold text-red-500">Failed to load teams</h3>
+                        <h3 className="text-lg font-semibold text-red-500">{t("failedToLoadTeams")}</h3>
                         <Button variant="outline" className="mt-4" onClick={() => refetch()}>
-                            Try Again
+                            {t("tryAgain")}
                         </Button>
                     </div>
                 ) : filteredTeams.length === 0 ? (
                     <div className="text-center p-16 border border-dashed border-border rounded-xl">
                         <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">No teams yet</h3>
+                        <h3 className="text-lg font-medium">{t("noTeamsYet")}</h3>
                         <p className="text-muted-foreground mb-4">
                             {isPlatformAdmin
-                                ? "Create a team to start routing complaints to specific entities."
-                                : "No teams have been created yet. Contact a platform admin."}
+                                ? t("noTeamsDescription")
+                                : t("noTeamsContact")}
                         </p>
                         {isPlatformAdmin && (
                             <Button onClick={() => setCreateDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create First Team
+                                <Plus className="h-4 w-4 me-2" />
+                                {t("createFirstTeam")}
                             </Button>
                         )}
                     </div>
@@ -372,12 +373,12 @@ export default function TeamsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 <Link href={`/${locale}/admin/teams/${team.id}`}>
                                                     <DropdownMenuItem>
-                                                        <Eye className="h-4 w-4 mr-2" />
-                                                        View Details
+                                                        <Eye className="h-4 w-4 me-2" />
+                                                        {t("viewDetails")}
                                                     </DropdownMenuItem>
                                                 </Link>
                                                 {isPlatformAdmin && (
@@ -388,8 +389,8 @@ export default function TeamsPage() {
                                                             setDeleteDialogOpen(true);
                                                         }}
                                                     >
-                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                        Delete Team
+                                                        <Trash2 className="h-4 w-4 me-2" />
+                                                        {t("deleteTeam")}
                                                     </DropdownMenuItem>
                                                 )}
                                             </DropdownMenuContent>
@@ -405,11 +406,11 @@ export default function TeamsPage() {
                                 <CardContent>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Users className="h-4 w-4" />
-                                        <span>{team.memberCount} members</span>
+                                        <span>{t("members", { count: team.memberCount })}</span>
                                     </div>
                                     <Link href={`/${locale}/admin/teams/${team.id}`}>
                                         <Button variant="outline" size="sm" className="w-full mt-4">
-                                            Manage Team
+                                            {t("manageTeam")}
                                         </Button>
                                     </Link>
                                 </CardContent>
@@ -423,19 +424,18 @@ export default function TeamsPage() {
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Team</AlertDialogTitle>
+                        <AlertDialogTitle>{t("deleteTeam")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete the team "{selectedTeam?.displayName}"?
-                            This will remove all member assignments.
+                            {t("deleteTeamConfirmation", { name: selectedTeam?.displayName || "" })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => selectedTeam && deleteMutation.mutate(selectedTeam.id)}
                             className="bg-red-600 hover:bg-red-700"
                         >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                            {deleteMutation.isPending ? t("deleting") : t("delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
