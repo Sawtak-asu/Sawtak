@@ -16,6 +16,7 @@ import { adminRoutes } from "./routes/admin.routes";
 import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
 import { voteRoutes } from "./routes/vote.routes";
+import { teamRoutes } from "./routes/team.routes";
 import { startIndexer } from "./services/hedera-indexer.service";
 import { rateLimiter } from "./services/rate-limiter.service";
 import { openapi } from '@elysiajs/openapi'
@@ -121,13 +122,14 @@ Anonymous complaints can be verified on the Hedera network:
     .use(trackingRoutes)
     .use(uploadRoutes)
     .use(voteRoutes)
+    .use(teamRoutes)
     .get("/", () => "Sawtak API v1.0.0 - Visit /swagger for documentation", {
       detail: {
         hide: true
       }
     })
 
-.get("/api/health", async () => {
+    .get("/api/health", async () => {
       const redisHealth = await rateLimiter.healthCheck();
       return {
         status: "healthy",

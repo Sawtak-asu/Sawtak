@@ -226,7 +226,8 @@
     "Team": {
         "title": "تعرف على",
         "titleHighlight": "فريقنا",
-        "subtitle": "مشروع تخرج لطلاب السنة الرابعة من قسم علوم الحاسب، كلية العلوم، جامعة عين شمس."
+        "subtitle": "مشروع تخرج لطلاب السنة الرابعة من قسم علوم الحاسب، كلية العلوم، جامعة عين شمس.",
+        "ProfessorHighlight": "تحت اشراف"
     },
     "ComplaintForm": {
         "detailsTitle": "تفاصيل الشكوى",
@@ -499,10 +500,11 @@
         "refresh": "تحديث",
         "stats": {
             "total": "الإجمالي",
-            "pending": "قيد الانتظار",
+            "submitted": "مقدمة",
             "investigating": "قيد التحقيق",
+            "closed": "مغلقة",
             "resolved": "تم الحل",
-            "dismissed": "مرفوضة"
+            "flagged": "مُعلَّمة"
         },
         "filters": {
             "searchPlaceholder": "البحث بالعنوان أو رمز التتبع أو المعرف...",
@@ -544,10 +546,12 @@
         "other": "أخرى"
     },
     "Statuses": {
-        "submitted": "قيد الانتظار",
+        "submitted": "مقدمة",
         "pending": "قيد الانتظار",
         "investigating": "قيد التحقيق",
+        "closed": "مغلقة",
         "resolved": "تم الحل",
+        "flagged": "مُعلَّمة",
         "dismissed": "مرفوضة"
     },
     "SubmissionModes": {

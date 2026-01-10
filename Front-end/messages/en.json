@@ -226,7 +226,8 @@
   "Team": {
     "title": "Meet Our",
     "titleHighlight": "Team",
-    "subtitle": "A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University."
+    "subtitle": "A graduation project by 4th-year students from the Department of Computer Science, Faculty of Science, Ain Shams University.",
+    "ProfessorHighlight": "Supervising Professors"    
   },
   "ComplaintForm": {
     "detailsTitle": "Complaint Details",

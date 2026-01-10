@@ -15,16 +15,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
  * })
  */
 
-export const authMiddleware = new Elysia()
+export const authMiddleware = new Elysia({ name: "auth" })
   .use(jwt({ name: "jwt", secret: JWT_SECRET }))
-  .derive(async ({ headers, jwt, set }: any) => {
+  .derive({ as: "global" }, async ({ headers, jwt, set }: any) => {
     const authHeader = headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      set.status = 401;
+      // Don't set status here, let the route handle optional auth
       return {
         user: null,
-        error: { success: false, error: "Unauthorized: No token provided" }
+        error: null
       };
     }
 
