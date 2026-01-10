@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { IdentifiedComplaintController } from "../controllers/identified-complaint.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { prisma } from "../db";
 
 // Initialize controller
 const controller = new IdentifiedComplaintController();
@@ -17,7 +18,29 @@ export const identifiedComplaintRoutes = new Elysia({
    * POST /api/complaints/identified/submit
    * Submit an identified complaint to the database
    */
-  .post("/submit", async ({ body, set }: any) => {
+  .post("/submit", async ({ body, set, user }: any) => {
+    // 1. Authenticate and authorize
+    if (!user || !user.userId) {
+      set.status = 401;
+      return { success: false, error: "Authentication required" };
+    }
+
+    if (body.userId !== user.userId) {
+      set.status = 403;
+      return { success: false, error: "Cannot submit complaint for another user" };
+    }
+
+    // 2. Check strict blocking status from DB (fresh check)
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { is_blocked: true }
+    });
+
+    if (dbUser?.is_blocked) {
+      set.status = 403;
+      return { success: false, error: "You are blocked from creating complaints" };
+    }
+
     return controller.submitComplaint(body, set);
   }, {
     body: t.Object({

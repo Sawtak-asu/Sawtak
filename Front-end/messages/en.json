@@ -499,10 +499,11 @@
     "refresh": "Refresh",
     "stats": {
       "total": "Total",
-      "pending": "Pending",
+      "submitted": "Submitted",
       "investigating": "Investigating",
+      "closed": "Closed",
       "resolved": "Resolved",
-      "dismissed": "Dismissed"
+      "flagged": "Flagged"
     },
     "filters": {
       "searchPlaceholder": "Search by title, tracking code, or ID...",
@@ -544,10 +545,12 @@
     "other": "Other"
   },
   "Statuses": {
-    "submitted": "Pending",
+    "submitted": "Submitted",
     "pending": "Pending",
     "investigating": "Investigating",
+    "closed": "Closed",
     "resolved": "Resolved",
+    "flagged": "Flagged",
     "dismissed": "Dismissed"
   },
   "SubmissionModes": {

@@ -16,27 +16,60 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
-
+import Link from "next/link"
 export function NavMain({
   items,
+  general
 }: {
   items: {
     title: string
     url: string
-    icon?: LucideIcon
+    icon: LucideIcon
     isActive?: boolean
     items?: {
       title: string
       url: string
     }[]
+  }[][],
+  general: {
+    title: string
+    url: string
+    icon: LucideIcon
   }[]
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>General</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {general.map((item) => (
+          <Link key={item.title} href={item.url}>
+            <SidebarMenuButton tooltip={item.title} >
+              <item.icon />
+              <span>{item.title}</span>
+            </SidebarMenuButton>
+          </Link>
+        ))}
+      </SidebarMenu>
+      <div className="h-7" />
+
+      <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+      <SidebarMenu>
+        {items[0].map((item) => (
+          <Link key={item.title} href={item.url}>
+            <SidebarMenuButton tooltip={item.title} >
+              <item.icon />
+              <span>{item.title}</span>
+            </SidebarMenuButton>
+          </Link>
+        ))}
+      </SidebarMenu>
+      <div className="h-7" />
+
+      <SidebarGroupLabel>{items[1][0].title == "Users" ? "Users" : "Complaints"}</SidebarGroupLabel>
+      <SidebarMenu>
+        {items[1].map((item) => (
           <Collapsible
             key={item.title}
             asChild

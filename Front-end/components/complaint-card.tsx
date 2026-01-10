@@ -277,6 +277,13 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                 )}>
                                     {getStatusName(complaint.status || "pending")}
                                 </Badge>
+                                {/* Official Response indicator */}
+                                {(complaint.status === "closed" || complaint.status === "resolved" || complaint.status === "flagged") && (
+                                    <Badge variant="outline" className="text-[10px] uppercase h-5 px-1.5 shrink-0 bg-primary/10 text-primary border-primary/20">
+                                        <MessageCircle className="h-3 w-3 mr-1" />
+                                        Official Response
+                                    </Badge>
+                                )}
                             </div>
 
                             {/* Title */}
@@ -401,7 +408,9 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <MessageCircle className="h-4 w-4" />
-                                    <span className="text-xs font-medium">0</span>
+                                    <span className="text-xs font-medium">
+                                        {(complaint.status === "closed" || complaint.status === "resolved" || complaint.status === "flagged") ? 1 : 0}
+                                    </span>
                                 </Button>
 
                                 {/* Share Button */}

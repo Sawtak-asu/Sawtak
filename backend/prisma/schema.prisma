@@ -15,7 +15,7 @@ model User {
   name                 String? // User's display name (from OAuth)
   picture              String? // Profile picture URL (from OAuth)
   anonymous_identifier String  @unique
-  role                 String  @default("user") // user, admin, moderator
+  role                 String  @default("user") // user, platform_admin
   is_blocked           Boolean @default(false) // Block user from platform
 
   // OAuth / Future Identity Provider fields
@@ -28,6 +28,10 @@ model User {
   complaints_identified IdentifiedComplaint[]
   admin_audits          AdminAudit[]
   votes                 ComplaintVote[]
+  team_memberships      TeamMember[]
+  complaint_actions     ComplaintHistory[]
+  escalations_from      Escalation[]          @relation("EscalatedFrom")
+  escalations_to        Escalation[]          @relation("EscalatedTo")
 }
 
 model IdentifiedComplaint {
@@ -116,4 +120,71 @@ model ComplaintVote {
 
   @@unique([complaint_id, voter_id]) // One vote per user per complaint
   @@index([complaint_id])
+}
+
+// Entity/Team model (maps to egypt-locations.ts ministries/governorates/centers)
+model Team {
+  id         String   @id @default(uuid())
+  entity_id  String   @unique // ID from egypt-locations.ts (e.g., "min_interior", "gov_cairo")
+  type       String // "ministry" | "governorate" | "center"
+  created_at DateTime @default(now())
+
+  members TeamMember[]
+
+  @@index([type])
+}
+
+// Admin-Team relationship with role type
+model TeamMember {
+  id         String   @id @default(uuid())
+  user_id    String
+  team_id    String
+  role       String // "reviewer" | "manager" | "team_admin"
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, team_id]) // One role per team per user
+  @@index([team_id])
+  @@index([user_id])
+}
+
+// Complaint action history/audit trail
+model ComplaintHistory {
+  id             String   @id @default(uuid())
+  complaint_id   String
+  complaint_type String // "identified" | "anonymous"
+  action         String // "status_change" | "escalate" | "flag_inaccurate" | "flag_legal" | "identity_reveal" | "ban_user"
+  old_status     String?
+  new_status     String?
+  note           String? // Optional note from reviewer/manager
+  performed_by   String
+  created_at     DateTime @default(now())
+
+  performer User @relation(fields: [performed_by], references: [id])
+
+  @@index([complaint_id])
+  @@index([performed_by])
+}
+
+// Escalation tracking with priority and assignment
+model Escalation {
+  id             String    @id @default(uuid())
+  complaint_id   String
+  complaint_type String // "identified" | "anonymous"
+  from_user_id   String // Who escalated
+  to_user_id     String? // Assigned manager (optional)
+  priority       String // "low" | "medium" | "high" | "urgent"
+  note           String? // Reason for escalation
+  status         String    @default("pending") // "pending" | "accepted" | "resolved"
+  created_at     DateTime  @default(now())
+  resolved_at    DateTime?
+
+  from_user User  @relation("EscalatedFrom", fields: [from_user_id], references: [id])
+  to_user   User? @relation("EscalatedTo", fields: [to_user_id], references: [id])
+
+  @@index([complaint_id])
+  @@index([to_user_id])
+  @@index([status])
 }

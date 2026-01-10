@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useAdmin } from "@/lib/admin-context"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
     SidebarInset,
@@ -25,18 +26,22 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutProps) {
-    const { user, isLoggedIn, isLoading } = useAuth()
+    const { user, isLoggedIn, isLoading: authLoading } = useAuth()
+    const { isAdmin, isLoading: adminLoading } = useAdmin()
     const router = useRouter()
+
+    const isLoading = authLoading || adminLoading
 
     // Protect admin routes
     useEffect(() => {
         if (!isLoading) {
-            const isAdmin = user?.role?.toUpperCase() === 'ADMIN'
-            if (!isLoggedIn || !isAdmin) {
+            // Check if user has any admin access (platform_admin or team member)
+            const hasAccess = user?.role === "platform_admin" || user?.role === "admin" || isAdmin
+            if (!isLoggedIn || !hasAccess) {
                 router.replace("/")
             }
         }
-    }, [isLoading, isLoggedIn, user, router])
+    }, [isLoading, isLoggedIn, user, isAdmin, router])
 
     if (isLoading) {
         return (
@@ -46,7 +51,9 @@ export function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutProps) {
         )
     }
 
-    if (!isLoggedIn || user?.role?.toUpperCase() !== 'ADMIN') {
+    // Check access
+    const hasAccess = user?.role === "platform_admin" || user?.role === "admin" || isAdmin
+    if (!isLoggedIn || !hasAccess) {
         return null
     }
 

@@ -499,10 +499,11 @@
         "refresh": "تحديث",
         "stats": {
             "total": "الإجمالي",
-            "pending": "قيد الانتظار",
+            "submitted": "مقدمة",
             "investigating": "قيد التحقيق",
+            "closed": "مغلقة",
             "resolved": "تم الحل",
-            "dismissed": "مرفوضة"
+            "flagged": "مُعلَّمة"
         },
         "filters": {
             "searchPlaceholder": "البحث بالعنوان أو رمز التتبع أو المعرف...",
@@ -544,10 +545,12 @@
         "other": "أخرى"
     },
     "Statuses": {
-        "submitted": "قيد الانتظار",
+        "submitted": "مقدمة",
         "pending": "قيد الانتظار",
         "investigating": "قيد التحقيق",
+        "closed": "مغلقة",
         "resolved": "تم الحل",
+        "flagged": "مُعلَّمة",
         "dismissed": "مرفوضة"
     },
     "SubmissionModes": {

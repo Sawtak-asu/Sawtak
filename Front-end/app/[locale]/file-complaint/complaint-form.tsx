@@ -73,7 +73,9 @@ const formSchema = z.object({
     message: "Main text must be at most 5000 characters.",
   }),
   category: z.string().nonempty("Please select a category."),
-  directedToType: z.enum(["none", "ministry", "governorate", "center"]).optional(),
+  directedToType: z.enum(["ministry", "governorate", "center"], {
+    message: "Please select where to direct this complaint.",
+  }),
   directedToMinistry: z.string().optional(),
   directedToGovernorate: z.string().optional(),
   directedToCenter: z.string().optional(),
@@ -82,6 +84,21 @@ const formSchema = z.object({
   evidence: z.any().optional(),
   submissionMode: z.enum(["anonymous", "public"]),
   visibility: z.enum(["public", "private"]),
+}).refine((data) => {
+  // Validate that the corresponding sub-field is filled based on directedToType
+  if (data.directedToType === "ministry") {
+    return !!data.directedToMinistry;
+  }
+  if (data.directedToType === "governorate") {
+    return !!data.directedToGovernorate;
+  }
+  if (data.directedToType === "center") {
+    return !!data.directedToGovernorate && !!data.directedToCenter;
+  }
+  return true;
+}, {
+  message: "Please select the target entity.",
+  path: ["directedToType"],
 });
 
 type ComplaintFormData = z.infer<typeof formSchema>;
@@ -104,7 +121,7 @@ export function ComplaintForm() {
       mainText: "",
       area: "",
       category: "",
-      directedToType: "none",
+      directedToType: undefined,
       directedToMinistry: "",
       directedToGovernorate: "",
       directedToCenter: "",
@@ -219,20 +236,17 @@ export function ComplaintForm() {
       }
     }
 
-    // Build directedTo object if specified
-    let directedTo: DirectedTo | undefined = undefined;
-    if (values.directedToType && values.directedToType !== "none") {
-      directedTo = {
-        type: values.directedToType as DirectedToType,
-      };
-      if (values.directedToType === "ministry" && values.directedToMinistry) {
-        directedTo.ministryId = values.directedToMinistry;
-      } else if (values.directedToType === "governorate" && values.directedToGovernorate) {
-        directedTo.governorateId = values.directedToGovernorate;
-      } else if (values.directedToType === "center" && values.directedToGovernorate && values.directedToCenter) {
-        directedTo.governorateId = values.directedToGovernorate;
-        directedTo.centerId = values.directedToCenter;
-      }
+    // Build directedTo object - now required
+    const directedTo: DirectedTo = {
+      type: values.directedToType as DirectedToType,
+    };
+    if (values.directedToType === "ministry" && values.directedToMinistry) {
+      directedTo.ministryId = values.directedToMinistry;
+    } else if (values.directedToType === "governorate" && values.directedToGovernorate) {
+      directedTo.governorateId = values.directedToGovernorate;
+    } else if (values.directedToType === "center" && values.directedToGovernorate && values.directedToCenter) {
+      directedTo.governorateId = values.directedToGovernorate;
+      directedTo.centerId = values.directedToCenter;
     }
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
@@ -470,10 +484,9 @@ export function ComplaintForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">{t("notSpecified")}</SelectItem>
                       <SelectItem value="ministry">{t("ministry")}</SelectItem>
                       <SelectItem value="governorate">{t("governorate")}</SelectItem>
-                      <SelectItem value="center">{t("center")}</SelectItem>
+                      {/* <SelectItem value="center">{t("center")}</SelectItem> */}
                     </SelectContent>
                   </Select>
                   <FormDescription>

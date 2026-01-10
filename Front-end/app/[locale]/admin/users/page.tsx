@@ -1,5 +1,7 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
@@ -81,19 +83,24 @@ interface UsersResponse {
 export default function UsersPage() {
     const { token } = useAuth();
     const queryClient = useQueryClient();
+    const searchParams = useSearchParams();
+    const blockedParam = searchParams.get("blocked");
+
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
+
     const [blockDialogOpen, setBlockDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [blockAction, setBlockAction] = useState<"block" | "unblock">("block");
 
     const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: ["admin-users", { page, search }],
+        queryKey: ["admin-users", { page, search, blocked: blockedParam }],
         queryFn: async () => {
             const params = new URLSearchParams();
             params.set("page", page.toString());
             params.set("limit", "20");
             if (search) params.set("search", search);
+            if (blockedParam) params.set("blocked", blockedParam);
 
             const res = await fetch(`${API_URL}/api/admin/users?${params}`, {
                 headers: {

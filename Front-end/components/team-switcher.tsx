@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, Plus } from "lucide-react"
+import { ChevronsUpDown, Building2, MapPin, Shield } from "lucide-react"
+import { useAdmin } from "@/lib/admin-context"
+import { Badge } from "@/components/ui/badge"
 
 import {
   DropdownMenu,
@@ -9,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -19,21 +20,85 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function TeamSwitcher({
-  teams,
-}: {
-  teams: {
-    name: string
-    logo: React.ElementType
-    plan: string
-  }[]
-}) {
+export function TeamSwitcher() {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const {
+    isPlatformAdmin,
+    teamMemberships,
+    selectedTeam,
+    selectedTeamRole,
+    switchTeam,
+    isLoading
+  } = useAdmin()
 
-  if (!activeTeam) {
-    return null
+  // Platform admin view - no team switching
+  if (isPlatformAdmin) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" className="cursor-default">
+            <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <Shield className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">Platform Admin</span>
+              <span className="truncate text-xs text-muted-foreground">Global Access</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
   }
+
+  // No teams - show placeholder
+  if (teamMemberships.length === 0) {
+    if (isLoading) {
+      return (
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" className="cursor-default">
+              <div className="bg-muted flex aspect-square size-8 items-center justify-center rounded-lg animate-pulse" />
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium text-muted-foreground">Loading...</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      )
+    }
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" className="cursor-default">
+            <div className="bg-muted text-muted-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <Building2 className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium text-muted-foreground">No Teams</span>
+              <span className="truncate text-xs text-muted-foreground">Contact admin</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  // Get icon based on team type
+  const getTeamIcon = (type: string) => {
+    return type === "ministry" ? Building2 : MapPin
+  }
+
+  // Get role badge color
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case "reviewer": return "secondary"
+      case "manager": return "default"
+      case "team_admin": return "destructive"
+      default: return "outline"
+    }
+  }
+
+  const TeamIcon = selectedTeam ? getTeamIcon(selectedTeam.type) : Building2
 
   return (
     <SidebarMenu>
@@ -45,11 +110,15 @@ export function TeamSwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <activeTeam.logo className="size-4" />
+                <TeamIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activeTeam.name}</span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate font-medium">
+                  {selectedTeam?.displayName || "Select Team"}
+                </span>
+                <span className="truncate text-xs capitalize">
+                  {selectedTeamRole?.replace("_", " ") || "—"}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -61,28 +130,31 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Teams
+              My Teams
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
-              <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
-                className="gap-2 p-2"
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border">
-                  <team.logo className="size-3.5 shrink-0" />
-                </div>
-                {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            ))}
+            {teamMemberships.map((membership) => {
+              const Icon = getTeamIcon(membership.team.type)
+              const isActive = selectedTeam?.id === membership.team.id
+              return (
+                <DropdownMenuItem
+                  key={membership.team.id}
+                  onClick={() => switchTeam(membership.team.id)}
+                  className={`gap-2 p-2 ${isActive ? "bg-accent" : ""}`}
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border">
+                    <Icon className="size-3.5 shrink-0" />
+                  </div>
+                  <div className="flex-1 truncate">{membership.team.displayName}</div>
+                  <Badge variant={getRoleBadgeVariant(membership.role) as any} className="text-xs capitalize">
+                    {membership.role.replace("_", " ")}
+                  </Badge>
+                </DropdownMenuItem>
+              )
+            })}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                <Plus className="size-4" />
-              </div>
-              <div className="text-muted-foreground font-medium">Add team</div>
-            </DropdownMenuItem>
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              {teamMemberships.length} team{teamMemberships.length !== 1 ? "s" : ""}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
