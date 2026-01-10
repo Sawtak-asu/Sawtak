@@ -6,12 +6,12 @@ import Link from "next/link";
 import sh from "@/public/team/sherif.jpeg";
 import sayed from "@/public/team/sayed.png";
 import ahmed from "@/public/team/ahmed.jpeg";
+import drnull from "@/public/team/drmm.jpg"
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 export function Team() {
     const t = useTranslations("Team");
-
     const team = [
         {
             name: "Ahmed Khaled",
@@ -34,7 +34,17 @@ export function Team() {
             github: "sizif-22",
             image: sh
         },
+
     ];
+    const professor = [
+        {
+            name: "Dr. Mohamed Mostafa",
+            role: "A Game Designer, Teaching Assistant at Ain Shams University and Data Scientist.",
+            bio: "A Game Designer, Teaching Assistant at Ain Shams University and Data Scientist.",
+            github: "DoctorNULL",
+            image: drnull
+        },
+    ]
 
     return (
         <section dir="ltr" className="py-16 md:py-24 border-t border-border/50 bg-background/30 backdrop-blur-sm">
@@ -67,6 +77,36 @@ export function Team() {
                                     className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
                                 >
                                     <span className="flex w-fit items-center gap-2 px-2"><Github className="h-5 w-5" />| {member.github}</span>
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="justify-center mt-24">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-semibold md:text-4xl">
+                            <span className="text-primary">{t("ProfessorHighlight")}</span>
+                        </h2>
+                    </div>
+                    {professor.map((professor) => (
+                        <div key={professor.name} className="group relative text-center">
+                            <div className="mx-auto mb-6 h-32 w-32 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
+                                <div className="h-full w-full flex items-center justify-center bg-secondary/50">
+                                    <Image src={professor.image} alt={professor.name} width={1000} height={1000} />
+                                </div>
+                            </div>
+                            <h3 className="text-lg font-semibold">{professor.name}</h3>
+                            <p className="text-sm text-primary mb-2">{professor.role}</p>
+
+                            <div className="flex justify-center">
+                                <Link
+                                    href={`https://github.com/${professor.github}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                                >
+                                    <span className="flex w-fit items-center gap-2 px-2"><Github className="h-5 w-5" />| {professor.github}</span>
                                 </Link>
                             </div>
                         </div>

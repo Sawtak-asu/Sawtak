@@ -33,7 +33,8 @@ function truncateName(name: string | null | undefined): string {
 export function Navbar({ variant = "sticky" }: NavbarProps) {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { logout, user, isLoggedIn, isLoading } = useAuth();
+  const [hasTeamAccess, setHasTeamAccess] = React.useState(false);
+  const { logout, user, isLoggedIn, isLoading, token } = useAuth();
   const pathname = usePathname();
   const t = useTranslations("Navbar");
   const tCommon = useTranslations("Common");
@@ -46,7 +47,36 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Check if user has team membership (for non-platform admins)
+  React.useEffect(() => {
+    const checkTeamAccess = async () => {
+      if (!token || !isLoggedIn || user?.role === "platform_admin") {
+        setHasTeamAccess(false);
+        return;
+      }
+
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${API_URL}/api/admin/teams/my-teams`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const teams = data.data?.teams || [];
+          setHasTeamAccess(teams.length > 0);
+        }
+      } catch (error) {
+        console.error("Failed to check team access:", error);
+      }
+    };
+
+    checkTeamAccess();
+  }, [token, isLoggedIn, user?.role]);
+
   const isFloating = variant === "floating";
+
+  // Check if user has any admin access
+  const isAnyAdmin = user?.role === "admin" || user?.role === "platform_admin" || hasTeamAccess;
 
   const navLinks = [
     { href: "/feed", label: t("feed") },
@@ -131,7 +161,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                           {t("myComplaints")}
                         </Link>
                       </DropdownMenuItem>
-                      {user?.role?.toLowerCase() === "admin" && (
+                      {isAnyAdmin && (
                         <DropdownMenuItem asChild>
                           <Link href="/admin" className="flex items-center">
                             <Shield className="me-2 h-4 w-4" />
@@ -199,7 +229,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                             {t("myComplaints")}
                           </Link>
 
-                          {user?.role?.toUpperCase() === "ADMIN" && (
+                          {isAnyAdmin && (
                             <Link
                               href="/admin"
                               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -311,7 +341,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                       {t("myComplaints")}
                     </Link>
                   </DropdownMenuItem>
-                  {user?.role?.toLowerCase() === "admin" && (
+                  {isAnyAdmin && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="flex items-center">
                         <Shield className="me-2 h-4 w-4" />
@@ -379,7 +409,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
                         {t("myComplaints")}
                       </Link>
 
-                      {user?.role?.toUpperCase() === "ADMIN" && (
+                      {isAnyAdmin && (
                         <Link
                           href="/admin"
                           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"

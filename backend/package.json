@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "bun run --watch src/server.ts",
     "test": "bun test",
-    "build": "bun build src/server.ts --outdir dist",
+    "build": "bun build src/server.ts --outdir dist --target bun",
     "start": "bun run src/server.ts"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "date-fns": "latest",
     "elysia": "latest",
     "google-auth-library": "^10.5.0",
-    "ioredis": "latest",
+    "ioredis": "^5.9.1",
     "web3.storage": "latest",
     "zod": "latest"
   },

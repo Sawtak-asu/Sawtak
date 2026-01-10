@@ -302,7 +302,7 @@ Without the indexer, querying the blockchain directly would be too slow.
 - **JWT Authentication**: Access tokens with configurable expiry
 - **Encrypted Storage**: User IDs encrypted (AES-256-GCM) in anonymous tracking
 - **Audit Logging**: All admin actions logged immutably
-- **Identity Reveal**: Multi-sig approval workflow for accessing anonymous identities (🔜 Future)
+- **Identity Reveal Workflow**: Team Admins request reveals → Platform Admins approve with manual decryption key (✅ Implemented)
 - **Input Sanitization**: XSS and SQL injection prevention
 
 ---
@@ -373,6 +373,27 @@ Without the indexer, querying the blockchain directly would be too slow.
 | PUT | `/api/admin/complaints/:id/status` | ✅ Admin | Update complaint status |
 | GET | `/api/admin/stats` | ✅ Admin | Admin dashboard stats |
 | GET | `/api/admin/audit` | ✅ Admin | Get audit logs |
+
+### Identity Reveal (Escalation Workflow)
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/admin/complaints/:id/request-identity-reveal` | ✅ Team Admin | Request identity reveal (creates pending request) |
+| GET | `/api/admin/identity-reveal-requests` | ✅ Platform Admin | List all reveal requests (search & filter) |
+| GET | `/api/admin/identity-reveal-requests/:id` | ✅ Platform Admin | Get reveal request details |
+| POST | `/api/admin/identity-reveal-requests/:id/approve` | ✅ Platform Admin | Approve with manual decryption key |
+| POST | `/api/admin/identity-reveal-requests/:id/reject` | ✅ Platform Admin | Reject reveal request |
+| GET | `/api/admin/my-reveal-requests` | ✅ Team Admin | Get own reveal requests |
+
+### Audits (Role-Based Access)
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/audits` | ✅ Manager+ | Get audit logs with role-based visibility |
+
+**Access Levels:**
+- Platform Admin: All audits, filter by entity
+- Team Admin: Audits from managers & reviewers in their team
+- Manager: Audits from reviewers in their team
+- Reviewer: No access
 
 ### Uploads
 | Method | Endpoint | Auth | Description |
@@ -463,9 +484,12 @@ bun run dev
 - [ ] Rate limiting per-session
 
 ### 2 - Enhanced Security
-- [ ] Multi-signature identity reveal workflow
+- [x] ~~Multi-signature identity reveal workflow~~ → Implemented as escalation workflow (Team Admin → Platform Admin)
+- [ ] **Encryption Key Rotation** - Automatic periodic rotation of AES-256 encryption keys with re-encryption of sensitive data
+- [ ] **Immutable Audit Logs on Blockchain** - Record all audit entries on Hedera/blockchain for tamper-proof audit trail
 - [ ] Integration with Hweya (Egyptian national ID)
 - [ ] End-to-end encryption for identified complaints
+- [ ] Hardware Security Module (HSM) integration for key storage
 
 ### 3 - Mobile & Accessibility
 - [ ] Progressive Web App (PWA)

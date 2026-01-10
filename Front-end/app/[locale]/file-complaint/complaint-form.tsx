@@ -62,14 +62,20 @@ import {
 } from "@/lib/egypt-locations";
 
 const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
+  title: z.string().min(5, {
+    message: "Title must be at least 5 characters.",
+  }).max(200, {
+    message: "Title must be at most 200 characters.",
   }),
-  mainText: z.string().min(10, {
-    message: "Main text must be at least 10 characters.",
+  mainText: z.string().min(20, {
+    message: "Main text must be at least 20 characters.",
+  }).max(5000, {
+    message: "Main text must be at most 5000 characters.",
   }),
   category: z.string().nonempty("Please select a category."),
-  directedToType: z.enum(["none", "ministry", "governorate", "center"]).optional(),
+  directedToType: z.enum(["ministry", "governorate", "center"], {
+    message: "Please select where to direct this complaint.",
+  }),
   directedToMinistry: z.string().optional(),
   directedToGovernorate: z.string().optional(),
   directedToCenter: z.string().optional(),
@@ -78,6 +84,21 @@ const formSchema = z.object({
   evidence: z.any().optional(),
   submissionMode: z.enum(["anonymous", "public"]),
   visibility: z.enum(["public", "private"]),
+}).refine((data) => {
+  // Validate that the corresponding sub-field is filled based on directedToType
+  if (data.directedToType === "ministry") {
+    return !!data.directedToMinistry;
+  }
+  if (data.directedToType === "governorate") {
+    return !!data.directedToGovernorate;
+  }
+  if (data.directedToType === "center") {
+    return !!data.directedToGovernorate && !!data.directedToCenter;
+  }
+  return true;
+}, {
+  message: "Please select the target entity.",
+  path: ["directedToType"],
 });
 
 type ComplaintFormData = z.infer<typeof formSchema>;
@@ -100,7 +121,7 @@ export function ComplaintForm() {
       mainText: "",
       area: "",
       category: "",
-      directedToType: "none",
+      directedToType: undefined,
       directedToMinistry: "",
       directedToGovernorate: "",
       directedToCenter: "",
@@ -149,6 +170,7 @@ export function ComplaintForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("[ComplaintForm] Backend error response:", errorData);
         throw new Error(errorData.error || "Failed to submit complaint.");
       }
 
@@ -163,7 +185,6 @@ export function ComplaintForm() {
       } else {
         toast.success(tToasts("identifiedSubmitted"));
       }
-      console.log("Submission successful:", data);
       form.reset();
     },
     onError: (error) => {
@@ -215,22 +236,18 @@ export function ComplaintForm() {
       }
     }
 
-    // Build directedTo object if specified
-    let directedTo: DirectedTo | undefined = undefined;
-    if (values.directedToType && values.directedToType !== "none") {
-      directedTo = {
-        type: values.directedToType as DirectedToType,
-      };
-      if (values.directedToType === "ministry" && values.directedToMinistry) {
-        directedTo.ministryId = values.directedToMinistry;
-      } else if (values.directedToType === "governorate" && values.directedToGovernorate) {
-        directedTo.governorateId = values.directedToGovernorate;
-      } else if (values.directedToType === "center" && values.directedToGovernorate && values.directedToCenter) {
-        directedTo.governorateId = values.directedToGovernorate;
-        directedTo.centerId = values.directedToCenter;
-      }
+    // Build directedTo object - now required
+    const directedTo: DirectedTo = {
+      type: values.directedToType as DirectedToType,
+    };
+    if (values.directedToType === "ministry" && values.directedToMinistry) {
+      directedTo.ministryId = values.directedToMinistry;
+    } else if (values.directedToType === "governorate" && values.directedToGovernorate) {
+      directedTo.governorateId = values.directedToGovernorate;
+    } else if (values.directedToType === "center" && values.directedToGovernorate && values.directedToCenter) {
+      directedTo.governorateId = values.directedToGovernorate;
+      directedTo.centerId = values.directedToCenter;
     }
-
     const payload = isPublic ? {
       // Identified complaint payload - matches identified-complaint.controller.ts
       userId: user.id,
@@ -244,7 +261,7 @@ export function ComplaintForm() {
       visibility: values.visibility, // public = visible in feed, private = admin only
     } : {
       // Anonymous complaint payload - matches anonymous-complaint.controller.ts
-      userId: user.id,
+      // userId: user.id,
       anonymousIdentifier: user.anonymousIdentifier,
       title: values.title,
       text: values.mainText,
@@ -467,10 +484,9 @@ export function ComplaintForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">{t("notSpecified")}</SelectItem>
                       <SelectItem value="ministry">{t("ministry")}</SelectItem>
                       <SelectItem value="governorate">{t("governorate")}</SelectItem>
-                      <SelectItem value="center">{t("center")}</SelectItem>
+                      {/* <SelectItem value="center">{t("center")}</SelectItem> */}
                     </SelectContent>
                   </Select>
                   <FormDescription>

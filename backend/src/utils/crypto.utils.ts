@@ -49,3 +49,36 @@ export const generateAnonymousId = (userId: string): string => {
   hash.update(`${userId}`);
   return `anon_${hash.digest('hex').substring(0, 12)}`;
 };
+
+/**
+ * Decrypt with a manually provided key (for platform admin identity reveal)
+ * @param text - The encrypted text in format iv:authTag:encrypted
+ * @param manualKey - The 32-byte hex key provided by the platform admin
+ * @returns Decrypted text
+ */
+export const decryptWithKey = (text: string, manualKey: string): string => {
+  const [ivHex, authTagHex, encryptedHex] = text.split(":");
+  if (!ivHex || !authTagHex || !encryptedHex) {
+    throw new Error("Invalid encrypted format");
+  }
+
+  // Validate key format
+  if (!/^[0-9a-fA-F]{64}$/.test(manualKey)) {
+    throw new Error("Invalid decryption key format. Must be 64 hex characters (32 bytes).");
+  }
+
+  const manualKeyBuffer = Buffer.from(manualKey, "hex");
+
+  const decipher = createDecipheriv(
+    ALGORITHM,
+    manualKeyBuffer,
+    Buffer.from(ivHex, "hex")
+  );
+
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+
+  let decrypted = decipher.update(encryptedHex, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+
+  return decrypted;
+};

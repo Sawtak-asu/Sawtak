@@ -113,8 +113,8 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
         <Image
           src="/haweya.webp"
           alt="Haweya"
-          width={20}
-          height={20}
+          width={100}
+          height={100}
           className="w-5 h-5"
         />
       )}

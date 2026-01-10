@@ -2,7 +2,7 @@
 # Sawtak - Development Docker Compose
 # ============================================
 # Usage: docker-compose up -d
-# Architecture: 3 containers (Postgres, Backend, Frontend)
+# Architecture: 4 containers (Postgres, Redis, Backend, Frontend)
 # ============================================
 
 services:
@@ -28,6 +28,24 @@ services:
       retries: 5
 
   # ==========================================
+  # Redis - Rate Limiting & Caching
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: sawtak-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
   # Backend Service (Monolith API)
   # ==========================================
   backend:
@@ -39,11 +57,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 8000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sawtak}?schema=public
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      
+      # Rate Limiting
+      RATE_LIMIT_ANONYMOUS_HOURLY: ${RATE_LIMIT_ANONYMOUS_HOURLY:-5}
+      RATE_LIMIT_IDENTIFIED_HOURLY: ${RATE_LIMIT_IDENTIFIED_HOURLY:-20}
+      RATE_LIMIT_API_HOURLY: ${RATE_LIMIT_API_HOURLY:-100}
       
       # JWT & Encryption
       JWT_SECRET: ${JWT_SECRET}
@@ -93,7 +123,8 @@ services:
     container_name: sawtak-frontend
     restart: unless-stopped
     depends_on:
-      backend
+      backend:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
@@ -109,6 +140,9 @@ volumes:
   postgres_data:
     external: true
     name: sawtak_postgres_data
+  redis_data:
+    external: true
+    name: sawtak_redis_data
 
 networks:
   default:

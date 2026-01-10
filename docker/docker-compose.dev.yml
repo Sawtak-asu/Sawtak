@@ -23,6 +23,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: sawtak-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - sawtak_redis_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
 volumes:
   sawtak_postgres_dev:
     name: sawtak_postgres_dev
+  sawtak_redis_dev:
+    name: sawtak_redis_dev

@@ -31,7 +31,9 @@ import {
     MessageCircle,
     Share2,
     LogIn,
-    AlertCircle
+    AlertCircle,
+    Clock,
+    Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -106,6 +108,31 @@ export default function ComplaintPage() {
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
 
+    // Complaint history state
+    interface HistoryItem {
+        id: string;
+        action: string;
+        old_status: string;
+        new_status: string;
+        note: string | null;
+        created_at: string;
+        performer: {
+            id: string;
+            name: string | null;
+            email: string;
+            picture: string | null;
+        } | null;
+    }
+    const [complaintHistory, setComplaintHistory] = useState<HistoryItem[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+    // Public comments are closing notes (visible to everyone)
+    const publicComments = complaintHistory.filter(
+        (h) => (h.new_status === "closed" || h.new_status === "flagged" || h.new_status === "resolved") && h.note
+    );
+    // Internal admin notes (only visible to admins)
+    const adminNotes = complaintHistory;
+
     const { data, isLoading, isError } = useQuery({
         queryKey: ["complaint", complaintId],
         queryFn: async () => {
@@ -164,6 +191,35 @@ export default function ComplaintPage() {
             getVoteCount();
         }
     }, [complaint, isAnonymous, isLoggedIn, token]);
+
+    // Fetch complaint history
+    useEffect(() => {
+        if (!complaint) return;
+
+        const fetchHistory = async () => {
+            setIsLoadingHistory(true);
+            try {
+                // Try admin endpoint first (requires auth), fallback for public comments
+                const headers: Record<string, string> = {};
+                if (token) headers.Authorization = `Bearer ${token}`;
+
+                const res = await fetch(
+                    `${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`,
+                    { headers }
+                );
+                if (res.ok) {
+                    const data = await res.json();
+                    setComplaintHistory(data.data?.history || []);
+                }
+            } catch (error) {
+                // Silently fail
+            } finally {
+                setIsLoadingHistory(false);
+            }
+        };
+
+        fetchHistory();
+    }, [complaint, token]);
 
 
     const handleUpvote = useCallback(async () => {
@@ -345,217 +401,256 @@ export default function ComplaintPage() {
                 </DialogContent>
             </Dialog>
 
-            <div className="container max-w-2xl mx-auto px-4 py-4">
+            <div className={cn(
+                "container mx-auto px-4 py-4",
+                isAdmin ? "max-w-6xl" : "max-w-2xl"
+            )}>
                 {/* Back Button */}
                 <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     {t("back")}
                 </Button>
 
-                {/* Main Content */}
-                <motion.article
-                    layoutId={`complaint-card-${complaint.id}`}
-                    layout
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
-                >
-                    {/* Header */}
-                    <div className="p-4 pb-3 border-b border-white/5">
-                        <div className="flex items-start gap-3">
-                            <motion.div layoutId={`complaint-avatar-${complaint.id}`}>
-                                <Avatar className="h-12 w-12">
-                                    <AvatarImage src={complaint.user?.picture ?? undefined} />
-                                    <AvatarFallback>
-                                        {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </motion.div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold">
-                                        {isAnonymous ? tModes("anonymous") : complaint.user?.name || t("user")}
-                                    </span>
-                                    <Badge variant="outline" className={cn(
-                                        "text-[10px] uppercase h-5 px-1.5",
-                                        isAnonymous
-                                            ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                                            : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                    )}>
-                                        {isAnonymous ? tModes("anonymous") : tModes("public")}
-                                    </Badge>
-                                    <Badge variant="outline" className={cn(
-                                        "text-[10px] uppercase h-5 px-1.5",
-                                        complaint.status === "resolved"
-                                            ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                            : complaint.status === "investigating"
-                                                ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                                                : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                                    )}>
-                                        {getStatusName(complaint.status || "pending")}
-                                    </Badge>
+                <div className={cn(
+                    "grid gap-6",
+                    isAdmin ? "lg:grid-cols-2" : "grid-cols-1"
+                )}>
+                    <motion.article
+                        layoutId={`complaint-card-${complaint.id}`}
+                        layout
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden h-fit">
+
+                        {/* Header */}
+                        <div className="p-4 pb-3 border-b border-white/5">
+                            <div className="flex items-start gap-3">
+                                <motion.div layoutId={`complaint-avatar-${complaint.id}`}>
+                                    <Avatar className="h-12 w-12">
+                                        <AvatarImage src={complaint.user?.picture ?? undefined} />
+                                        <AvatarFallback>
+                                            {isAnonymous ? "🔒" : complaint.user?.name?.[0] || "U"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </motion.div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-semibold">
+                                            {isAnonymous ? tModes("anonymous") : complaint.user?.name || t("user")}
+                                        </span>
+                                        <Badge variant="outline" className={cn(
+                                            "text-[10px] uppercase h-5 px-1.5",
+                                            isAnonymous
+                                                ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                        )}>
+                                            {isAnonymous ? tModes("anonymous") : tModes("public")}
+                                        </Badge>
+                                        <Badge variant="outline" className={cn(
+                                            "text-[10px] uppercase h-5 px-1.5",
+                                            complaint.status === "resolved"
+                                                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                                : complaint.status === "investigating"
+                                                    ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                                                    : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                                        )}>
+                                            {getStatusName(complaint.status || "pending")}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
+                                    </p>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
-                                </p>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Content */}
-                    <div className="p-4 space-y-4">
-                        {/* Title */}
-                        <motion.h1
-                            layoutId={`complaint-title-${complaint.id}`}
-                            className="text-xl font-bold leading-tight"
-                        >
-                            {complaint.title}
-                        </motion.h1>
-
-                        {/* Description */}
-                        <p className="text-base leading-relaxed whitespace-pre-wrap">
-                            {complaint.text}
-                        </p>
-
-                        {/* Evidence Grid */}
-                        {allEvidence.length > 0 && (
-                            <div className={cn(
-                                "grid gap-1 rounded-xl overflow-hidden",
-                                allEvidence.length === 1 && "grid-cols-1",
-                                allEvidence.length === 2 && "grid-cols-2",
-                                allEvidence.length === 3 && "grid-cols-2",
-                                allEvidence.length >= 4 && "grid-cols-2"
-                            )}>
-                                {allEvidence.slice(0, 4).map((url, i) => {
-                                    const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
-                                    const isLast = i === 3 && allEvidence.length > 4;
-                                    const remaining = allEvidence.length - 4;
-
-                                    return (
-                                        <a
-                                            key={i}
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={cn(
-                                                "relative aspect-video bg-muted/50",
-                                                allEvidence.length === 3 && i === 0 && "row-span-2 aspect-square"
-                                            )}
-                                        >
-                                            {isImage ? (
-                                                <img
-                                                    src={url}
-                                                    alt={`Evidence ${i + 1}`}
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <FileText className="h-8 w-8 text-muted-foreground" />
-                                                </div>
-                                            )}
-                                            {isLast && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                    <span className="text-2xl font-bold text-white">+{remaining}</span>
-                                                </div>
-                                            )}
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Metadata */}
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                            <span className="flex items-center gap-1">
-                                <Hash className="h-3.5 w-3.5" />
-                                {getCategoryName(complaint.category)}
-                            </span>
-                            {complaint.area && (
-                                <span className="flex items-center gap-1">
-                                    <MapPin className="h-3.5 w-3.5" />
-                                    {complaint.area}
-                                </span>
-                            )}
-                            {complaint.incidentDate && (
-                                <span className="flex items-center gap-1">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    {new Date(complaint.incidentDate).toLocaleDateString()}
-                                </span>
-                            )}
-                            {getDirectedToName() && (
-                                <span className="flex items-center gap-1 font-semibold">
-                                    <span>{tDirected("to")}</span>
-                                    {getDirectedToName()}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Blockchain Proof for Anonymous */}
-                        {isAnonymous && (
-                            <div className="rounded-lg bg-purple-500/5 border border-purple-500/20 p-3">
-                                <div className="flex items-center gap-2 text-purple-400 text-xs mb-2">
-                                    <Globe className="h-3.5 w-3.5" />
-                                    <span className="uppercase font-mono tracking-wider">{t("blockchainVerified")}</span>
-                                </div>
-                                <code className="text-xs text-purple-300 break-all font-mono">
-                                    {complaint.transactionId || complaint.id}
-                                </code>
-                            </div>
-                        )}
-
-                        {/* Admin Response */}
-                        {complaint.adminResponse && !isAdmin && (
-                            <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
-                                <h4 className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                                    <Shield className="h-4 w-4" />
-                                    {t("officialResponse")}
-                                </h4>
-                                <p className="text-sm whitespace-pre-wrap">
-                                    {complaint.adminResponse}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Action Bar */}
-                    <div className="px-4 py-3 border-t border-white/5 flex items-center gap-1">
-                        {canUpvote ? (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                    "gap-2 rounded-full hover:text-orange-500 hover:bg-orange-500/10",
-                                    hasVoted && "text-orange-500 bg-orange-500/10"
-                                )}
-                                onClick={handleUpvote}
-                                disabled={isVoting}
+                        {/* Content */}
+                        <div className="p-4 space-y-4">
+                            {/* Title */}
+                            <motion.h1
+                                layoutId={`complaint-title-${complaint.id}`}
+                                className="text-2xl font-bold leading-tight"
                             >
-                                <ArrowBigUp className={cn(
-                                    "h-5 w-5",
-                                    hasVoted && "fill-orange-500"
-                                )} />
-                                <span>{localUpvotes}</span>
-                            </Button>
-                        ) : (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400">
-                                <Shield className="h-4 w-4" />
-                                <span>{tCard("protectedByBlockchain")}</span>
+                                {complaint.title}
+                            </motion.h1>
+
+                            {/* Description */}
+                            <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                                {complaint.text}
+                            </p>
+
+                            {/* Evidence Grid */}
+                            {allEvidence.length > 0 && (
+                                <div className={cn(
+                                    "grid gap-1 rounded-xl overflow-hidden",
+                                    allEvidence.length === 1 && "grid-cols-1",
+                                    allEvidence.length === 2 && "grid-cols-2",
+                                    allEvidence.length === 3 && "grid-cols-2",
+                                    allEvidence.length >= 4 && "grid-cols-2"
+                                )}>
+                                    {allEvidence.slice(0, 4).map((url, i) => {
+                                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
+                                        const isLast = i === 3 && allEvidence.length > 4;
+                                        const remaining = allEvidence.length - 4;
+
+                                        return (
+                                            <a
+                                                key={i}
+                                                href={url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={cn(
+                                                    "relative aspect-video bg-muted/50",
+                                                    allEvidence.length === 3 && i === 0 && "row-span-2 aspect-square"
+                                                )}
+                                            >
+                                                {isImage ? (
+                                                    <img
+                                                        src={url}
+                                                        alt={`Evidence ${i + 1}`}
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <FileText className="h-8 w-8 text-muted-foreground" />
+                                                    </div>
+                                                )}
+                                                {isLast && (
+                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <span className="text-2xl font-bold text-white">+{remaining}</span>
+                                                    </div>
+                                                )}
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Metadata */}
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                                <span className="flex items-center gap-1">
+                                    <Hash className="h-3.5 w-3.5" />
+                                    {getCategoryName(complaint.category)}
+                                </span>
+                                {complaint.area && (
+                                    <span className="flex items-center gap-1">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        {complaint.area}
+                                    </span>
+                                )}
+                                {complaint.incidentDate && (
+                                    <span className="flex items-center gap-1">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        {new Date(complaint.incidentDate).toLocaleDateString()}
+                                    </span>
+                                )}
+                                {getDirectedToName() && (
+                                    <span className="flex items-center gap-1 font-semibold">
+                                        <span>{tDirected("to")}</span>
+                                        {getDirectedToName()}
+                                    </span>
+                                )}
                             </div>
-                        )}
 
-                        <Button variant="ghost" size="sm" className="gap-2 rounded-full">
-                            <MessageCircle className="h-5 w-5" />
-                            <span>0</span>
-                        </Button>
+                            {/* Blockchain Proof for Anonymous */}
+                            {isAnonymous && (
+                                <div className="rounded-lg bg-purple-500/5 border border-purple-500/20 p-3">
+                                    <div className="flex items-center gap-2 text-purple-400 text-xs mb-2">
+                                        <Globe className="h-3.5 w-3.5" />
+                                        <span className="uppercase font-mono tracking-wider">{t("blockchainVerified")}</span>
+                                    </div>
+                                    <code className="text-xs text-purple-300 break-all font-mono">
+                                        {complaint.transactionId || complaint.id}
+                                    </code>
+                                </div>
+                            )}
 
-                        <Button variant="ghost" size="sm" className="rounded-full ml-auto" onClick={handleShare}>
-                            <Share2 className="h-5 w-5" />
-                        </Button>
-                    </div>
+                            {/* Admin Response */}
+                            {complaint.adminResponse && !isAdmin && (
+                                <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                    <h4 className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                                        <Shield className="h-4 w-4" />
+                                        {t("officialResponse")}
+                                    </h4>
+                                    <p className="text-sm whitespace-pre-wrap">
+                                        {complaint.adminResponse}
+                                    </p>
+                                </div>
+                            )}
 
-                    {/* Admin Panel */}
+                            {/* Public Comments - Closing notes visible to everyone */}
+                            {publicComments.length > 0 && (
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                                        <MessageCircle className="h-4 w-4" />
+                                        Official Responses ({publicComments.length})
+                                    </h4>
+                                    {publicComments.map((comment) => (
+                                        <div key={comment.id} className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Avatar className="h-6 w-6">
+                                                    <AvatarImage src={comment.performer?.picture ?? undefined} />
+                                                    <AvatarFallback className="text-xs">
+                                                        {comment.performer?.name?.[0] || "A"}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <span className="text-sm font-medium">
+                                                        {comment.performer?.name || "Admin"}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground ml-2">
+                                                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm whitespace-pre-wrap">
+                                                {comment.note}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Action Bar */}
+                        <div className="px-4 py-3 border-t border-white/5 flex items-center gap-1">
+                            {canUpvote ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={cn(
+                                        "gap-2 rounded-full hover:text-orange-500 hover:bg-orange-500/10",
+                                        hasVoted && "text-orange-500 bg-orange-500/10"
+                                    )}
+                                    onClick={handleUpvote}
+                                    disabled={isVoting}
+                                >
+                                    <ArrowBigUp className={cn(
+                                        "h-5 w-5",
+                                        hasVoted && "fill-orange-500"
+                                    )} />
+                                    <span>{localUpvotes}</span>
+                                </Button>
+                            ) : (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-400">
+                                    <Shield className="h-4 w-4" />
+                                    <span>{tCard("protectedByBlockchain")}</span>
+                                </div>
+                            )}
+
+                            <Button variant="ghost" size="sm" className="gap-2 rounded-full">
+                                <MessageCircle className="h-5 w-5" />
+                                <span>{publicComments.length}</span>
+                            </Button>
+
+                            <Button variant="ghost" size="sm" className="rounded-full ml-auto" onClick={handleShare}>
+                                <Share2 className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    </motion.article>
+
                     {isAdmin && (
-                        <div className="p-4 bg-primary/5 border-t border-primary/20">
+                        <div className="bg-primary/5 backdrop-blur-xl rounded-2xl border border-primary/20 p-4 max-h-[80vh] overflow-y-auto sticky top-4">
                             <div className="flex items-center gap-2 text-primary mb-4">
                                 <Lock className="h-4 w-4" />
                                 <span className="text-xs font-bold uppercase tracking-wider">{t("adminPanel")}</span>
@@ -585,40 +680,65 @@ export default function ComplaintPage() {
                                 </div>
                             )}
 
-                            <div className="space-y-4 pt-4 border-t border-primary/20">
-                                <h4 className="text-sm font-semibold">{t("updateStatus")}</h4>
-                                <div className="grid gap-4">
-                                    <Select value={newStatus} onValueChange={setNewStatus}>
-                                        <SelectTrigger className="bg-background">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="submitted">{tStatuses("pending")}</SelectItem>
-                                            <SelectItem value="investigating">{tStatuses("investigating")}</SelectItem>
-                                            <SelectItem value="resolved">{tStatuses("resolved")}</SelectItem>
-                                            <SelectItem value="dismissed">{tStatuses("dismissed")}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Textarea
-                                        placeholder={t("addPublicResponse")}
-                                        value={statusNote}
-                                        onChange={(e) => setStatusNote(e.target.value)}
-                                        className="bg-background"
-                                        rows={3}
-                                    />
-                                    <Button onClick={handleUpdateStatus} disabled={isUpdating}>
-                                        {isUpdating ? (
-                                            <CircleDashed className="h-4 w-4 animate-spin mr-2" />
-                                        ) : (
-                                            <Save className="h-4 w-4 mr-2" />
-                                        )}
-                                        {t("saveChanges")}
-                                    </Button>
+                            {/* Admin Notes Timeline */}
+                            <div className="space-y-4 pt-4 border-t border-primary/20 min-h-[40vh]">
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    <h4 className="text-sm font-semibold">Action History</h4>
                                 </div>
+
+                                {isLoadingHistory && (
+                                    <div className="flex items-center justify-center py-4">
+                                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                    </div>
+                                )}
+
+                                {!isLoadingHistory && adminNotes.length === 0 && (
+                                    <p className="text-sm text-muted-foreground py-2">No actions recorded yet.</p>
+                                )}
+
+                                {!isLoadingHistory && adminNotes.length > 0 && (
+                                    <div className="space-y-3 overflow-y-auto">
+                                        {adminNotes.map((item) => (
+                                            <div key={item.id} className="border-l-2 border-primary/30 pl-3 py-2">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarImage src={item.performer?.picture ?? undefined} />
+                                                        <AvatarFallback className="text-xs">
+                                                            {item.performer?.name?.[0] || "?"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1">
+                                                        <span className="font-medium text-foreground">
+                                                            {item.performer?.name || "System"}
+                                                        </span>
+                                                        {item.performer?.email && (
+                                                            <span className="text-muted-foreground ml-1">({item.performer.email})</span>
+                                                        )}
+                                                    </div>
+                                                    <span>{formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}</span>
+                                                </div>
+                                                <div className="mt-2">
+                                                    <Badge variant="outline" className="text-xs mr-2">
+                                                        {item.old_status} → {item.new_status}
+                                                    </Badge>
+                                                    <span className="text-sm text-muted-foreground capitalize">
+                                                        {item.action.replace("_", " ")}
+                                                    </span>
+                                                </div>
+                                                {item.note && (
+                                                    <p className="text-base mt-2 bg-background p-3 rounded border text-muted-foreground italic">
+                                                        "{item.note}"
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
-                </motion.article>
+                </div>
             </div>
         </GridBackground>
     );
