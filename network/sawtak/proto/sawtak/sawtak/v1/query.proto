@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package sawtak.sawtak.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "sawtak/sawtak/v1/complaint.proto";
+import "sawtak/sawtak/v1/params.proto";
+
+option go_package = "github.com/sayedibrahimQ/sawtak/x/sawtak/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/params";
+  }
+
+  // ListComplaint Queries a list of Complaint items.
+  rpc GetComplaint(QueryGetComplaintRequest) returns (QueryGetComplaintResponse) {
+    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/complaint/{id}";
+  }
+
+  // ListComplaint defines the ListComplaint RPC.
+  rpc ListComplaint(QueryAllComplaintRequest) returns (QueryAllComplaintResponse) {
+    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/complaint";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// QueryGetComplaintRequest defines the QueryGetComplaintRequest message.
+message QueryGetComplaintRequest {
+  uint64 id = 1;
+}
+
+// QueryGetComplaintResponse defines the QueryGetComplaintResponse message.
+message QueryGetComplaintResponse {
+  Complaint complaint = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllComplaintRequest defines the QueryAllComplaintRequest message.
+message QueryAllComplaintRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllComplaintResponse defines the QueryAllComplaintResponse message.
+message QueryAllComplaintResponse {
+  repeated Complaint complaint = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

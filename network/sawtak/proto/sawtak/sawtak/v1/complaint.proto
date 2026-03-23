@@ -1,0 +1,19 @@
+syntax = "proto3";
+package sawtak.sawtak.v1;
+
+option go_package = "github.com/sayedibrahimQ/sawtak/x/sawtak/types";
+
+// Complaint defines the Complaint message.
+message Complaint {
+  uint64 id = 1;
+  string tracking_id = 2;
+  string complaint_type = 3;
+  string title = 4;
+  string text = 5;
+  string category = 6;
+  string area = 7;
+  string directed_to = 8;
+  string incident_date = 9;
+  string evidence = 10;
+  string status = 11;
+}

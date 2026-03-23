@@ -47,3 +47,24 @@ docker/backups/
 
 /docs
 /ignore
+
+
+
+#ignite - network env
+vue/node_modules
+vue/dist
+release/
+.idea/
+.vscode/
+.DS_Store
+*.dot
+*.log
+*.ign
+
+apps/network/cmd/sawtakd/sawtakd
+apps/network/release/
+apps/network/.dist/
+
+vendor/
+apps/network/data/
+.sawtak/
