@@ -51,6 +51,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a submitAnonymousComplaint tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "tracking_id"}, {ProtoField: "title"}, {ProtoField: "text"}, {ProtoField: "category"}, {ProtoField: "area"}, {ProtoField: "directed_to"}, {ProtoField: "incident_date"}, {ProtoField: "evidence"}, {ProtoField: "proof"}},
 				},
+				{
+					RpcMethod:      "UpdateComplaintStatus",
+					Use:            "update-complaint-status [id] [new-status] [public-notes]",
+					Short:          "Send a updateComplaintStatus tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "new_status"}, {ProtoField: "public_notes"}},
+				},
 			},
 		},
 	}

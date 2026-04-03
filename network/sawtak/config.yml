@@ -1,27 +1,28 @@
 version: 1
-validation: sovereign
-default_denom: stake
-accounts: 
-- name: alice
-  coins:
-  - 20000token
-  - 200000000stake
-- name: bob
-  coins:
-  - 10000token
-  - 100000000stake
+build:
+    main: cmd/sawtakd
+    proto:
+        path: proto
+accounts:
+    - name: admin
+      coins:
+        - 10000000000000usawtak
+    - name: ministry
+      coins:
+        - 50000usawtak
+    - name: university
+      coins:
+        - 50000usawtak
+    - name: ngo
+      coins:
+        - 50000usawtak
+    - name: elysia_relayer
+      coins:
+        - 10000000usawtak
 client:
-  openapi:
-    path: docs/static/openapi.json
-faucet:
-  name: bob
-  coins:
-  - 5token
-  - 100000stake
+    typescript:
+        path: ts-client
+default_denom: usawtak
 validators:
-- name: alice
-  bonded: 100000000stake
-- name: validator1
-  bonded: 200000000stake
-- name: validator2
-  bonded: 100000000stake
+    - name: admin
+      bonded: 10000000000usawtak

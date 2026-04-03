@@ -68,3 +68,6 @@ apps/network/.dist/
 vendor/
 apps/network/data/
 .sawtak/
+tasks.csv
+se.md
+wallets.md

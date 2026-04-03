@@ -59,6 +59,21 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		weightMsgSubmitAnonymousComplaint,
 		sawtaksimulation.SimulateMsgSubmitAnonymousComplaint(am.authKeeper, am.bankKeeper, am.keeper, simState.TxConfig),
 	))
+	const (
+		opWeightMsgUpdateComplaintStatus          = "op_weight_msg_sawtak"
+		defaultWeightMsgUpdateComplaintStatus int = 100
+	)
+
+	var weightMsgUpdateComplaintStatus int
+	simState.AppParams.GetOrGenerate(opWeightMsgUpdateComplaintStatus, &weightMsgUpdateComplaintStatus, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateComplaintStatus = defaultWeightMsgUpdateComplaintStatus
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgUpdateComplaintStatus,
+		sawtaksimulation.SimulateMsgUpdateComplaintStatus(am.authKeeper, am.bankKeeper, am.keeper, simState.TxConfig),
+	))
 
 	return operations
 }

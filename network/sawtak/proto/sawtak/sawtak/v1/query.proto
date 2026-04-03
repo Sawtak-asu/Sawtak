@@ -15,17 +15,17 @@ option go_package = "github.com/sayedibrahimQ/sawtak/x/sawtak/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/params";
+    option (google.api.http).get = "/sawtak/v1/params";
   }
 
   // ListComplaint Queries a list of Complaint items.
   rpc GetComplaint(QueryGetComplaintRequest) returns (QueryGetComplaintResponse) {
-    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/complaint/{id}";
+    option (google.api.http).get = "/sawtak/v1/complaint/{id}";
   }
 
   // ListComplaint defines the ListComplaint RPC.
   rpc ListComplaint(QueryAllComplaintRequest) returns (QueryAllComplaintResponse) {
-    option (google.api.http).get = "/sayedibrahimQ/sawtak/sawtak/v1/complaint";
+    option (google.api.http).get = "/sawtak/v1/complaint";
   }
 }
 
