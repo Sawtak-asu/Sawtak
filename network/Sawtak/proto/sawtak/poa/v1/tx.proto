@@ -1,0 +1,75 @@
+syntax = "proto3";
+package sawtak.poa.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "sawtak/poa/v1/params.proto";
+
+option go_package = "github.com/sayedibrahimQ/sawtak/x/poa/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // UpdateAdmin changes the PoA admin address. Only callable by the current admin.
+  rpc UpdateAdmin(MsgUpdateAdmin) returns (MsgUpdateAdminResponse);
+
+  // UpdateAllowedValidators updates the list of allowed validator operator addresses.
+  // Only callable by the admin.
+  rpc UpdateAllowedValidators(MsgUpdateAllowedValidators) returns (MsgUpdateAllowedValidatorsResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "sawtak/x/poa/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgUpdateAdmin changes the PoA admin address.
+message MsgUpdateAdmin {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "sawtak/x/poa/MsgUpdateAdmin";
+
+  // authority is the current admin address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // new_admin is the new admin address.
+  string new_admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateAdminResponse defines the response structure for executing a MsgUpdateAdmin message.
+message MsgUpdateAdminResponse {}
+
+// MsgUpdateAllowedValidators updates the allowed validator operator addresses.
+message MsgUpdateAllowedValidators {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "sawtak/x/poa/MsgUpdateAllowedValidators";
+
+  // authority is the admin address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // allowed_validators is the new list of allowed validator operator addresses.
+  repeated string allowed_validators = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateAllowedValidatorsResponse defines the response structure.
+message MsgUpdateAllowedValidatorsResponse {}
