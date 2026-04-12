@@ -71,3 +71,15 @@ apps/network/data/
 tasks.csv
 se.md
 wallets.md
+
+vue/node_modules
+vue/dist
+release/
+.idea/
+.vscode/
+.DS_Store
+*.dot
+*.log
+*.ign
+se.md
+wallets.md

@@ -1,0 +1,34 @@
+version: 1
+build:
+    main: cmd/sawtakd
+    proto:
+        path: proto
+accounts:
+    - name: admin
+      coins:
+        - 10000000000000usawtak
+      mnemonic: "tenant mutual lab resist together wrestle tribe drop girl negative unit intact fiction island rapid inform amateur west reject hood lottery issue athlete brief"
+    - name: ministry
+      coins:
+        - 50000usawtak
+    - name: university
+      coins:
+        - 50000usawtak
+    - name: ngo
+      coins:
+        - 50000usawtak
+    - name: elysia_relayer
+      coins:
+        - 10000000usawtak
+client:
+    typescript:
+        path: ts-client
+default_denom: usawtak
+genesis:
+    app_state:
+        poa:
+            params:
+                admin: sawtak1czwnf95lklf68kahvxynmqc09wll04pmfcex84
+validators:
+    - name: admin
+      bonded: 10000000000usawtak
