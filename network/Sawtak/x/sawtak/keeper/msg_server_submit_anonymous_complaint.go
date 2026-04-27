@@ -13,7 +13,7 @@ func (k msgServer) SubmitAnonymousComplaint(goCtx context.Context, msg *types.Ms
 
 	// 1. Create the Complaint object (without the ID first)
 	var complaint = types.Complaint{
-		TrackingId:    msg.TrackingId,
+		AnonymousIdentifier:    msg.AnonymousIdentifier,
 		ComplaintType: "anonymous",
 		Title:         msg.Title,
 		Text:          msg.Text, // Hash

@@ -47,9 +47,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SubmitAnonymousComplaint",
-					Use:            "submit-anonymous-complaint [tracking-id] [title] [text] [category] [area] [directed-to] [incident-date] [evidence] [proof]",
+					Use:            "submit-anonymous-complaint [anonymous_identifier] [title] [text] [category] [area] [directed-to] [incident-date] [evidence] [proof]",
 					Short:          "Send a submitAnonymousComplaint tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "tracking_id"}, {ProtoField: "title"}, {ProtoField: "text"}, {ProtoField: "category"}, {ProtoField: "area"}, {ProtoField: "directed_to"}, {ProtoField: "incident_date"}, {ProtoField: "evidence"}, {ProtoField: "proof"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "anonymous_identifier"}, {ProtoField: "title"}, {ProtoField: "text"}, {ProtoField: "category"}, {ProtoField: "area"}, {ProtoField: "directed_to"}, {ProtoField: "incident_date"}, {ProtoField: "evidence"}, {ProtoField: "proof"}},
 				},
 				{
 					RpcMethod:      "UpdateComplaintStatus",

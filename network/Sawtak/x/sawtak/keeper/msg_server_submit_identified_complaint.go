@@ -7,14 +7,12 @@ import (
 	"github.com/sayedibrahimQ/sawtak/x/sawtak/types"
 )
 
-
-
 func (k msgServer) SubmitIdentifiedComplaint(goCtx context.Context, msg *types.MsgSubmitIdentifiedComplaint) (*types.MsgSubmitIdentifiedComplaintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// 1. Create the Complaint object (without the ID first)
 	var complaint = types.Complaint{
-		TrackingId:    msg.TrackingId,
+		TrackingId:   msg.TrackingId,
 		ComplaintType: "identified",
 		Title:         msg.Title,
 		Text:          msg.Text, // Hash
