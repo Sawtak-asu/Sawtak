@@ -1,0 +1,20 @@
+syntax = "proto3";
+package sawtak.poa.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/sayedibrahimQ/sawtak/x/poa/types";
+
+// Params defines the parameters for the PoA module.
+message Params {
+  option (amino.name) = "sawtak/x/poa/Params";
+  option (gogoproto.equal) = true;
+
+  // admin is the bech32 address of the PoA administrator.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // allowed_validators is the list of operator addresses permitted to be validators.
+  repeated string allowed_validators = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
