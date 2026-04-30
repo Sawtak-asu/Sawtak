@@ -45,10 +45,10 @@ export const trackingRoutes = new Elysia({
       if (!anonymous) {
         anonymous = await prisma.indexedComplaint.findFirst({
           where: {
-            OR: [
-              { hcs_hash: { contains: code } },
-              { anonymous_identifier: { contains: code } },
-            ],
+      OR: [
+          { chain_hash: { contains: code } },
+          { anonymous_identifier: { contains: code } },
+        ],
           },
         });
       }
@@ -60,7 +60,7 @@ export const trackingRoutes = new Elysia({
             found: true,
             type: "anonymous",
             complaint: {
-              id: anonymous.hcs_hash,
+              id: anonymous.chain_hash,
               title: anonymous.title,
               category: anonymous.category,
               area: anonymous.area,

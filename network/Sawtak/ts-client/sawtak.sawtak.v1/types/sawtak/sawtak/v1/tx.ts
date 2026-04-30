@@ -63,7 +63,8 @@ export interface MsgSubmitAnonymousComplaintResponse {
 /** MsgUpdateComplaintStatus defines the MsgUpdateComplaintStatus message. */
 export interface MsgUpdateComplaintStatus {
   creator: string;
-  id: number;
+  complaintId: string;
+  oldStatus: string;
   newStatus: string;
   publicNotes: string;
 }
@@ -725,7 +726,7 @@ export const MsgSubmitAnonymousComplaintResponse: MessageFns<MsgSubmitAnonymousC
 };
 
 function createBaseMsgUpdateComplaintStatus(): MsgUpdateComplaintStatus {
-  return { creator: "", id: 0, newStatus: "", publicNotes: "" };
+  return { creator: "", complaintId: "", oldStatus: "", newStatus: "", publicNotes: "" };
 }
 
 export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
@@ -733,14 +734,17 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.id !== 0) {
-      writer.uint32(16).uint64(message.id);
+    if (message.complaintId !== "") {
+      writer.uint32(18).string(message.complaintId);
+    }
+    if (message.oldStatus !== "") {
+      writer.uint32(26).string(message.oldStatus);
     }
     if (message.newStatus !== "") {
-      writer.uint32(26).string(message.newStatus);
+      writer.uint32(34).string(message.newStatus);
     }
     if (message.publicNotes !== "") {
-      writer.uint32(34).string(message.publicNotes);
+      writer.uint32(42).string(message.publicNotes);
     }
     return writer;
   },
@@ -761,11 +765,11 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
             break;
           }
 
-          message.id = longToNumber(reader.uint64());
+          message.complaintId = reader.string();
           continue;
         }
         case 3: {
@@ -773,11 +777,19 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
             break;
           }
 
-          message.newStatus = reader.string();
+          message.oldStatus = reader.string();
           continue;
         }
         case 4: {
           if (tag !== 34) {
+            break;
+          }
+
+          message.newStatus = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
             break;
           }
 
@@ -796,17 +808,10 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
   fromJSON(object: any): MsgUpdateComplaintStatus {
     return {
       creator: isSet(object.creator) ? globalThis.String(object.creator) : "",
-      id: isSet(object.id) ? globalThis.Number(object.id) : 0,
-      newStatus: isSet(object.newStatus)
-        ? globalThis.String(object.newStatus)
-        : isSet(object.new_status)
-        ? globalThis.String(object.new_status)
-        : "",
-      publicNotes: isSet(object.publicNotes)
-        ? globalThis.String(object.publicNotes)
-        : isSet(object.public_notes)
-        ? globalThis.String(object.public_notes)
-        : "",
+      complaintId: isSet(object.complaintId) ? globalThis.String(object.complaintId) : isSet(object.complaint_id) ? globalThis.String(object.complaint_id) : "",
+      oldStatus: isSet(object.oldStatus) ? globalThis.String(object.oldStatus) : isSet(object.old_status) ? globalThis.String(object.old_status) : "",
+      newStatus: isSet(object.newStatus) ? globalThis.String(object.newStatus) : isSet(object.new_status) ? globalThis.String(object.new_status) : "",
+      publicNotes: isSet(object.publicNotes) ? globalThis.String(object.publicNotes) : isSet(object.public_notes) ? globalThis.String(object.public_notes) : "",
     };
   },
 
@@ -815,8 +820,11 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
     if (message.creator !== "") {
       obj.creator = message.creator;
     }
-    if (message.id !== 0) {
-      obj.id = Math.round(message.id);
+    if (message.complaintId !== "") {
+      obj.complaintId = message.complaintId;
+    }
+    if (message.oldStatus !== "") {
+      obj.oldStatus = message.oldStatus;
     }
     if (message.newStatus !== "") {
       obj.newStatus = message.newStatus;
@@ -827,17 +835,18 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(base?: I): MsgUpdateComplaintStatus {
+create<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(base?: I): MsgUpdateComplaintStatus {
     return MsgUpdateComplaintStatus.fromPartial(base ?? ({} as any));
   },
   fromPartial<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(object: I): MsgUpdateComplaintStatus {
     const message = createBaseMsgUpdateComplaintStatus();
     message.creator = object.creator ?? "";
-    message.id = object.id ?? 0;
+    message.complaintId = object.complaintId ?? "";
+    message.oldStatus = object.oldStatus ?? "";
     message.newStatus = object.newStatus ?? "";
     message.publicNotes = object.publicNotes ?? "";
     return message;
-  },
+  }
 };
 
 function createBaseMsgUpdateComplaintStatusResponse(): MsgUpdateComplaintStatusResponse {

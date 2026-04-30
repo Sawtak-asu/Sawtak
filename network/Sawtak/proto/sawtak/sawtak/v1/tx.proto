@@ -70,15 +70,16 @@ message MsgSubmitIdentifiedComplaintResponse {}
 message MsgSubmitAnonymousComplaint {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string anonymous_identifier = 2;
-  string title = 3;
-  string text = 4;
-  string category = 5;
-  string area = 6;
-  string directed_to = 7;
-  string incident_date = 8;
-  string evidence = 9;
-  string proof = 10;
+  string tracking_id = 2;
+  string anonymous_identifier = 3;
+  string title = 4;
+  string text = 5;
+  string category = 6;
+  string area = 7;
+  string directed_to = 8;
+  string incident_date = 9;
+  string evidence = 10;
+  string proof = 11;
 }
 
 // MsgSubmitAnonymousComplaintResponse defines the MsgSubmitAnonymousComplaintResponse message.
@@ -88,9 +89,10 @@ message MsgSubmitAnonymousComplaintResponse {}
 message MsgUpdateComplaintStatus {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  uint64 id = 2;
-  string new_status = 3;
-  string public_notes = 4;
+  string complaint_id = 2;
+  string old_status = 3;
+  string new_status = 4;
+  string public_notes = 5;
 }
 
 // MsgUpdateComplaintStatusResponse defines the MsgUpdateComplaintStatusResponse message.

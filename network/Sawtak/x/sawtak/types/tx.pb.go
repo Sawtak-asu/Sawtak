@@ -274,15 +274,16 @@ var xxx_messageInfo_MsgSubmitIdentifiedComplaintResponse proto.InternalMessageIn
 // MsgSubmitAnonymousComplaint defines the MsgSubmitAnonymousComplaint message.
 type MsgSubmitAnonymousComplaint struct {
 	Creator             string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	AnonymousIdentifier string `protobuf:"bytes,2,opt,name=anonymous_identifier,json=anonymousIdentifier,proto3" json:"anonymous_identifier,omitempty"`
-	Title               string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Text                string `protobuf:"bytes,4,opt,name=text,proto3" json:"text,omitempty"`
-	Category            string `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
-	Area                string `protobuf:"bytes,6,opt,name=area,proto3" json:"area,omitempty"`
-	DirectedTo          string `protobuf:"bytes,7,opt,name=directed_to,json=directedTo,proto3" json:"directed_to,omitempty"`
-	IncidentDate        string `protobuf:"bytes,8,opt,name=incident_date,json=incidentDate,proto3" json:"incident_date,omitempty"`
-	Evidence            string `protobuf:"bytes,9,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	Proof               string `protobuf:"bytes,10,opt,name=proof,proto3" json:"proof,omitempty"`
+	TrackingId          string `protobuf:"bytes,2,opt,name=tracking_id,json=trackingId,proto3" json:"tracking_id,omitempty"`
+	AnonymousIdentifier string `protobuf:"bytes,3,opt,name=anonymous_identifier,json=anonymousIdentifier,proto3" json:"anonymous_identifier,omitempty"`
+	Title               string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Text                string `protobuf:"bytes,5,opt,name=text,proto3" json:"text,omitempty"`
+	Category            string `protobuf:"bytes,6,opt,name=category,proto3" json:"category,omitempty"`
+	Area                string `protobuf:"bytes,7,opt,name=area,proto3" json:"area,omitempty"`
+	DirectedTo          string `protobuf:"bytes,8,opt,name=directed_to,json=directedTo,proto3" json:"directed_to,omitempty"`
+	IncidentDate        string `protobuf:"bytes,9,opt,name=incident_date,json=incidentDate,proto3" json:"incident_date,omitempty"`
+	Evidence            string `protobuf:"bytes,10,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	Proof               string `protobuf:"bytes,11,opt,name=proof,proto3" json:"proof,omitempty"`
 }
 
 func (m *MsgSubmitAnonymousComplaint) Reset()         { *m = MsgSubmitAnonymousComplaint{} }
@@ -321,6 +322,13 @@ var xxx_messageInfo_MsgSubmitAnonymousComplaint proto.InternalMessageInfo
 func (m *MsgSubmitAnonymousComplaint) GetCreator() string {
 	if m != nil {
 		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgSubmitAnonymousComplaint) GetTrackingId() string {
+	if m != nil {
+		return m.TrackingId
 	}
 	return ""
 }
@@ -428,9 +436,10 @@ var xxx_messageInfo_MsgSubmitAnonymousComplaintResponse proto.InternalMessageInf
 // MsgUpdateComplaintStatus defines the MsgUpdateComplaintStatus message.
 type MsgUpdateComplaintStatus struct {
 	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Id          uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	NewStatus   string `protobuf:"bytes,3,opt,name=new_status,json=newStatus,proto3" json:"new_status,omitempty"`
-	PublicNotes string `protobuf:"bytes,4,opt,name=public_notes,json=publicNotes,proto3" json:"public_notes,omitempty"`
+	ComplaintId string `protobuf:"bytes,2,opt,name=complaint_id,json=complaintId,proto3" json:"complaint_id,omitempty"`
+	OldStatus   string `protobuf:"bytes,3,opt,name=old_status,json=oldStatus,proto3" json:"old_status,omitempty"`
+	NewStatus   string `protobuf:"bytes,4,opt,name=new_status,json=newStatus,proto3" json:"new_status,omitempty"`
+	PublicNotes string `protobuf:"bytes,5,opt,name=public_notes,json=publicNotes,proto3" json:"public_notes,omitempty"`
 }
 
 func (m *MsgUpdateComplaintStatus) Reset()         { *m = MsgUpdateComplaintStatus{} }
@@ -473,11 +482,18 @@ func (m *MsgUpdateComplaintStatus) GetCreator() string {
 	return ""
 }
 
-func (m *MsgUpdateComplaintStatus) GetId() uint64 {
+func (m *MsgUpdateComplaintStatus) GetComplaintId() string {
 	if m != nil {
-		return m.Id
+		return m.ComplaintId
 	}
-	return 0
+	return ""
+}
+
+func (m *MsgUpdateComplaintStatus) GetOldStatus() string {
+	if m != nil {
+		return m.OldStatus
+	}
+	return ""
 }
 
 func (m *MsgUpdateComplaintStatus) GetNewStatus() string {
@@ -1106,19 +1122,28 @@ func (m *MsgUpdateComplaintStatus) MarshalToSizedBuffer(dAtA []byte) (int, error
 		copy(dAtA[i:], m.PublicNotes)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.PublicNotes)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 	}
 	if len(m.NewStatus) > 0 {
 		i -= len(m.NewStatus)
 		copy(dAtA[i:], m.NewStatus)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.NewStatus)))
 		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.OldStatus) > 0 {
+		i -= len(m.OldStatus)
+		copy(dAtA[i:], m.OldStatus)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OldStatus)))
+		i--
 		dAtA[i] = 0x1a
 	}
-	if m.Id != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.Id))
+	if len(m.ComplaintId) > 0 {
+		i -= len(m.ComplaintId)
+		copy(dAtA[i:], m.ComplaintId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ComplaintId)))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x12
 	}
 	if len(m.Creator) > 0 {
 		i -= len(m.Creator)
@@ -1310,8 +1335,13 @@ func (m *MsgUpdateComplaintStatus) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.Id != 0 {
-		n += 1 + sovTx(uint64(m.Id))
+	l = len(m.ComplaintId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.OldStatus)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.NewStatus)
 	if l > 0 {
@@ -2374,27 +2404,8 @@ func (m *MsgUpdateComplaintStatus) Unmarshal(dAtA []byte) error {
 			m.Creator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			m.Id = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NewStatus", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ComplaintId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2422,13 +2433,15 @@ func (m *MsgUpdateComplaintStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NewStatus = string(dAtA[iNdEx:postIndex])
+			m.ComplaintId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PublicNotes", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OldStatus", wireType)
 			}
 			var stringLen uint64
+			var intStringLen int
+			var postIndex int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2443,11 +2456,79 @@ func (m *MsgUpdateComplaintStatus) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
+			intStringLen = int(stringLen)
 			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex = iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OldStatus = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewStatus", wireType)
+			}
+			var stringLen uint64
+			var intStringLen int
+			var postIndex int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen = int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex = iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NewStatus = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PublicNotes", wireType)
+			}
+			var stringLen uint64
+			var intStringLen int
+			var postIndex int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen = int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex = iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}

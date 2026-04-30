@@ -1,0 +1,28 @@
+Issue Type,Summary,Description,Priority,Parent
+Sub-task,Implement submitMessage() using CosmJS,Create SawtakCosmosService implementing IBlockchainService interface,High,SAW-149
+Sub-task,Map message payloads to Cosmos SDK Msg types,Map message payloads to Cosmos SDK Msg types (MsgCreateAnonymousComplaint etc),High,SAW-149
+Sub-task,Add CosmJS dependencies to package.json,Add @cosmjs/stargate @cosmjs/proto-signing to package.json,High,SAW-149
+Sub-task,Add COSMOS environment variables to config,"Add COSMOS environment variables (RPC gRPC WS mnemonic chain ID gas price)",High,SAW-149
+Sub-task,Implement processBlock,Implement processBlock to decode tx events and filter by message.action,High,SAW-150
+Sub-task,Implement index handlers,Implement indexAnonymousComplaint indexIdentifiedComplaint indexStatusUpdate handlers,High,SAW-150
+Sub-task,Add indexer endpoints,Add indexer endpoints (status start reindex),High,SAW-150
+Sub-task,Add cosmos_hash field to indexedComplaint,Add cosmos_hash field primary key to replace alongside hcs_hash,High,SAW-151
+Sub-task,Add chain_type field,Add chain_type field hedera cosmos for dual-chain transition,Medium,SAW-151
+Sub-task,Update indexedStatusUpdate schema,Update indexedStatusUpdate to use cosmos_tx_hash sequence,Medium,SAW-151
+Sub-task,Update AnonymousSubmissionService constructor,Update AnonymousSubmissionService constructor to default to SawtakCosmosService,High,SAW-152
+Sub-task,Update ComplaintStatusService,Update ComplaintStatusService to use Cosmos blockchain service,High,SAW-152
+Sub-task,Update anonymous submit response schema,Remove HCS Topic references add Cosmos tx hash,Medium,SAW-153
+Sub-task,Update route descriptions,Update route descriptions to remove Hedera blockchain references,Medium,SAW-153
+Sub-task,Update Anonymous-submission.test.ts,Update to use Cosmos test setup instead of hiero-ledger sdk,High,SAW-154
+Sub-task,Add CosmosIndexerService integration tests,Add integration tests for CosmosIndexerService mock Tendermint WebSocket,Medium,SAW-154
+Sub-task,Add COSMOS environment validation tests,Add environment validation tests for COSMOS variables,Medium,SAW-154
+Sub-task,Remove hiero-ledger sdk package,Remove hiero-ledger sdk package dependency from package.json,High,SAW-155
+Sub-task,Delete hedera.service.ts and hedera.config.ts,Delete Hedera service files,High,SAW-155
+Sub-task,Delete hedera-indexer.service.ts,Delete hedera-indexer.service.ts replaced by CosmosIndexerService,High,SAW-155
+Sub-task,Remove HEDERA_CONFIG,Remove HEDERA_CONFIG from codebase and environment configs,High,SAW-155
+Sub-task,Remove HEDERA environment variables,"Remove HEDERA environment variables from env.example and deployment configs",Medium,SAW-155
+Sub-task,Migrate hcs_hash to cosmos_hash,Migrate existing hcs_hash values to cosmos_hash column in indexedComplaint table,Medium,SAW-155
+Sub-task,Drop hcs_hash column,Drop hcs_hash column after successful migration,Low,SAW-155
+Sub-task,Remove chain_type column,Remove chain_type column from indexedComplaint no longer needed Cosmos only,Low,SAW-155
+Sub-task,Export Hedera topic messages,Export Hedera topic messages to JSON archive file,Low,SAW-155
+Sub-task,Document Hedera topic IDs,Document Hedera topic IDs and archive location for reference,Low,SAW-155

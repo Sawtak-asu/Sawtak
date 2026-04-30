@@ -215,24 +215,26 @@ export class HederaIndexerService {
         return;
       }
 
-      // Index the complaint
-      await prisma.indexedComplaint.create({
-        data: {
-          hcs_hash: msg.running_hash,
-          anonymous_identifier: complaint.anon_id,
-          tracking_hash: complaint.tracking_hash || null,
-          title: complaint.title,
-          complaint_text: complaint.text,
-          category: complaint.category,
-          directed_to: complaint.directed_to ?? undefined,
-          area: complaint.area || "Unknown",
-          severity: "medium", // Default severity
-          incident_date: complaint.incident_date ? new Date(complaint.incident_date) : consensusDate,
-          evidence_cids: complaint.evidence || [],
-          status: "submitted",
-          consensus_timestamp: consensusDate,
-        },
-      });
+    // Index the complaint — chain_hash mirrors hcs_hash for universal lookups
+    await prisma.indexedComplaint.create({
+      data: {
+        hcs_hash: msg.running_hash,
+        chain_hash: msg.running_hash, // Same as hcs_hash for Hedera-indexed records
+        chain_type: "hedera",
+        anonymous_identifier: complaint.anon_id,
+        tracking_hash: complaint.tracking_hash || null,
+        title: complaint.title,
+        complaint_text: complaint.text,
+        category: complaint.category,
+        directed_to: complaint.directed_to ?? undefined,
+        area: complaint.area || "Unknown",
+        severity: "medium", // Default severity
+        incident_date: complaint.incident_date ? new Date(complaint.incident_date) : consensusDate,
+        evidence_cids: complaint.evidence || [],
+        status: "submitted",
+        consensus_timestamp: consensusDate,
+      },
+    });
 
       console.log(`[HederaIndexer] ✓ Indexed complaint: "${complaint.title}"`);
     } catch (error: any) {

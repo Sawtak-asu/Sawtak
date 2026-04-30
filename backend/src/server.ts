@@ -17,7 +17,8 @@ import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { teamRoutes } from "./routes/team.routes";
-import { startIndexer } from "./services/hedera-indexer.service";
+import { startIndexer as startHederaIndexer } from "./services/hedera-indexer.service";
+import { startIndexer as startCosmosIndexer } from "./services/cosmos-indexer.service";
 import { rateLimiter } from "./services/rate-limiter.service";
 import { openapi } from '@elysiajs/openapi'
 
@@ -165,9 +166,12 @@ Anonymous complaints can be verified on the Hedera network:
     `📚 Swagger docs available at http://${app.server?.hostname}:${app.server?.port}/swagger`
   );
 
-  // Auto-start the Hedera indexer
+  // Auto-start the indexers
   if (process.env.ENABLE_INDEXER !== "false") {
-    startIndexer();
+    startHederaIndexer();
+    if (process.env.COSMOS_CHAIN_ID) {
+      startCosmosIndexer();
+    }
   }
 }
 
