@@ -515,21 +515,25 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
                     <div className="space-y-4 py-2">
                         <RadioGroup value={managerActionType} onValueChange={(v) => setManagerActionType(v as "resolved" | "closed" | "flagged")}>
-                            <div className="flex items-center space-x-2 border border-green-500/30 p-3 rounded-md cursor-pointer hover:bg-green-500/10" onClick={() => setManagerActionType("resolved")}>
-                                <RadioGroupItem value="resolved" id="m-resolved" />
-                                <Label htmlFor="m-resolved" className="cursor-pointer font-medium text-green-600 dark:text-green-400">Resolved</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Mark as successfully addressed</span>
-                            </div>
+                            {(!complaint.status?.includes("flagged")) && (
+                                <div className="flex items-center space-x-2 border border-green-500/30 p-3 rounded-md cursor-pointer hover:bg-green-500/10" onClick={() => setManagerActionType("resolved")}>
+                                    <RadioGroupItem value="resolved" id="m-resolved" />
+                                    <Label htmlFor="m-resolved" className="cursor-pointer font-medium text-green-600 dark:text-green-400">Resolved</Label>
+                                    <span className="text-xs text-muted-foreground ml-auto">Mark as successfully addressed</span>
+                                </div>
+                            )}
                             <div className="flex items-center space-x-2 border border-slate-500/30 p-3 rounded-md cursor-pointer hover:bg-slate-500/10" onClick={() => setManagerActionType("closed")}>
                                 <RadioGroupItem value="closed" id="m-closed" />
                                 <Label htmlFor="m-closed" className="cursor-pointer font-medium text-slate-600 dark:text-slate-400">Closed</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Close without resolution</span>
+                                <span className="text-xs text-muted-foreground ml-auto">Close without resolution / Mark invalid</span>
                             </div>
-                            <div className="flex items-center space-x-2 border border-amber-500/30 p-3 rounded-md cursor-pointer hover:bg-amber-500/10" onClick={() => setManagerActionType("flagged")}>
-                                <RadioGroupItem value="flagged" id="m-flagged" />
-                                <Label htmlFor="m-flagged" className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">Flagged</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Flag for further review</span>
-                            </div>
+                            {(!complaint.status?.includes("flagged")) && (
+                                <div className="flex items-center space-x-2 border border-amber-500/30 p-3 rounded-md cursor-pointer hover:bg-amber-500/10" onClick={() => setManagerActionType("flagged")}>
+                                    <RadioGroupItem value="flagged" id="m-flagged" />
+                                    <Label htmlFor="m-flagged" className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">Flagged</Label>
+                                    <span className="text-xs text-muted-foreground ml-auto">Flag for further review</span>
+                                </div>
+                            )}
                         </RadioGroup>
 
                         <div className="space-y-2">
@@ -775,11 +779,26 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     </Button>
                                 )}
 
+                                {/* Team Admin/Manager close flagged complaint button */}
+                                {(selectedTeamRole === "team_admin" || selectedTeamRole === "manager") && complaint.status?.includes("flagged") && (
+                                    <Button
+                                        size="sm"
+                                        className="h-8 px-3 ml-auto bg-slate-500/10 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20 border border-slate-500/20 mr-2"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setManagerActionType("closed");
+                                            setManagerDialogOpen(true);
+                                        }}
+                                    >
+                                        Close Complaint
+                                    </Button>
+                                )}
+
                                 {/* Request Identity Reveal Button (Team Admin Only, Flagged Anonymous Complaints) */}
                                 {(selectedTeamRole === "team_admin") && isAnonymous && complaint.status?.includes("flagged") && (
                                     <Button
                                         size="sm"
-                                        className="h-8 px-3 ml-auto bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
+                                        className="h-8 px-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setRevealReason("");

@@ -3,6 +3,9 @@ import { prisma } from "../db";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 import { decrypt } from "../utils/crypto.utils";
+import { ComplaintStatusService } from "../services/complaint-status.service";
+
+const statusService = new ComplaintStatusService();
 
 export const adminRoutes = new Elysia({
   prefix: "/api/admin",
@@ -371,7 +374,7 @@ export const adminRoutes = new Elysia({
           return { success: false, error: "Only reviewers or higher can start investigation" };
         }
       }
-      // Manager: investigating → resolved/closed/flagged
+      // Manager/Team Admin: investigating → resolved/closed/flagged
       else if ((status === "resolved" || status === "closed" || status === "flagged") && oldStatus === "investigating") {
         if (!isManager && !isTeamAdmin && !isPlatformAdmin) {
           set.status = 403;
@@ -381,6 +384,17 @@ export const adminRoutes = new Elysia({
           action = "flag";
         }
       }
+      // Manager/Team Admin: flagged → closed
+      else if (status === "closed" && (oldStatus === "flagged" || oldStatus === "flagged_inaccurate" || oldStatus === "flagged_legal")) {
+        if (!isManager && !isTeamAdmin && !isPlatformAdmin) {
+          set.status = 403;
+          return { success: false, error: "Only managers or higher can close flagged complaints" };
+        }
+        if (!note) {
+          set.status = 400;
+          return { success: false, error: "Comment is required when closing a flagged complaint" };
+        }
+      }
       // Platform Admin can do anything
       else if (!isPlatformAdmin) {
         // If none of the specific transitions match, only platform admin can proceed
@@ -388,7 +402,28 @@ export const adminRoutes = new Elysia({
         return { success: false, error: "Invalid status transition or insufficient permissions" };
       }
 
-      // Update the complaint status
+      // Broadcast status update to blockchain first
+      let txHash = "";
+      try {
+        const blockchainComplaintId = complaintType === "anonymous" && complaint.tracking_hash 
+          ? complaint.tracking_hash 
+          : (complaintType === "identified" && complaint.cosmos_tx_hash ? complaint.cosmos_tx_hash : id);
+
+        const result = await statusService.updateStatus({
+          complaintHash: blockchainComplaintId,
+          oldStatus: oldStatus,
+          newStatus: status,
+          publicNotes: note || "",
+          adminId: user?.userId || "admin",
+        });
+        txHash = result.transactionId;
+      } catch (err: any) {
+        console.error("[AdminRoutes] Failed to broadcast status update:", err.message);
+        set.status = 500;
+        return { success: false, error: `Failed to broadcast to blockchain: ${err.message}. Status update aborted.` };
+      }
+
+      // Update the complaint status in DB only if blockchain update succeeds
       if (complaintType === "identified") {
         await prisma.identifiedComplaint.update({
           where: { id },
@@ -416,8 +451,8 @@ export const adminRoutes = new Elysia({
 
       return {
         success: true,
-        message: "Status updated",
-        data: { id, oldStatus, status, type: complaintType, action },
+        message: "Status updated" + (txHash ? " and broadcast to blockchain" : ""),
+        data: { id, oldStatus, status, type: complaintType, action, txHash },
       };
     } catch (error: any) {
       console.error("[AdminRoutes] Status update error:", error);
@@ -495,7 +530,26 @@ export const adminRoutes = new Elysia({
         return { success: false, error: "Complaint not found" };
       }
 
-      // Create escalation record
+      // Broadcast status update to blockchain first
+      try {
+        const blockchainComplaintId = complaintType === "anonymous" && complaint.tracking_hash 
+          ? complaint.tracking_hash 
+          : (complaintType === "identified" && complaint.cosmos_tx_hash ? complaint.cosmos_tx_hash : id);
+
+        await statusService.updateStatus({
+          complaintHash: blockchainComplaintId,
+          oldStatus: complaint.status,
+          newStatus: "in_progress",
+          publicNotes: `Escalated with priority: ${priority}. ${note || ""}`,
+          adminId: user?.userId || "admin",
+        });
+      } catch (err: any) {
+        console.error("[AdminRoutes] Failed to broadcast escalation status:", err.message);
+        set.status = 500;
+        return { success: false, error: `Failed to broadcast escalation to blockchain: ${err.message}. Action aborted.` };
+      }
+
+      // Create escalation record only if blockchain succeeds
       const escalation = await prisma.escalation.create({
         data: {
           complaint_id: id,
