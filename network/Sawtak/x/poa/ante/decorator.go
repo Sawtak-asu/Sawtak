@@ -17,13 +17,13 @@ import (
 // stakingMsgTypeURLs is the set of staking/slashing message type URLs that
 // the PoA module restricts. Used to block authz grants for these message types.
 var stakingMsgTypeURLs = map[string]bool{
-	sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}):            true,
-	sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}):              true,
-	sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):                   true,
-	sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):                 true,
-	sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}):            true,
-	sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}):  true,
-	sdk.MsgTypeURL(&slashingtypes.MsgUnjail{}):                    true,
+	sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}):           true,
+	sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}):             true,
+	sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):                  true,
+	sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):                true,
+	sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}):           true,
+	sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}): true,
+	sdk.MsgTypeURL(&slashingtypes.MsgUnjail{}):                   true,
 }
 
 // isStakingTypeURL returns true if the given type URL corresponds to a

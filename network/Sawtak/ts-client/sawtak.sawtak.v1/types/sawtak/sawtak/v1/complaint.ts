@@ -13,6 +13,7 @@ export const protobufPackage = "sawtak.sawtak.v1";
 export interface Complaint {
   id: number;
   trackingId: string;
+  anonymousIdentifier: string;
   complaintType: string;
   title: string;
   text: string;
@@ -28,6 +29,7 @@ function createBaseComplaint(): Complaint {
   return {
     id: 0,
     trackingId: "",
+    anonymousIdentifier: "",
     complaintType: "",
     title: "",
     text: "",
@@ -48,32 +50,35 @@ export const Complaint: MessageFns<Complaint> = {
     if (message.trackingId !== "") {
       writer.uint32(18).string(message.trackingId);
     }
+    if (message.anonymousIdentifier !== "") {
+      writer.uint32(26).string(message.anonymousIdentifier);
+    }
     if (message.complaintType !== "") {
-      writer.uint32(26).string(message.complaintType);
+      writer.uint32(34).string(message.complaintType);
     }
     if (message.title !== "") {
-      writer.uint32(34).string(message.title);
+      writer.uint32(42).string(message.title);
     }
     if (message.text !== "") {
-      writer.uint32(42).string(message.text);
+      writer.uint32(50).string(message.text);
     }
     if (message.category !== "") {
-      writer.uint32(50).string(message.category);
+      writer.uint32(58).string(message.category);
     }
     if (message.area !== "") {
-      writer.uint32(58).string(message.area);
+      writer.uint32(66).string(message.area);
     }
     if (message.directedTo !== "") {
-      writer.uint32(66).string(message.directedTo);
+      writer.uint32(74).string(message.directedTo);
     }
     if (message.incidentDate !== "") {
-      writer.uint32(74).string(message.incidentDate);
+      writer.uint32(82).string(message.incidentDate);
     }
     if (message.evidence !== "") {
-      writer.uint32(82).string(message.evidence);
+      writer.uint32(90).string(message.evidence);
     }
     if (message.status !== "") {
-      writer.uint32(90).string(message.status);
+      writer.uint32(98).string(message.status);
     }
     return writer;
   },
@@ -106,7 +111,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.complaintType = reader.string();
+          message.anonymousIdentifier = reader.string();
           continue;
         }
         case 4: {
@@ -114,7 +119,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.title = reader.string();
+          message.complaintType = reader.string();
           continue;
         }
         case 5: {
@@ -122,7 +127,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.text = reader.string();
+          message.title = reader.string();
           continue;
         }
         case 6: {
@@ -130,7 +135,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.category = reader.string();
+          message.text = reader.string();
           continue;
         }
         case 7: {
@@ -138,7 +143,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.area = reader.string();
+          message.category = reader.string();
           continue;
         }
         case 8: {
@@ -146,7 +151,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.directedTo = reader.string();
+          message.area = reader.string();
           continue;
         }
         case 9: {
@@ -154,7 +159,7 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.incidentDate = reader.string();
+          message.directedTo = reader.string();
           continue;
         }
         case 10: {
@@ -162,11 +167,19 @@ export const Complaint: MessageFns<Complaint> = {
             break;
           }
 
-          message.evidence = reader.string();
+          message.incidentDate = reader.string();
           continue;
         }
         case 11: {
           if (tag !== 90) {
+            break;
+          }
+
+          message.evidence = reader.string();
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
             break;
           }
 
@@ -189,6 +202,11 @@ export const Complaint: MessageFns<Complaint> = {
         ? globalThis.String(object.trackingId)
         : isSet(object.tracking_id)
         ? globalThis.String(object.tracking_id)
+        : "",
+      anonymousIdentifier: isSet(object.anonymousIdentifier)
+        ? globalThis.String(object.anonymousIdentifier)
+        : isSet(object.anonymous_identifier)
+        ? globalThis.String(object.anonymous_identifier)
         : "",
       complaintType: isSet(object.complaintType)
         ? globalThis.String(object.complaintType)
@@ -221,6 +239,9 @@ export const Complaint: MessageFns<Complaint> = {
     }
     if (message.trackingId !== "") {
       obj.trackingId = message.trackingId;
+    }
+    if (message.anonymousIdentifier !== "") {
+      obj.anonymousIdentifier = message.anonymousIdentifier;
     }
     if (message.complaintType !== "") {
       obj.complaintType = message.complaintType;
@@ -259,6 +280,7 @@ export const Complaint: MessageFns<Complaint> = {
     const message = createBaseComplaint();
     message.id = object.id ?? 0;
     message.trackingId = object.trackingId ?? "";
+    message.anonymousIdentifier = object.anonymousIdentifier ?? "";
     message.complaintType = object.complaintType ?? "";
     message.title = object.title ?? "";
     message.text = object.text ?? "";

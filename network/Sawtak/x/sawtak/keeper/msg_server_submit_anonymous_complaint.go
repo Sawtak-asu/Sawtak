@@ -10,19 +10,18 @@ import (
 func (k msgServer) SubmitAnonymousComplaint(goCtx context.Context, msg *types.MsgSubmitAnonymousComplaint) (*types.MsgSubmitAnonymousComplaintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-
 	// 1. Create the Complaint object (without the ID first)
 	var complaint = types.Complaint{
-		AnonymousIdentifier:    msg.AnonymousIdentifier,
-		ComplaintType: "anonymous",
-		Title:         msg.Title,
-		Text:          msg.Text, // Hash
-		Category:      msg.Category,
-		Area:          msg.Area,
-		DirectedTo:    msg.DirectedTo,
-		IncidentDate:  msg.IncidentDate,
-		Evidence:      msg.Evidence,
-		Status:        "submitted",
+		AnonymousIdentifier: msg.AnonymousIdentifier,
+		ComplaintType:       "anonymous",
+		Title:               msg.Title,
+		Text:                msg.Text, // Hash
+		Category:            msg.Category,
+		Area:                msg.Area,
+		DirectedTo:          msg.DirectedTo,
+		IncidentDate:        msg.IncidentDate,
+		Evidence:            msg.Evidence,
+		Status:              "submitted",
 	}
 
 	// 2. Get the next ID from the database sequence

@@ -1,13 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, ResponseType } from "axios";
-import { QueryParamsResponse } from "./types/sawtak/sawtak/v1/query";
-import { QueryGetComplaintResponse } from "./types/sawtak/sawtak/v1/query";
-import { QueryAllComplaintResponse } from "./types/sawtak/sawtak/v1/query";
-import { QueryFilterComplaintsResponse } from "./types/sawtak/sawtak/v1/query";
+import { QueryParamsResponse } from "./types/sawtak/poa/v1/query";
 
-import { QueryParamsRequest } from "./types/sawtak/sawtak/v1/query";
-import { QueryGetComplaintRequest } from "./types/sawtak/sawtak/v1/query";
-import { QueryAllComplaintRequest } from "./types/sawtak/sawtak/v1/query";
-import { QueryFilterComplaintsRequest } from "./types/sawtak/sawtak/v1/query";
+import { QueryParamsRequest } from "./types/sawtak/poa/v1/query";
 
 
 import type {SnakeCasedPropertiesDeep} from 'type-fest';
@@ -195,7 +189,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title sawtak.sawtak.v1
+ * @title sawtak.poa.v1
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
   /**
@@ -203,71 +197,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name queryParams
-   * @request GET:/sawtak/v1/params
+   * @request GET:/sawtak/poa/v1/params
    */
   queryParams = (
     query?: Record<string, any>,
     params: RequestParams = {},
   ) =>
     this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryParamsResponse>>>({
-      path: `/sawtak/v1/params`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-  
-  /**
-   * QueryGetComplaint
-   *
-   * @tags Query
-   * @name queryGetComplaint
-   * @request GET:/sawtak/v1/complaint/{id}
-   */
-  queryGetComplaint = (id: string,
-    query?: Record<string, any>,
-    params: RequestParams = {},
-  ) =>
-    this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryGetComplaintResponse>>>({
-      path: `/sawtak/v1/complaint/${id}`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-  
-  /**
-   * QueryListComplaint
-   *
-   * @tags Query
-   * @name queryListComplaint
-   * @request GET:/sawtak/v1/complaint
-   */
-  queryListComplaint = (
-    query?: Omit<FlattenObject<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryAllComplaintRequest>>>,"">,
-    params: RequestParams = {},
-  ) =>
-    this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryAllComplaintResponse>>>({
-      path: `/sawtak/v1/complaint`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-  
-  /**
-   * QueryFilterComplaints
-   *
-   * @tags Query
-   * @name queryFilterComplaints
-   * @request GET:/sayedibrahimQ/sawtak/sawtak/v1/filter_complaints/{status}/{area}/{category}
-   */
-  queryFilterComplaints = (status: string, area: string, category: string,
-    query?: Record<string, any>,
-    params: RequestParams = {},
-  ) =>
-    this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryFilterComplaintsResponse>>>({
-      path: `/sayedibrahimQ/sawtak/sawtak/v1/filter_complaints/${status}/${area}/${category}`,
+      path: `/sawtak/poa/v1/params`,
       method: "GET",
       query: query,
       format: "json",

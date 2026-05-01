@@ -18,7 +18,7 @@ func (k msgServer) UpdateComplaintStatus(goCtx context.Context, msg *types.MsgUp
 	}
 
 	complaint.Status = msg.NewStatus
-    
+
 	// complaint.PublicNotes = msg.PublicNotes
 
 	err = k.Complaint.Set(ctx, msg.Id, complaint)

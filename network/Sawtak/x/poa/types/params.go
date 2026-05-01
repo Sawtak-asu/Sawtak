@@ -9,8 +9,8 @@ import (
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		Admin:              "", // must be set in genesis
-		AllowedValidators:  []string{},
+		Admin:             "", // must be set in genesis
+		AllowedValidators: []string{},
 	}
 }
 

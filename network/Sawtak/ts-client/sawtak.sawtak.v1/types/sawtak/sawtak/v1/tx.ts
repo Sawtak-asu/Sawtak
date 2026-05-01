@@ -45,7 +45,7 @@ export interface MsgSubmitIdentifiedComplaintResponse {
 /** MsgSubmitAnonymousComplaint defines the MsgSubmitAnonymousComplaint message. */
 export interface MsgSubmitAnonymousComplaint {
   creator: string;
-  trackingId: string;
+  anonymousIdentifier: string;
   title: string;
   text: string;
   category: string;
@@ -453,7 +453,7 @@ export const MsgSubmitIdentifiedComplaintResponse: MessageFns<MsgSubmitIdentifie
 function createBaseMsgSubmitAnonymousComplaint(): MsgSubmitAnonymousComplaint {
   return {
     creator: "",
-    trackingId: "",
+    anonymousIdentifier: "",
     title: "",
     text: "",
     category: "",
@@ -470,8 +470,8 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.trackingId !== "") {
-      writer.uint32(18).string(message.trackingId);
+    if (message.anonymousIdentifier !== "") {
+      writer.uint32(18).string(message.anonymousIdentifier);
     }
     if (message.title !== "") {
       writer.uint32(26).string(message.title);
@@ -520,7 +520,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.trackingId = reader.string();
+          message.anonymousIdentifier = reader.string();
           continue;
         }
         case 3: {
@@ -599,10 +599,10 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
   fromJSON(object: any): MsgSubmitAnonymousComplaint {
     return {
       creator: isSet(object.creator) ? globalThis.String(object.creator) : "",
-      trackingId: isSet(object.trackingId)
-        ? globalThis.String(object.trackingId)
-        : isSet(object.tracking_id)
-        ? globalThis.String(object.tracking_id)
+      anonymousIdentifier: isSet(object.anonymousIdentifier)
+        ? globalThis.String(object.anonymousIdentifier)
+        : isSet(object.anonymous_identifier)
+        ? globalThis.String(object.anonymous_identifier)
         : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       text: isSet(object.text) ? globalThis.String(object.text) : "",
@@ -628,8 +628,8 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
     if (message.creator !== "") {
       obj.creator = message.creator;
     }
-    if (message.trackingId !== "") {
-      obj.trackingId = message.trackingId;
+    if (message.anonymousIdentifier !== "") {
+      obj.anonymousIdentifier = message.anonymousIdentifier;
     }
     if (message.title !== "") {
       obj.title = message.title;
@@ -664,7 +664,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
   fromPartial<I extends Exact<DeepPartial<MsgSubmitAnonymousComplaint>, I>>(object: I): MsgSubmitAnonymousComplaint {
     const message = createBaseMsgSubmitAnonymousComplaint();
     message.creator = object.creator ?? "";
-    message.trackingId = object.trackingId ?? "";
+    message.anonymousIdentifier = object.anonymousIdentifier ?? "";
     message.title = object.title ?? "";
     message.text = object.text ?? "";
     message.category = object.category ?? "";
