@@ -19,6 +19,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sawtak}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     ports:
       - "5432:5432"
     healthcheck:
@@ -93,6 +94,14 @@ services:
       HEDERA_OPERATOR_KEY: ${HEDERA_OPERATOR_KEY}
       HEDERA_TOPIC_COMPLAINTS: ${HEDERA_TOPIC_COMPLAINTS}
       HEDERA_TOPIC_STATUS: ${HEDERA_TOPIC_STATUS}
+      ENABLE_HEDERA_INDEXER: ${ENABLE_HEDERA_INDEXER:-false}
+      
+      # Cosmos
+      COSMOS_RPC_ENDPOINT: http://sawtak-node-1:26657
+      COSMOS_GRPC_ENDPOINT: http://sawtak-node-1:9090
+      COSMOS_CHAIN_ID: sawtak-testnet-1
+      COSMOS_BACKEND_MNEMONIC: ${COSMOS_BACKEND_MNEMONIC:-tenant mutual lab resist together wrestle tribe drop girl negative unit intact fiction island rapid inform amateur west reject hood lottery issue athlete brief}
+      COSMOS_BACKEND_ADDRESS: ${COSMOS_BACKEND_ADDRESS:-sawtak1czwnf95lklf68kahvxynmqc09wll04pmfcex84}
       
       # IPFS
       WEB3_STORAGE_TOKEN: ${WEB3_STORAGE_TOKEN}
@@ -111,30 +120,49 @@ services:
       retries: 3
 
   # ==========================================
-  # Frontend Service
+  # Sawtak Cosmos Chain
   # ==========================================
-  frontend:
+  sawtak-chain:
     build:
-      context: ../Front-end
+      context: ../network/Sawtak
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-    container_name: sawtak-frontend
+    container_name: sawtak-chain
     restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
     ports:
-      - "3000:3000"
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+    volumes:
+      - sawtak_chain_data:/root/.sawtak
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:26657/status"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ==========================================
+  # Haweya (Decentralized Identity)
+  # ==========================================
+  haweya:
+    build:
+      context: ../haweya
+      dockerfile: Dockerfile
+    container_name: sawtak-haweya
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3030
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/haweya?schema=public
+    ports:
+      - "3030:3030"
+    networks:
+      - sawtak-network
+
+  # ==========================================
+  # Infrastructure Only (Backend & DBs)
+  # ==========================================
 
 volumes:
   postgres_data:
@@ -143,6 +171,8 @@ volumes:
   redis_data:
     external: true
     name: sawtak_redis_data
+  sawtak_chain_data:
+    name: sawtak_chain_data
 
 networks:
   default:
