@@ -362,10 +362,23 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
     // Get translated status
     const getStatusName = (status: string) => {
+        // Fallback for UI if exact string isn't found
+        if (!status) return status;
+
         try {
+            // First try exact match
             return tStatuses(status);
         } catch {
-            return status;
+            // Try to map or return as is if translation throws
+            try {
+                // Mapping common status variations
+                if (status.includes("flagged")) return tStatuses("flagged");
+                if (status === "pending") return tStatuses("submitted");
+                if (status === "under_investigation") return tStatuses("investigating");
+                return status; // Return as is if still fails
+            } catch {
+                return status;
+            }
         }
     };
 
