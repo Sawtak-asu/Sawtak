@@ -8,7 +8,7 @@ interface CosmosEvent {
 
 interface TxResult {
   height: string;
-  txhash: string;
+  hash: string;
   tx_result: {
     events: CosmosEvent[];
   };
@@ -148,7 +148,7 @@ export class CosmosIndexerService {
 
   private async indexAnonymousComplaint(tx: TxResult, event: CosmosEvent): Promise<void> {
     const attrs = event.attributes;
-    const txHash = tx.txhash;
+    const txHash = tx.hash;
     const trackingHash = this.getAttr(attrs, "tracking_id");
     const anonId = this.getAttr(attrs, "proof");
 
@@ -173,6 +173,7 @@ export class CosmosIndexerService {
 
     await prisma.indexedComplaint.create({
       data: {
+        hcs_hash: txHash,
         chain_hash: txHash,
         chain_type: "cosmos",
         anonymous_identifier: anonId,
@@ -197,7 +198,7 @@ export class CosmosIndexerService {
 
   private async indexIdentifiedComplaint(tx: TxResult, event: CosmosEvent): Promise<void> {
     const attrs = event.attributes;
-    const txHash = tx.txhash;
+    const txHash = tx.hash;
 
     const existing = await prisma.indexedComplaint.findUnique({
       where: { chain_hash: txHash },
@@ -220,6 +221,7 @@ export class CosmosIndexerService {
 
     await prisma.indexedComplaint.create({
       data: {
+        hcs_hash: txHash,
         chain_hash: txHash,
         chain_type: "cosmos",
         anonymous_identifier: "",
@@ -244,7 +246,7 @@ export class CosmosIndexerService {
 
   private async indexStatusUpdate(tx: TxResult, event: CosmosEvent): Promise<void> {
     const attrs = event.attributes;
-    const txHash = tx.txhash;
+    const txHash = tx.hash;
 
     const complaintHash = this.getAttr(attrs, "complaint_id") || this.getAttr(attrs, "id");
     const existing = await prisma.indexedStatusUpdate.findUnique({
@@ -263,6 +265,7 @@ export class CosmosIndexerService {
 
     await prisma.indexedStatusUpdate.create({
       data: {
+        hcs_hash: txHash,
         cosmos_tx_hash: txHash,
         complaint_hash: complaintHash,
         old_status: this.getAttr(attrs, "old_status") || "",

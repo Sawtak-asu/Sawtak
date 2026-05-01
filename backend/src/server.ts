@@ -168,7 +168,9 @@ Anonymous complaints can be verified on the Hedera network:
 
   // Auto-start the indexers
   if (process.env.ENABLE_INDEXER !== "false") {
-    startHederaIndexer();
+    if (process.env.ENABLE_HEDERA_INDEXER === "true") {
+      startHederaIndexer();
+    }
     if (process.env.COSMOS_CHAIN_ID) {
       startCosmosIndexer();
     }

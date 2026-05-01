@@ -46,6 +46,7 @@ export interface MsgSubmitIdentifiedComplaintResponse {
 export interface MsgSubmitAnonymousComplaint {
   creator: string;
   trackingId: string;
+  anonymousIdentifier: string;
   title: string;
   text: string;
   category: string;
@@ -455,6 +456,7 @@ function createBaseMsgSubmitAnonymousComplaint(): MsgSubmitAnonymousComplaint {
   return {
     creator: "",
     trackingId: "",
+    anonymousIdentifier: "",
     title: "",
     text: "",
     category: "",
@@ -474,29 +476,32 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
     if (message.trackingId !== "") {
       writer.uint32(18).string(message.trackingId);
     }
+    if (message.anonymousIdentifier !== "") {
+      writer.uint32(26).string(message.anonymousIdentifier);
+    }
     if (message.title !== "") {
-      writer.uint32(26).string(message.title);
+      writer.uint32(34).string(message.title);
     }
     if (message.text !== "") {
-      writer.uint32(34).string(message.text);
+      writer.uint32(42).string(message.text);
     }
     if (message.category !== "") {
-      writer.uint32(42).string(message.category);
+      writer.uint32(50).string(message.category);
     }
     if (message.area !== "") {
-      writer.uint32(50).string(message.area);
+      writer.uint32(58).string(message.area);
     }
     if (message.directedTo !== "") {
-      writer.uint32(58).string(message.directedTo);
+      writer.uint32(66).string(message.directedTo);
     }
     if (message.incidentDate !== "") {
-      writer.uint32(66).string(message.incidentDate);
+      writer.uint32(74).string(message.incidentDate);
     }
     if (message.evidence !== "") {
-      writer.uint32(74).string(message.evidence);
+      writer.uint32(82).string(message.evidence);
     }
     if (message.proof !== "") {
-      writer.uint32(82).string(message.proof);
+      writer.uint32(90).string(message.proof);
     }
     return writer;
   },
@@ -529,7 +534,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.title = reader.string();
+          message.anonymousIdentifier = reader.string();
           continue;
         }
         case 4: {
@@ -537,7 +542,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.text = reader.string();
+          message.title = reader.string();
           continue;
         }
         case 5: {
@@ -545,7 +550,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.category = reader.string();
+          message.text = reader.string();
           continue;
         }
         case 6: {
@@ -553,7 +558,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.area = reader.string();
+          message.category = reader.string();
           continue;
         }
         case 7: {
@@ -561,7 +566,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.directedTo = reader.string();
+          message.area = reader.string();
           continue;
         }
         case 8: {
@@ -569,7 +574,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.incidentDate = reader.string();
+          message.directedTo = reader.string();
           continue;
         }
         case 9: {
@@ -577,11 +582,19 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
             break;
           }
 
-          message.evidence = reader.string();
+          message.incidentDate = reader.string();
           continue;
         }
         case 10: {
           if (tag !== 82) {
+            break;
+          }
+
+          message.evidence = reader.string();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
             break;
           }
 
@@ -604,6 +617,11 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
         ? globalThis.String(object.trackingId)
         : isSet(object.tracking_id)
         ? globalThis.String(object.tracking_id)
+        : "",
+      anonymousIdentifier: isSet(object.anonymousIdentifier)
+        ? globalThis.String(object.anonymousIdentifier)
+        : isSet(object.anonymous_identifier)
+        ? globalThis.String(object.anonymous_identifier)
         : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       text: isSet(object.text) ? globalThis.String(object.text) : "",
@@ -631,6 +649,9 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
     }
     if (message.trackingId !== "") {
       obj.trackingId = message.trackingId;
+    }
+    if (message.anonymousIdentifier !== "") {
+      obj.anonymousIdentifier = message.anonymousIdentifier;
     }
     if (message.title !== "") {
       obj.title = message.title;
@@ -666,6 +687,7 @@ export const MsgSubmitAnonymousComplaint: MessageFns<MsgSubmitAnonymousComplaint
     const message = createBaseMsgSubmitAnonymousComplaint();
     message.creator = object.creator ?? "";
     message.trackingId = object.trackingId ?? "";
+    message.anonymousIdentifier = object.anonymousIdentifier ?? "";
     message.title = object.title ?? "";
     message.text = object.text ?? "";
     message.category = object.category ?? "";
@@ -808,10 +830,26 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
   fromJSON(object: any): MsgUpdateComplaintStatus {
     return {
       creator: isSet(object.creator) ? globalThis.String(object.creator) : "",
-      complaintId: isSet(object.complaintId) ? globalThis.String(object.complaintId) : isSet(object.complaint_id) ? globalThis.String(object.complaint_id) : "",
-      oldStatus: isSet(object.oldStatus) ? globalThis.String(object.oldStatus) : isSet(object.old_status) ? globalThis.String(object.old_status) : "",
-      newStatus: isSet(object.newStatus) ? globalThis.String(object.newStatus) : isSet(object.new_status) ? globalThis.String(object.new_status) : "",
-      publicNotes: isSet(object.publicNotes) ? globalThis.String(object.publicNotes) : isSet(object.public_notes) ? globalThis.String(object.public_notes) : "",
+      complaintId: isSet(object.complaintId)
+        ? globalThis.String(object.complaintId)
+        : isSet(object.complaint_id)
+        ? globalThis.String(object.complaint_id)
+        : "",
+      oldStatus: isSet(object.oldStatus)
+        ? globalThis.String(object.oldStatus)
+        : isSet(object.old_status)
+        ? globalThis.String(object.old_status)
+        : "",
+      newStatus: isSet(object.newStatus)
+        ? globalThis.String(object.newStatus)
+        : isSet(object.new_status)
+        ? globalThis.String(object.new_status)
+        : "",
+      publicNotes: isSet(object.publicNotes)
+        ? globalThis.String(object.publicNotes)
+        : isSet(object.public_notes)
+        ? globalThis.String(object.public_notes)
+        : "",
     };
   },
 
@@ -835,7 +873,7 @@ export const MsgUpdateComplaintStatus: MessageFns<MsgUpdateComplaintStatus> = {
     return obj;
   },
 
-create<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(base?: I): MsgUpdateComplaintStatus {
+  create<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(base?: I): MsgUpdateComplaintStatus {
     return MsgUpdateComplaintStatus.fromPartial(base ?? ({} as any));
   },
   fromPartial<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(object: I): MsgUpdateComplaintStatus {
@@ -846,7 +884,7 @@ create<I extends Exact<DeepPartial<MsgUpdateComplaintStatus>, I>>(base?: I): Msg
     message.newStatus = object.newStatus ?? "";
     message.publicNotes = object.publicNotes ?? "";
     return message;
-  }
+  },
 };
 
 function createBaseMsgUpdateComplaintStatusResponse(): MsgUpdateComplaintStatusResponse {
@@ -963,17 +1001,6 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
-
-function longToNumber(int64: { toString(): string }): number {
-  const num = globalThis.Number(int64.toString());
-  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
-  }
-  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
-  }
-  return num;
-}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

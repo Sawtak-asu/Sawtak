@@ -1,4 +1,4 @@
-import { SigningStargateClient } from "@cosmjs/stargate";
+import { SigningStargateClient, GasPrice } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet, Registry } from "@cosmjs/proto-signing";
 import { IBlockchainService } from "../interfaces/blockchain.interface";
 import { COSMOS_CONFIG } from "../config/cosmos.config";
@@ -6,8 +6,8 @@ import {
   MsgSubmitAnonymousComplaint,
   MsgSubmitIdentifiedComplaint,
   MsgUpdateComplaintStatus,
-} from "../../network/Sawtak/ts-client/sawtak.sawtak.v1/types/sawtak/sawtak/v1/tx";
-import { msgTypes } from "../../network/Sawtak/ts-client/sawtak.sawtak.v1/registry";
+} from "../../../network/Sawtak/ts-client/sawtak.sawtak.v1/types/sawtak/sawtak/v1/tx";
+import { msgTypes } from "../../../network/Sawtak/ts-client/sawtak.sawtak.v1/registry";
 
 type TopicId = "complaints" | "status" | "identified";
 
@@ -35,7 +35,10 @@ export class SawtakCosmosService implements IBlockchainService {
     this.client = await SigningStargateClient.connectWithSigner(
       COSMOS_CONFIG.RPC_ENDPOINT,
       this.wallet,
-      { registry }
+      { 
+        registry,
+        gasPrice: GasPrice.fromString(COSMOS_CONFIG.GAS_PRICE)
+      }
     );
 
     console.log(`[SawtakCosmosService] Connected to ${COSMOS_CONFIG.RPC_ENDPOINT}`);
