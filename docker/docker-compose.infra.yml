@@ -157,8 +157,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/haweya?schema=public
     ports:
       - "3030:3030"
-    networks:
-      - sawtak-network
 
   # ==========================================
   # Infrastructure Only (Backend & DBs)

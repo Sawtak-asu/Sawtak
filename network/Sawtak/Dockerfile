@@ -3,7 +3,7 @@
 # ============================================
 
 # Stage 1: Build the chain binary
-FROM golang:1.22-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache make gcc musl-dev git

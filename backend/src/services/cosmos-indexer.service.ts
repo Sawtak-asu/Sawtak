@@ -93,7 +93,9 @@ export class CosmosIndexerService {
 
   private async poll(): Promise<void> {
     try {
+      console.log(`[CosmosIndexer] Polling from height ${this.lastHeight + 1}...`);
       const events = await this.fetchTxEvents(this.lastHeight + 1);
+      console.log(`[CosmosIndexer] Found ${events.length} transactions`);
       if (events.length === 0) return;
 
       for (const tx of events) {
@@ -124,7 +126,9 @@ export class CosmosIndexerService {
   }
 
   private async processTx(tx: TxResult): Promise<void> {
+    console.log(`[CosmosIndexer] Processing tx ${tx.hash} at height ${tx.height}`);
     for (const event of tx.tx_result.events) {
+      console.log(`[CosmosIndexer] Found event type: ${event.type}`);
       switch (event.type) {
         case "sawtak.sawtak.v1.EventSubmitAnonymousComplaint":
           await this.indexAnonymousComplaint(tx, event);
@@ -156,7 +160,10 @@ export class CosmosIndexerService {
       where: { chain_hash: txHash },
     });
 
-    if (existing) return;
+    if (existing) {
+      console.log(`[CosmosIndexer] Complaint already exists: ${txHash}`);
+      return;
+    }
 
     const directedToRaw = this.getAttr(attrs, "directed_to");
     let directedTo: any = null;
@@ -171,29 +178,32 @@ export class CosmosIndexerService {
       evidence = Array.isArray(parsed) ? parsed : [];
     } catch {}
 
-    await prisma.indexedComplaint.create({
-      data: {
-        hcs_hash: txHash,
-        chain_hash: txHash,
-        chain_type: "cosmos",
-        anonymous_identifier: anonId,
-        tracking_hash: trackingHash || null,
-        title: this.getAttr(attrs, "title"),
-        complaint_text: this.getAttr(attrs, "text"),
-        category: this.getAttr(attrs, "category"),
-        area: this.getAttr(attrs, "area") || "Unknown",
-        directed_to: directedTo,
-        severity: "medium",
-        incident_date: this.getAttr(attrs, "incident_date")
-          ? new Date(this.getAttr(attrs, "incident_date"))
-          : new Date(),
-        evidence_cids: evidence,
-        status: "submitted",
-        consensus_timestamp: new Date(),
-      },
-    });
-
-    console.log(`[CosmosIndexer] Indexed anonymous complaint: ${txHash}`);
+    try {
+      await prisma.indexedComplaint.create({
+        data: {
+          hcs_hash: txHash,
+          chain_hash: txHash,
+          chain_type: "cosmos",
+          anonymous_identifier: anonId,
+          tracking_hash: trackingHash || null,
+          title: this.getAttr(attrs, "title"),
+          complaint_text: this.getAttr(attrs, "text"),
+          category: this.getAttr(attrs, "category"),
+          area: this.getAttr(attrs, "area") || "Unknown",
+          directed_to: directedTo,
+          severity: "medium",
+          incident_date: this.getAttr(attrs, "incident_date")
+            ? new Date(this.getAttr(attrs, "incident_date"))
+            : new Date(),
+          evidence_cids: evidence,
+          status: "submitted",
+          consensus_timestamp: new Date(),
+        },
+      });
+      console.log(`[CosmosIndexer] Indexed anonymous complaint: ${txHash}`);
+    } catch (err: any) {
+      console.error(`[CosmosIndexer] Failed to create IndexedComplaint: ${err.message}`);
+    }
   }
 
   private async indexIdentifiedComplaint(tx: TxResult, event: CosmosEvent): Promise<void> {
