@@ -35,8 +35,9 @@ func (k msgServer) UpdateComplaintStatus(goCtx context.Context, msg *types.MsgUp
 		// Status may have changed externally, log but proceed
 	}
 
-	// 3. Update the status
 	complaint.Status = msg.NewStatus
+
+	// 3. Update the status
 	err := k.Complaint.Set(ctx, complaintId, complaint)
 	if err != nil {
 		return nil, err

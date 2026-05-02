@@ -6,8 +6,9 @@ import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "sawtak/sawtak/v1/params.proto";
 import "google/api/annotations.proto";
+import "sawtak/sawtak/v1/params.proto";
+
 option go_package = "github.com/sayedibrahimQ/sawtak/x/sawtak/types";
 
 // Msg defines the Msg service.

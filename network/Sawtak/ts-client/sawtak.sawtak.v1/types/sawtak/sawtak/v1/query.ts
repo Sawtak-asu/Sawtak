@@ -43,6 +43,17 @@ export interface QueryAllComplaintResponse {
   pagination: PageResponse | undefined;
 }
 
+/** QueryFilterComplaintsRequest defines the QueryFilterComplaintsRequest message. */
+export interface QueryFilterComplaintsRequest {
+  status: string;
+  area: string;
+  category: string;
+}
+
+/** QueryFilterComplaintsResponse defines the QueryFilterComplaintsResponse message. */
+export interface QueryFilterComplaintsResponse {
+}
+
 function createBaseQueryParamsRequest(): QueryParamsRequest {
   return {};
 }
@@ -404,6 +415,141 @@ export const QueryAllComplaintResponse: MessageFns<QueryAllComplaintResponse> = 
   },
 };
 
+function createBaseQueryFilterComplaintsRequest(): QueryFilterComplaintsRequest {
+  return { status: "", area: "", category: "" };
+}
+
+export const QueryFilterComplaintsRequest: MessageFns<QueryFilterComplaintsRequest> = {
+  encode(message: QueryFilterComplaintsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.status !== "") {
+      writer.uint32(10).string(message.status);
+    }
+    if (message.area !== "") {
+      writer.uint32(18).string(message.area);
+    }
+    if (message.category !== "") {
+      writer.uint32(26).string(message.category);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): QueryFilterComplaintsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryFilterComplaintsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.area = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.category = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryFilterComplaintsRequest {
+    return {
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
+      area: isSet(object.area) ? globalThis.String(object.area) : "",
+      category: isSet(object.category) ? globalThis.String(object.category) : "",
+    };
+  },
+
+  toJSON(message: QueryFilterComplaintsRequest): unknown {
+    const obj: any = {};
+    if (message.status !== "") {
+      obj.status = message.status;
+    }
+    if (message.area !== "") {
+      obj.area = message.area;
+    }
+    if (message.category !== "") {
+      obj.category = message.category;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<QueryFilterComplaintsRequest>, I>>(base?: I): QueryFilterComplaintsRequest {
+    return QueryFilterComplaintsRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<QueryFilterComplaintsRequest>, I>>(object: I): QueryFilterComplaintsRequest {
+    const message = createBaseQueryFilterComplaintsRequest();
+    message.status = object.status ?? "";
+    message.area = object.area ?? "";
+    message.category = object.category ?? "";
+    return message;
+  },
+};
+
+function createBaseQueryFilterComplaintsResponse(): QueryFilterComplaintsResponse {
+  return {};
+}
+
+export const QueryFilterComplaintsResponse: MessageFns<QueryFilterComplaintsResponse> = {
+  encode(_: QueryFilterComplaintsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): QueryFilterComplaintsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryFilterComplaintsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): QueryFilterComplaintsResponse {
+    return {};
+  },
+
+  toJSON(_: QueryFilterComplaintsResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<QueryFilterComplaintsResponse>, I>>(base?: I): QueryFilterComplaintsResponse {
+    return QueryFilterComplaintsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<QueryFilterComplaintsResponse>, I>>(_: I): QueryFilterComplaintsResponse {
+    const message = createBaseQueryFilterComplaintsResponse();
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -412,6 +558,8 @@ export interface Query {
   GetComplaint(request: QueryGetComplaintRequest): Promise<QueryGetComplaintResponse>;
   /** ListComplaint defines the ListComplaint RPC. */
   ListComplaint(request: QueryAllComplaintRequest): Promise<QueryAllComplaintResponse>;
+  /** FilterComplaints Queries a list of FilterComplaints items. */
+  FilterComplaints(request: QueryFilterComplaintsRequest): Promise<QueryFilterComplaintsResponse>;
 }
 
 export const QueryServiceName = "sawtak.sawtak.v1.Query";
@@ -424,6 +572,7 @@ export class QueryClientImpl implements Query {
     this.Params = this.Params.bind(this);
     this.GetComplaint = this.GetComplaint.bind(this);
     this.ListComplaint = this.ListComplaint.bind(this);
+    this.FilterComplaints = this.FilterComplaints.bind(this);
   }
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse> {
     const data = QueryParamsRequest.encode(request).finish();
@@ -441,6 +590,12 @@ export class QueryClientImpl implements Query {
     const data = QueryAllComplaintRequest.encode(request).finish();
     const promise = this.rpc.request(this.service, "ListComplaint", data);
     return promise.then((data) => QueryAllComplaintResponse.decode(new BinaryReader(data)));
+  }
+
+  FilterComplaints(request: QueryFilterComplaintsRequest): Promise<QueryFilterComplaintsResponse> {
+    const data = QueryFilterComplaintsRequest.encode(request).finish();
+    const promise = this.rpc.request(this.service, "FilterComplaints", data);
+    return promise.then((data) => QueryFilterComplaintsResponse.decode(new BinaryReader(data)));
   }
 }
 

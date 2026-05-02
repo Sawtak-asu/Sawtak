@@ -29,6 +29,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Alias:          []string{"show-complaint"},
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
 				},
+				{
+					RpcMethod: "FilterComplaints",
+					Use:       "filter-complaints",
+					Short:     "Query complaints filtered by status, area, and/or category",
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"status":   {Name: "status", Usage: "filter by complaint status (e.g. pending, resolved)"},
+						"area":     {Name: "area", Usage: "filter by complaint area"},
+						"category": {Name: "category", Usage: "filter by complaint category"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
