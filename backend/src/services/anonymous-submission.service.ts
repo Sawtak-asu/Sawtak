@@ -69,6 +69,25 @@ export class AnonymousSubmissionService {
     // Encrypting anonID/wallet
     const encryptedAnonId = encrypt(payload.anonymousIdentifier);
 
+    // Generate cryptographic proof (signature) of the encryptedAnonId
+    let proof = "";
+    const backendPrivKeyPem = process.env.BACKEND_PRIVATE_KEY_PEM || `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIKROiyGG99oHdS5Ckax5fPTJfKdsu//EtmpxP6yZO0fY
+-----END PRIVATE KEY-----`;
+
+    if (backendPrivKeyPem) {
+      try {
+        const privateKey = crypto.createPrivateKey({
+          key: backendPrivKeyPem,
+          format: 'pem'
+        });
+        const signature = crypto.sign(null, Buffer.from(encryptedAnonId), privateKey);
+        proof = signature.toString('base64');
+      } catch (err) {
+        console.error("[AnonymousSubmission] Failed to sign proof:", err);
+      }
+    }
+
     // Create a lookup hash from tracking code (so we can find this complaint later)
     const trackingHash = crypto
       .createHash("sha256")
@@ -80,6 +99,7 @@ export class AnonymousSubmissionService {
     const publicPayload = {
       type: "COMPLAINT_SUBMISSION",
       anon_id: encryptedAnonId,
+      proof: proof,
       tracking_hash: trackingHash, // Hashed tracking code for lookup
       title: payload.title,
       text: payload.text,

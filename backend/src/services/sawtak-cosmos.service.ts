@@ -77,6 +77,7 @@ export class SawtakCosmosService implements IBlockchainService {
           value: MsgSubmitAnonymousComplaint.fromPartial({
             creator: this.backendAddress,
             trackingId: message.tracking_hash || "",
+            anonymousIdentifier: message.anon_id || message.encrypted_anon_id || "",
             title: message.title || "",
             text: message.text || "",
             category: message.category || "",
@@ -88,7 +89,7 @@ export class SawtakCosmosService implements IBlockchainService {
             evidence: Array.isArray(message.evidence)
               ? JSON.stringify(message.evidence)
               : message.evidence || "",
-            proof: message.anon_id || message.encrypted_anon_id || "",
+            proof: message.proof || "",
           }),
         };
 
@@ -131,6 +132,7 @@ export class SawtakCosmosService implements IBlockchainService {
           value: MsgSubmitAnonymousComplaint.fromPartial({
             creator: this.backendAddress,
             trackingId: message.tracking_hash || "",
+            anonymousIdentifier: message.anon_id || message.encrypted_anon_id || "",
             title: message.title || "",
             text: message.text || "",
             category: message.category || "",
@@ -142,7 +144,7 @@ export class SawtakCosmosService implements IBlockchainService {
             evidence: Array.isArray(message.evidence)
               ? JSON.stringify(message.evidence)
               : message.evidence || "",
-            proof: message.anon_id || message.encrypted_anon_id || "",
+            proof: message.proof || "",
           }),
         };
     }

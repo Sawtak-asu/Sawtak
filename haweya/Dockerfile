@@ -25,4 +25,4 @@ ENV PORT=3030
 EXPOSE 3030
 
 # Start server
-CMD ["bun", "run", "backend/src/index.ts"]
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun run backend/src/index.ts"]
