@@ -50,7 +50,6 @@ import { toast } from "sonner";
 import { ComplaintCard, Complaint } from "@/components/admin.complaint-card";
 import { AdminLayout } from "@/components/admin-layout";
 import { useRouter } from "next/navigation";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface AdminFeedResponse {
     success: boolean;
@@ -107,7 +106,7 @@ export default function AdminDashboard() {
                 params.set("entity", selectedTeam.entity_id);
             }
 
-            const res = await fetch(`${API_URL}/api/admin/complaints?${params}`, {
+            const res = await fetch(`/api/admin/complaints?${params}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -128,7 +127,7 @@ export default function AdminDashboard() {
     const closeMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`${API_URL}/api/admin/complaints/${selectedComplaint.id}/status`, {
+            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/status`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ status: "closed", note: closeNote })
@@ -152,7 +151,7 @@ export default function AdminDashboard() {
     const escalateMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`${API_URL}/api/admin/complaints/${selectedComplaint.id}/escalate`, {
+            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/escalate`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ priority: escalatePriority, note: escalateNote })

@@ -25,8 +25,6 @@ import { useRouter } from "next/navigation";
 import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
 import { useTranslations, useLocale } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export interface Complaint {
     id: string;
     title: string;
@@ -83,7 +81,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
         const checkVoteStatus = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -124,7 +122,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

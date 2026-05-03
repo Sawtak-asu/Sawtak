@@ -3,8 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 // Team member role within a team
 export type TeamRole = "reviewer" | "manager" | "team_admin";
 
@@ -81,7 +79,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const res = await fetch(`${API_URL}/api/admin/teams/my-teams`, {
+            const res = await fetch(`/api/admin/teams/my-teams`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

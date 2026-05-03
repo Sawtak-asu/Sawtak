@@ -103,8 +103,6 @@ const formSchema = z.object({
 
 type ComplaintFormData = z.infer<typeof formSchema>;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export function ComplaintForm() {
   const { user, isLoggedIn, token } = useAuth();
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
@@ -154,8 +152,8 @@ export function ComplaintForm() {
 
       // Correct endpoints: /api/complaints/{type}/submit
       const endpoint = data.mode === "public"
-        ? `${API_URL}/api/complaints/identified/submit`
-        : `${API_URL}/api/complaints/anonymous/submit`;
+        ? `/api/complaints/identified/submit`
+        : `/api/complaints/anonymous/submit`;
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -193,8 +191,6 @@ export function ComplaintForm() {
     },
   });
 
-
-
   async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
       toast.error(tToasts("loginRequired"));
@@ -212,7 +208,7 @@ export function ComplaintForm() {
           formData.append("files", file as File);
         });
 
-        const uploadResponse = await fetch(`${API_URL}/api/upload`, {
+        const uploadResponse = await fetch(`/api/upload`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

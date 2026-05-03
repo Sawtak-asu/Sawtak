@@ -51,8 +51,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface User {
     id: string;
     email: string;
@@ -112,7 +110,7 @@ function UsersPageContent() {
             if (search) params.set("search", search);
             if (blockedParam) params.set("blocked", blockedParam);
 
-            const res = await fetch(`${API_URL}/api/admin/users?${params}`, {
+            const res = await fetch(`/api/admin/users?${params}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -127,7 +125,7 @@ function UsersPageContent() {
 
     const blockMutation = useMutation({
         mutationFn: async ({ userId, action }: { userId: string; action: "block" | "unblock" }) => {
-            const res = await fetch(`${API_URL}/api/admin/users/${userId}/${action}`, {
+            const res = await fetch(`/api/admin/users/${userId}/${action}`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,

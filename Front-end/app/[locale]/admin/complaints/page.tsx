@@ -29,8 +29,6 @@ import { toast } from "sonner";
 import { Loader2, Search, Filter, Ban, ArrowUpCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 // Wrapper component with Suspense boundary
 export default function ComplaintsQueuePage() {
     return (
@@ -76,7 +74,7 @@ function ComplaintsQueueContent() {
                 params.set("entity", selectedTeam.entity_id);
             }
 
-            const res = await fetch(`${API_URL}/api/admin/complaints?${params}`, {
+            const res = await fetch(`/api/admin/complaints?${params}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch complaints");
@@ -91,7 +89,7 @@ function ComplaintsQueueContent() {
     const closeMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`${API_URL}/api/admin/complaints/${selectedComplaint.id}/status`, {
+            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/status`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -121,7 +119,7 @@ function ComplaintsQueueContent() {
     const escalateMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`${API_URL}/api/admin/complaints/${selectedComplaint.id}/escalate`, {
+            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/escalate`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

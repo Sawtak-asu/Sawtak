@@ -32,8 +32,6 @@ import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { MINISTRIES, GOVERNORATES } from "@/lib/egypt-locations";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface RevealRequest {
     id: string;
     complaint_id: string;
@@ -119,7 +117,7 @@ function RevealRequestsContent() {
             if (entityFilter && entityFilter !== "all") params.set("entity", entityFilter);
             params.set("limit", "50");
 
-            const res = await fetch(`${API_URL}/api/admin/identity-reveal-requests?${params}`, {
+            const res = await fetch(`/api/admin/identity-reveal-requests?${params}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch reveal requests");
@@ -134,7 +132,7 @@ function RevealRequestsContent() {
     const approveMutation = useMutation({
         mutationFn: async () => {
             if (!selectedRequest) return;
-            const res = await fetch(`${API_URL}/api/admin/identity-reveal-requests/${selectedRequest.id}/approve`, {
+            const res = await fetch(`/api/admin/identity-reveal-requests/${selectedRequest.id}/approve`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -163,7 +161,7 @@ function RevealRequestsContent() {
     const rejectMutation = useMutation({
         mutationFn: async () => {
             if (!selectedRequest) return;
-            const res = await fetch(`${API_URL}/api/admin/identity-reveal-requests/${selectedRequest.id}/reject`, {
+            const res = await fetch(`/api/admin/identity-reveal-requests/${selectedRequest.id}/reject`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

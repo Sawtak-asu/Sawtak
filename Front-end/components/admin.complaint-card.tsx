@@ -29,8 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export interface Complaint {
     id: string;
     title: string;
@@ -107,7 +105,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         }
         setIsRequestingReveal(true);
         try {
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/request-identity-reveal`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/request-identity-reveal`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -155,7 +153,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         const fetchHistory = async () => {
             setIsLoadingHistory(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`, {
+                const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -178,7 +176,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
         const checkVoteStatus = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -219,7 +217,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -258,7 +256,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 toast.error("You must be logged in to perform this action");
                 return;
             }
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -306,7 +304,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 toast.error("You must be logged in to perform this action");
                 return;
             }
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,

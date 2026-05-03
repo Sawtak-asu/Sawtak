@@ -31,8 +31,6 @@ import { Link } from "@/i18n/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface UserComplaint {
     id: string;
     title: string;
@@ -66,7 +64,7 @@ export default function ProfilePage() {
     const { data, isLoading } = useQuery({
         queryKey: ["my-complaints", user?.id],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/api/complaints/identified/user/${user?.id}`, {
+            const res = await fetch(`/api/complaints/identified/user/${user?.id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

@@ -43,10 +43,9 @@ function CallbackContent() {
 
       try {
         // Exchange code for tokens via our backend
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
+                const redirectUri = `${window.location.origin}/auth/google/callback`;
 
-        const response = await fetch(`${apiUrl}/api/auth/google/callback`, {
+        const response = await fetch(`/api/auth/google/callback`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
