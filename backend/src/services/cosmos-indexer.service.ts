@@ -93,11 +93,11 @@ export class CosmosIndexerService {
 
   private async poll(): Promise<void> {
     try {
-      console.log(`[CosmosIndexer] Polling from height ${this.lastHeight + 1}...`);
+      // Reduced logging: only log when transactions are actually found
       const events = await this.fetchTxEvents(this.lastHeight + 1);
-      console.log(`[CosmosIndexer] Found ${events.length} transactions`);
       if (events.length === 0) return;
 
+      console.log(`[CosmosIndexer] Found ${events.length} transactions at height ${this.lastHeight + 1}`);
       for (const tx of events) {
         await this.processTx(tx);
         const height = parseInt(tx.height);
@@ -126,9 +126,7 @@ export class CosmosIndexerService {
   }
 
   private async processTx(tx: TxResult): Promise<void> {
-    console.log(`[CosmosIndexer] Processing tx ${tx.hash} at height ${tx.height}`);
     for (const event of tx.tx_result.events) {
-      console.log(`[CosmosIndexer] Found event type: ${event.type}`);
       switch (event.type) {
         case "sawtak.sawtak.v1.EventSubmitAnonymousComplaint":
           await this.indexAnonymousComplaint(tx, event);
