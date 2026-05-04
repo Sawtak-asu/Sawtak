@@ -71,7 +71,17 @@ bun run tests/query_nodes.ts
 
 ---
 
-## 🧹 4. Troubleshooting & Clean Slate
+## 🔒 6. Bun Lockfile Issues
+If you see an error like `error: lockfile out of date` during the build process, it means the `bun.lockb` file is out of sync with `package.json`.
+
+**To fix this:**
+1. Navigate to the service folder (e.g., `cd backend`).
+2. Run `bun install` locally to regenerate the lockfile.
+3. Commit and push the updated `bun.lockb`.
+
+---
+
+## 🧹 7. Troubleshooting & Clean Slate
 If the blockchain nodes fail to sync (e.g., if you stopped the containers midway through genesis creation), or if you just want to completely reset the database and blockchain state:
 
 1. **Stop all containers:**
