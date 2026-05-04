@@ -1,13 +1,13 @@
 # ============================================
-# Sawtak - Windows-Specific Testnet Stack
+# Sawtak - Personal Windows Dev Stack (Limited Internet)
+# ============================================
+# This version uses existing local images to save bandwidth.
+# Usage: docker-compose -f docker/docker-compose.dev-windows-testnet-ak.yml --env-file .env up -d
 # ============================================
 name: sawtak
 
 services:
   sawtak-node-1:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
     container_name: sawtak-node-1
     restart: always
@@ -28,9 +28,6 @@ services:
       - internal
 
   sawtak-node-2:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
     container_name: sawtak-node-2
     restart: always
@@ -53,9 +50,6 @@ services:
       - internal
 
   sawtak-node-3:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
     container_name: sawtak-node-3
     restart: always
@@ -112,9 +106,6 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
     image: sawtak-backend:latest
     container_name: sawtak-backend
     restart: always
@@ -163,9 +154,6 @@ services:
       - privacy
 
   privacy-proxy:
-    build:
-      context: ../privacy-proxy
-      dockerfile: Dockerfile
     image: sawtak-privacy-proxy:latest
     container_name: sawtak-privacy-proxy
     restart: always
@@ -188,12 +176,6 @@ services:
       - "4000:4000"
 
   frontend:
-    build:
-      context: ../Front-end
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
-        NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
     image: sawtak-frontend:latest
     container_name: sawtak-frontend
     restart: always
@@ -225,9 +207,6 @@ services:
       retries: 5
 
   haweya-app:
-    build:
-      context: ../haweya
-      dockerfile: Dockerfile
     image: sawtak-haweya-app:latest
     container_name: sawtak-haweya-app
     restart: always

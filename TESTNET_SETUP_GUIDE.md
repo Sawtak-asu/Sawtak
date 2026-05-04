@@ -40,7 +40,11 @@ We have configured specific Docker Compose files optimized for different operati
 The Windows compose file bypasses Prisma migration issues on existing databases by dynamically pushing the schema, and handles Windows-to-Linux pathing securely.
 
 ```powershell
+# Standard version (will build images if missing)
 docker-compose -f docker/docker-compose.dev-windows-testnet.yml --env-file .env up -d
+
+# Ahmed's version (skips builds to save bandwidth)
+docker-compose -f docker/docker-compose.dev-windows-testnet-ak.yml --env-file .env up -d
 ```
 
 ### For Linux / Mac Users
