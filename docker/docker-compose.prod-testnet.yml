@@ -120,6 +120,9 @@ services:
       REQUIRE_PROXY_AUTH: "true"
       BLOCKCHAIN_RPC_URL: http://sawtak-node-1:26657
       BLOCKCHAIN_REST_URL: http://sawtak-node-1:1317
+      HAWEYA_ISSUER_URL: http://sawtak-haweya-app:3030
+      HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
+      HAWEYA_CLIENT_SECRET: ${HAWEYA_CLIENT_SECRET:-sawtak_secret}
     networks:
       - internal
       - privacy
