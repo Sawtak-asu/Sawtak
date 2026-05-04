@@ -113,12 +113,39 @@ jobs:
         continue-on-error: true
 
   # ==========================================
+  # Build & Test Privacy Proxy
+  # ==========================================
+  proxy:
+    name: Privacy Proxy Build & Test
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./privacy-proxy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type check
+        run: bunx tsc --noEmit
+        continue-on-error: true
+
+  # ==========================================
   # Build Docker Images
   # ==========================================
   docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [backend, frontend, haweya]
+    needs: [backend, frontend, haweya, proxy]
     if: github.ref == 'refs/heads/main'
     
     permissions:
@@ -181,6 +208,56 @@ jobs:
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_HAWEYA_URL=${{ secrets.NEXT_PUBLIC_HAWEYA_URL }}
             NEXT_PUBLIC_HAWEYA_CLIENT_ID=${{ secrets.NEXT_PUBLIC_HAWEYA_CLIENT_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata (haweya)
+        id: meta-haweya
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-haweya
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Extract metadata (privacy-proxy)
+        id: meta-proxy
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proxy
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push privacy-proxy
+        uses: docker/build-push-action@v5
+        with:
+          context: ./privacy-proxy
+          push: true
+          tags: ${{ steps.meta-proxy.outputs.tags }}
+          labels: ${{ steps.meta-proxy.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata (chain-node)
+        id: meta-chain
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-chain
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push chain-node
+        uses: docker/build-push-action@v5
+        with:
+          context: ./network/Sawtak
+          push: true
+          tags: ${{ steps.meta-chain.outputs.tags }}
+          labels: ${{ steps.meta-chain.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

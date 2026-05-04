@@ -1,87 +1,37 @@
 # ============================================
-# Sawtak Backend - Optimized Dockerfile
+# Sawtak Backend - Optimized Production Build
 # ============================================
-
-# Stage 1: Install ALL dependencies (including dev) for building
-FROM oven/bun:1-alpine AS deps
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json bun.lock* ./
-
-# Clear cache and install dependencies with retry
-RUN rm -rf ~/.bun/install/cache && \
-    bun install --no-cache || bun install --no-cache
-
-# Stage 2: Build the application
 FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Stage 1: Install dependencies with caching
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile --no-progress
 
-# Copy prisma schema for client generation
-COPY prisma ./prisma/
-
-# Generate Prisma Client
-RUN bunx prisma generate
-
-# Copy source code
+# Stage 2: Build the application
 COPY . .
-
-# Build the application  
+# Only generate prisma if the directory exists
+RUN if [ -d "./prisma" ]; then bunx prisma generate; fi
 RUN bun build src/server.ts --outdir dist --target bun --minify
 
-# Stage 3: Production dependencies only
-FROM oven/bun:1-alpine AS prod-deps
-
+# Stage 3: Production Runner (Real Prod)
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
+# Install production dependencies only to keep it clean
 COPY package.json bun.lock* ./
+RUN bun install --production --frozen-lockfile --no-progress
 
-# Install ONLY production dependencies
-RUN rm -rf ~/.bun/install/cache && \
-    bun install --production --no-cache --ignore-scripts || \
-    bun install --production --no-cache --ignore-scripts
-
-# Stage 4: Final production image
-FROM oven/bun:1-alpine AS production
-
-WORKDIR /app
-
-# Install OpenSSL for Prisma (Alpine)
-RUN apk add --no-cache openssl libc6-compat
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S sawtak -u 1001 -G nodejs
-
-# Copy only what's needed for production
+# Copy compiled assets from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=prod-deps /app/node_modules ./node_modules
-COPY package.json ./
+COPY --from=builder /app/package.json ./
 
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8000/api/health || exit 1
-
-# Change ownership
-RUN chown -R sawtak:nodejs /app
-
-# Switch to non-root user
-USER sawtak
-
-# Start command - runs migrations then starts server
-CMD ["sh", "-c", "bunx prisma migrate deploy && bun run dist/server.js"]
+# Start command
+CMD ["bun", "run", "dist/server.js"]
