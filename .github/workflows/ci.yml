@@ -221,6 +221,16 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest
 
+      - name: Build and push haweya
+        uses: docker/build-push-action@v5
+        with:
+          context: ./haweya
+          push: true
+          tags: ${{ steps.meta-haweya.outputs.tags }}
+          labels: ${{ steps.meta-haweya.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Extract metadata (privacy-proxy)
         id: meta-proxy
         uses: docker/metadata-action@v5
@@ -258,26 +268,6 @@ jobs:
           push: true
           tags: ${{ steps.meta-chain.outputs.tags }}
           labels: ${{ steps.meta-chain.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (haweya)
-        id: meta-haweya
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-haweya
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push haweya
-        uses: docker/build-push-action@v5
-        with:
-          context: ./haweya
-          push: true
-          tags: ${{ steps.meta-haweya.outputs.tags }}
-          labels: ${{ steps.meta-haweya.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
