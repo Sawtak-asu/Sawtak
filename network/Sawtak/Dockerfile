@@ -12,7 +12,7 @@ WORKDIR /app
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
-RUN go mod download
+RUN export GOPROXY=https://proxy.golang.org,direct && go mod download
 
 # Copy the rest of the source code
 COPY . .
@@ -43,6 +43,8 @@ COPY --from=builder /app/config.yml ./config.yml
 
 # We'll use a custom entrypoint to handle initialization
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+# WINDOWS FIX: Strip carriage returns in case the file was saved with CRLF
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

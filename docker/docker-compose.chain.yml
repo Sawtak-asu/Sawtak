@@ -9,14 +9,16 @@ services:
     restart: unless-stopped
     environment:
       - MONIKER=sawtak-node-1
-       - CHAIN_ID=sawtak-testnet-1
-       - SAWTAK_BACKEND_PUBKEY=dTKKvUIk93dkxL6JDoH3OGz4AibMTFmAB4KwlhRElSA=
+      - CHAIN_ID=sawtak-testnet-1
+      - SAWTAK_BACKEND_PUBKEY=dTKKvUIk93dkxL6JDoH3OGz4AibMTFmAB4KwlhRElSA=
+      - NODE_TYPE=genesis
     ports:
       - "26657:26657" # RPC
       - "1317:1317"   # REST
       - "9090:9090"   # gRPC
     volumes:
       - sawtak_node_1_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
       - sawtak-network
@@ -29,9 +31,9 @@ services:
     restart: unless-stopped
     environment:
       - MONIKER=sawtak-node-2
-       - CHAIN_ID=sawtak-testnet-1
-       - PERSISTENT_PEERS=baeb65265fdada12c5819a919c8c3b6f75b75688@sawtak-node-1:26656
-       - SAWTAK_BACKEND_PUBKEY=dTKKvUIk93dkxL6JDoH3OGz4AibMTFmAB4KwlhRElSA=
+      - CHAIN_ID=sawtak-testnet-1
+      - SAWTAK_BACKEND_PUBKEY=dTKKvUIk93dkxL6JDoH3OGz4AibMTFmAB4KwlhRElSA=
+      - NODE_TYPE=validator
     ports:
       - "26658:26657"
       - "1318:1317"
@@ -40,6 +42,31 @@ services:
       - sawtak-node-1
     volumes:
       - sawtak_node_2_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
+      - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
+    networks:
+      - sawtak-network
+
+  sawtak-node-3:
+    build:
+      context: ../network/Sawtak
+      dockerfile: Dockerfile
+    container_name: sawtak-node-3
+    restart: unless-stopped
+    environment:
+      - MONIKER=sawtak-node-3
+      - CHAIN_ID=sawtak-testnet-1
+      - SAWTAK_BACKEND_PUBKEY=dTKKvUIk93dkxL6JDoH3OGz4AibMTFmAB4KwlhRElSA=
+      - NODE_TYPE=validator
+    ports:
+      - "26659:26657"
+      - "1319:1317"
+      - "9092:9090"
+    depends_on:
+      - sawtak-node-1
+    volumes:
+      - sawtak_node_3_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
       - sawtak-network
@@ -47,6 +74,8 @@ services:
 volumes:
   sawtak_node_1_data:
   sawtak_node_2_data:
+  sawtak_node_3_data:
+  sawtak_shared_genesis:
 
 networks:
   sawtak-network:

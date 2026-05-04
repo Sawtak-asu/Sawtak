@@ -24,19 +24,20 @@ services:
     build:
       context: ../network/Sawtak
       dockerfile: Dockerfile
-    image: sawtak-node:latest
     container_name: sawtak-node-1
     restart: always
     environment:
       - MONIKER=sawtak-node-1
       - CHAIN_ID=sawtak-testnet-1
       - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
+      - NODE_TYPE=genesis
     ports:
       - "26657:26657" # RPC
       - "1317:1317"   # REST
       - "9090:9090"   # gRPC
     volumes:
       - sawtak_node_1_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
       - internal
@@ -48,14 +49,13 @@ services:
     build:
       context: ../network/Sawtak
       dockerfile: Dockerfile
-    image: sawtak-node:latest
     container_name: sawtak-node-2
     restart: always
     environment:
       - MONIKER=sawtak-node-2
       - CHAIN_ID=sawtak-testnet-1
-      - PERSISTENT_PEERS=baeb65265fdada12c5819a919c8c3b6f75b75688@sawtak-node-1:26656
       - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
+      - NODE_TYPE=validator
     ports:
       - "26658:26657"
       - "1318:1317"
@@ -64,6 +64,34 @@ services:
       - sawtak-node-1
     volumes:
       - sawtak_node_2_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
+      - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
+    networks:
+      - internal
+
+  # ==========================================
+  # Custom Cosmos Chain - Node 3
+  # ==========================================
+  sawtak-node-3:
+    build:
+      context: ../network/Sawtak
+      dockerfile: Dockerfile
+    container_name: sawtak-node-3
+    restart: always
+    environment:
+      - MONIKER=sawtak-node-3
+      - CHAIN_ID=sawtak-testnet-1
+      - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
+      - NODE_TYPE=validator
+    ports:
+      - "26659:26657"
+      - "1319:1317"
+      - "9092:9090"
+    depends_on:
+      - sawtak-node-1
+    volumes:
+      - sawtak_node_3_data:/root/.sawtak
+      - sawtak_shared_genesis:/shared
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
       - internal
@@ -72,7 +100,7 @@ services:
   # Infrastructure — Postgres
   # ==========================================
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     container_name: sawtak-postgres
     restart: always
     environment:
@@ -220,7 +248,6 @@ services:
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
         NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
-    image: docker-frontend:latest
     container_name: sawtak-frontend
     restart: always
     depends_on:
@@ -279,6 +306,8 @@ services:
 volumes:
   sawtak_node_1_data:
   sawtak_node_2_data:
+  sawtak_node_3_data:
+  sawtak_shared_genesis:
   postgres_data:
   redis_data:
   haweya_postgres_data:
