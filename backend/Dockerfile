@@ -22,8 +22,8 @@ RUN bun build src/server.ts --outdir dist --target bun --minify
 
 FROM oven/bun:1-alpine AS runner
 
-# Install OpenSSL for Prisma (needed at runtime too)
-RUN apk add --no-cache openssl
+# Install OpenSSL for Prisma and ca-certificates for outbound HTTPS requests
+RUN apk add --no-cache openssl ca-certificates
 
 WORKDIR /app
 
