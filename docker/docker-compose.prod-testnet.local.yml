@@ -1,13 +1,20 @@
 # ============================================
-# Sawtak - Local Development/Production Testnet Stack
+# Sawtak - Local Testnet Stack (Podman)
 # ============================================
-# Services: 
-#  - Frontend (Public @ http://localhost)
-#  - Privacy Proxy (Public @ http://api.localhost)
-#  - Backend (Internal Only)
-#  - Chain Nodes 1 & 2 (Publicly Accessible)
-#  - Infrastructure (Internal Postgres & Redis)
+# Usage:
+#   podman compose -f docker/docker-compose.prod-testnet.local.yml up -d
+#
+# Architecture:
+#   User → Traefik (port 80) → Frontend / Privacy Proxy
+#   Privacy Proxy → Backend (internal only)
+#   Backend → Postgres, Redis, Cosmos Nodes
+#
+# Why separate containers:
+#   Each service is isolated with its own process, restarts independently,
+#   has its own resource limits, and can be scaled individually.
+#   A single monolithic container would be a single point of failure.
 # ============================================
+name: sawtak
 
 services:
   # ==========================================
@@ -25,14 +32,14 @@ services:
       - CHAIN_ID=sawtak-testnet-1
       - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
     ports:
-      - "26657:26657" # Public RPC
-      - "1317:1317"   # Public REST
-      - "9090:9090"   # Public gRPC
+      - "26657:26657" # RPC
+      - "1317:1317"   # REST
+      - "9090:9090"   # gRPC
     volumes:
       - sawtak_node_1_data:/root/.sawtak
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
-      - sawtak-network
+      - internal
 
   # ==========================================
   # Custom Cosmos Chain - Node 2
@@ -50,43 +57,46 @@ services:
       - PERSISTENT_PEERS=baeb65265fdada12c5819a919c8c3b6f75b75688@sawtak-node-1:26656
       - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
     ports:
-      - "26658:26657" # Public RPC (Offset)
-      - "1318:1317"   # Public REST (Offset)
-      - "9091:9090"   # Public gRPC (Offset)
+      - "26658:26657"
+      - "1318:1317"
+      - "9091:9090"
     depends_on:
       - sawtak-node-1
     volumes:
       - sawtak_node_2_data:/root/.sawtak
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
-      - sawtak-network
+      - internal
 
   # ==========================================
-  # Infrastructure
+  # Infrastructure — Postgres
   # ==========================================
   postgres:
     image: postgres:16-alpine
     container_name: sawtak-postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-sawtak}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB:-sawtak}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-sawtak}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ==========================================
+  # Infrastructure — Redis
+  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: sawtak-redis
     restart: always
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: redis-server --appendonly yes ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     networks:
@@ -99,32 +109,39 @@ services:
       retries: 5
 
   # ==========================================
-  # Backend (Internal Only)
+  # Backend (Internal Only — no public ports)
   # ==========================================
   backend:
-    image: sawtak-backend:latest
     build:
       context: ..
       dockerfile: backend/Dockerfile
+    image: sawtak-backend:latest
     container_name: sawtak-backend
     restart: always
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
+    # Run migrations before starting the server
     command: >
       sh -c "bunx prisma migrate deploy && bun run dist/server.js"
     environment:
       NODE_ENV: production
       PORT: 8000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sawtak}?schema=public
+
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sawtak}?schema=public
+
+      # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      # Privacy Proxy Trust
       PROXY_SECRET: ${PROXY_SECRET}
       REQUIRE_PROXY_AUTH: "true"
 
-      # Cosmos Chain
+      # Cosmos Chain (primary blockchain)
       COSMOS_CHAIN_ID: ${COSMOS_CHAIN_ID:-sawtak-testnet-1}
       COSMOS_RPC_ENDPOINT: http://sawtak-node-1:26657
       COSMOS_GRPC_ENDPOINT: http://sawtak-node-1:9090
@@ -133,16 +150,18 @@ services:
       COSMOS_BACKEND_MNEMONIC: ${COSMOS_BACKEND_MNEMONIC}
       INDEXER_START_HEIGHT: ${INDEXER_START_HEIGHT:-0}
       INDEXER_POLL_INTERVAL: ${INDEXER_POLL_INTERVAL:-10000}
+
+      # Indexer toggles
       ENABLE_HEDERA_INDEXER: "false"
       ENABLE_COSMOS_INDEXER: "true"
 
       # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       HAWEYA_ISSUER_URL: http://sawtak-haweya-app:3030
       HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
       HAWEYA_CLIENT_SECRET: ${HAWEYA_CLIENT_SECRET:-sawtak_secret}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      JWT_SECRET: ${JWT_SECRET}
 
       # Encryption
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
@@ -158,16 +177,15 @@ services:
     networks:
       - internal
       - privacy
-      - sawtak-network
 
   # ==========================================
-  # Privacy Proxy (Gateway to Backend)
+  # Privacy Proxy (Gateway — public via Traefik)
   # ==========================================
   privacy-proxy:
-    image: sawtak-privacy-proxy:latest
     build:
       context: ../privacy-proxy
       dockerfile: Dockerfile
+    image: sawtak-privacy-proxy:latest
     container_name: sawtak-privacy-proxy
     restart: always
     depends_on:
@@ -187,25 +205,22 @@ services:
     networks:
       - proxy
       - privacy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
-      - "traefik.http.routers.api.entrypoints=web"
-      - "traefik.http.services.api.loadbalancer.server.port=4000"
+    ports:
+      - "4000:4000"
 
   # ==========================================
-  # Frontend
+  # Frontend (direct port mapping for local)
   # ==========================================
   frontend:
-    image: sawtak-frontend:latest
     build:
       context: ../Front-end
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
-        NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://haweya.localhost}
+        NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
         NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
+    image: docker-frontend:latest
     container_name: sawtak-frontend
     restart: always
     depends_on:
@@ -213,37 +228,16 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
-      NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://haweya.localhost}
+      NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
       NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
     networks:
       - proxy
       - privacy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-
-  # ==========================================
-  # Traefik Edge Router
-  # ==========================================
-  traefik:
-    image: traefik:v3.0
-    container_name: sawtak-traefik
-    restart: always
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
     ports:
-      - "8080:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro,z
-    networks:
-      - proxy
+      - "3000:3000"
 
   # ==========================================
-  # Haweya (Mock Identity Provider)
+  # Haweya — Mock Identity Provider
   # ==========================================
   haweya-db:
     image: postgres:15-alpine
@@ -253,6 +247,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: haweya
+    volumes:
+      - haweya_postgres_data:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
@@ -262,10 +258,10 @@ services:
       retries: 5
 
   haweya-app:
-    image: sawtak-haweya-app:latest
     build:
       context: ../haweya
       dockerfile: Dockerfile
+    image: sawtak-haweya-app:latest
     container_name: sawtak-haweya-app
     restart: always
     depends_on:
@@ -277,17 +273,15 @@ services:
     networks:
       - proxy
       - internal
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.haweya.rule=Host(`haweya.localhost`)"
-      - "traefik.http.routers.haweya.entrypoints=web"
-      - "traefik.http.services.haweya.loadbalancer.server.port=3030"
+    ports:
+      - "3030:3030"
 
 volumes:
   sawtak_node_1_data:
   sawtak_node_2_data:
   postgres_data:
   redis_data:
+  haweya_postgres_data:
 
 networks:
   internal:
@@ -295,7 +289,4 @@ networks:
   proxy:
     driver: bridge
   privacy:
-    driver: bridge
-  sawtak-network:
-    name: sawtak-network
     driver: bridge

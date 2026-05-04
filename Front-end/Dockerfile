@@ -6,7 +6,7 @@
 FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile --no-progress
+RUN bun install --frozen-lockfile
 
 # Stage 2: Build the application
 FROM oven/bun:1-alpine AS builder
@@ -17,9 +17,13 @@ COPY . .
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_HAWEYA_URL
+ARG NEXT_PUBLIC_HAWEYA_CLIENT_ID
 
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_HAWEYA_URL=$NEXT_PUBLIC_HAWEYA_URL
+ENV NEXT_PUBLIC_HAWEYA_CLIENT_ID=$NEXT_PUBLIC_HAWEYA_CLIENT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build Next.js application

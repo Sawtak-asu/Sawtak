@@ -1,37 +1,44 @@
 # ============================================
-# Sawtak Backend - Optimized Production Build
+# Sawtak Backend - Production Build
 # ============================================
 FROM oven/bun:1-alpine AS builder
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
-# Stage 1: Install dependencies with caching
-COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile --no-progress
+# Stage 1: Install dependencies
+COPY backend/package.json backend/bun.lock* ./
+RUN bun install --frozen-lockfile --verbose
 
-# Stage 2: Build the application
-COPY . .
-# Only generate prisma if the directory exists
-RUN if [ -d "./prisma" ]; then bunx prisma generate; fi
+COPY backend/ .
+COPY network/Sawtak/ts-client /network/Sawtak/ts-client
+
+RUN cd /network/Sawtak/ts-client && bun install --frozen-lockfile || bun install
+
+RUN bunx prisma generate
 RUN bun build src/server.ts --outdir dist --target bun --minify
 
-# Stage 3: Production Runner (Real Prod)
 FROM oven/bun:1-alpine AS runner
+
+# Install OpenSSL for Prisma (needed at runtime too)
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
-# Install production dependencies only to keep it clean
-COPY package.json bun.lock* ./
-RUN bun install --production --frozen-lockfile --no-progress
+COPY backend/package.json backend/bun.lock* ./
+RUN bun install --production --frozen-lockfile --ignore-scripts
 
-# Copy compiled assets from builder
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
 
-# Set environment
 ENV NODE_ENV=production
 ENV PORT=8000
 
 EXPOSE 8000
 
-# Start command
 CMD ["bun", "run", "dist/server.js"]
