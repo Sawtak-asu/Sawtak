@@ -197,18 +197,26 @@ services:
       context: ../Front-end
       dockerfile: Dockerfile
       args:
+        # Browser-facing URL (baked into the JS bundle for the client)
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
         NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
         NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
+        # Server-side rewrite destination — MUST be a build arg because Next.js
+        # compiles rewrites() into routes-manifest.json at build time (not runtime).
+        INTERNAL_API_URL: http://privacy-proxy:4000
     image: sawtak-frontend:latest
     container_name: sawtak-frontend
     restart: always
     depends_on:
       - privacy-proxy
     environment:
+      # Browser-facing URL
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
       NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
       NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
+      # Server-side URL used by Next.js rewrites() inside Docker
+      # Uses the Docker service name so the frontend container can reach the proxy internally
+      INTERNAL_API_URL: http://privacy-proxy:4000
     networks:
       - proxy
       - privacy
