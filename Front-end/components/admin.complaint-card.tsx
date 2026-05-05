@@ -194,15 +194,25 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         checkVoteStatus();
     }, [complaint.id, token, isLoggedIn, canUpvote]);
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean);
 
     // Filter for images only for preview
-    const imageEvidence = allEvidence.filter(url => /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url));
+    const imageEvidence = allEvidence.filter((url) => isImageUrl(url) || isIpfsUrl(url));
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();

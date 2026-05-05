@@ -327,11 +327,21 @@ export default function ComplaintPage() {
         return null;
     };
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = complaint ? [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean) : [];
 
     if (isLoading) {
@@ -485,7 +495,7 @@ export default function ComplaintPage() {
                                     allEvidence.length >= 4 && "grid-cols-2"
                                 )}>
                                     {allEvidence.slice(0, 4).map((url, i) => {
-                                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
+                                        const isImage = isImageUrl(url) || isIpfsUrl(url);
                                         const isLast = i === 3 && allEvidence.length > 4;
                                         const remaining = allEvidence.length - 4;
 
