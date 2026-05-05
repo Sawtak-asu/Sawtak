@@ -1,12 +1,10 @@
 # ============================================
-# Sawtak - Personal Windows Dev Stack (Limited Internet)
-# ============================================
-# This version uses existing local images to save bandwidth.
-# Usage: docker-compose -f docker/docker-compose.dev-windows-testnet-ak.yml --env-file .env up -d
-# ============================================
 name: sawtak
 
 services:
+  # ==========================================
+  # Custom Cosmos Chain - Node 1
+  # ==========================================
   sawtak-node-1:
     image: sawtak-node:latest
     container_name: sawtak-node-1
@@ -71,6 +69,9 @@ services:
     networks:
       - internal
 
+  # ==========================================
+  # Infrastructure
+  # ==========================================
   postgres:
     image: postgres:15-alpine
     container_name: sawtak-postgres
@@ -105,6 +106,9 @@ services:
       timeout: 5s
       retries: 5
 
+  # ==========================================
+  # Backend - WINDOWS OPTIMIZED
+  # ==========================================
   backend:
     image: sawtak-backend:latest
     container_name: sawtak-backend
@@ -149,15 +153,13 @@ services:
       R2_BUCKET_NAME: ${R2_BUCKET_NAME:-sawtak-public-evidence}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
-
-      # Pinata IPFS
-      PINATA_API_KEY: ${PINATA_API_KEY:-}
-      PINATA_API_SECERT_KEY: ${PINATA_API_SECERT_KEY:-}
-      PINATA_JWT: ${PINATA_JWT:-}
     networks:
       - internal
       - privacy
 
+  # ==========================================
+  # Privacy Proxy
+  # ==========================================
   privacy-proxy:
     image: sawtak-privacy-proxy:latest
     container_name: sawtak-privacy-proxy
@@ -180,29 +182,34 @@ services:
     ports:
       - "4000:4000"
 
+  # ==========================================
+  # Frontend
+  # ==========================================
   frontend:
+    build:
+      context: ..
+      dockerfile: Front-end/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
+        NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
+        NEXT_PUBLIC_HAWEYA_CLIENT_ID: sawtak_client
     image: sawtak-frontend:latest
     container_name: sawtak-frontend
     restart: always
     depends_on:
       - privacy-proxy
-    build:
-      context: ../Front-end
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
-        NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
-        NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
     environment:
       NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
-      NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
-      NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
+      NEXT_PUBLIC_HAWEYA_URL: http://sawtak-haweya-app:3030
     networks:
       - proxy
       - privacy
     ports:
       - "3000:3000"
 
+  # ==========================================
+  # Haweya (Mock Identity Provider)
+  # ==========================================
   haweya-db:
     image: postgres:15-alpine
     container_name: sawtak-haweya-db
