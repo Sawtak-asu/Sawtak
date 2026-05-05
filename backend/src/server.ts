@@ -16,6 +16,7 @@ import { indexerRoutes } from "./routes/indexer.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
+import { uploadEvidenceRoutes } from "./routes/upload-evidence.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { teamRoutes } from "./routes/team.routes";
 import { startIndexer as startHederaIndexer } from "./services/hedera-indexer.service";
@@ -118,6 +119,7 @@ Anonymous complaints can be verified on the Cosmos network:
     .use(adminRoutes)
     .use(trackingRoutes)
     .use(uploadRoutes)
+    .use(uploadEvidenceRoutes)
     .use(voteRoutes)
     .use(teamRoutes)
     .get("/", () => "Sawtak API v1.0.0 - Visit /swagger for documentation", {
