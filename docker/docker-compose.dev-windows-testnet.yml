@@ -192,16 +192,18 @@ services:
       context: ../Front-end
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
-        NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+        NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
+        NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
     image: sawtak-frontend:latest
     container_name: sawtak-frontend
     restart: always
     depends_on:
       - privacy-proxy
     environment:
-      NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
       NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
+      NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID:-sawtak_client}
     networks:
       - proxy
       - privacy
