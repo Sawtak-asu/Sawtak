@@ -13,7 +13,7 @@ describe("Upload Evidence Route Test", () => {
     const largeBuffer = new Uint8Array(6 * 1024 * 1024);
     const blob = new Blob([largeBuffer], { type: "text/plain" });
     const formData = new FormData();
-    formData.append("evidence", blob, "large_file.txt");
+    formData.append("files", blob, "large_file.txt");
 
     const req = new Request("http://localhost/upload-evidence", {
       method: "POST",
@@ -25,7 +25,7 @@ describe("Upload Evidence Route Test", () => {
     
     const data = await response.json() as any;
     expect(data.success).toBe(false);
-    expect(data.error).toBe("File size exceeds the 5MB limit.");
+    expect(data.error).toBe("File large_file.txt exceeds the 5MB limit.");
   });
 
   test("Should successfully upload a small file to Pinata", async () => {
@@ -39,7 +39,7 @@ describe("Upload Evidence Route Test", () => {
     const textContent = "Hello from Sawtak automated testing! This is evidence.";
     const blob = new Blob([textContent], { type: "text/plain" });
     const formData = new FormData();
-    formData.append("evidence", blob, "test_evidence.txt");
+    formData.append("files", blob, "test_evidence.txt");
 
     const req = new Request("http://localhost/upload-evidence", {
       method: "POST",
@@ -52,8 +52,8 @@ describe("Upload Evidence Route Test", () => {
     const data = await response.json() as any;
     expect(data.success).toBe(true);
     expect(data.message).toBe("Evidence successfully pinned to IPFS.");
-    expect(data.ipfs_hash).toBe("QmMockHash123456789");
-    expect(data.pinata_url).toBe("https://gateway.pinata.cloud/ipfs/QmMockHash123456789");
+    expect(data.ipfs_hashes[0]).toBe("QmMockHash123456789");
+    expect(data.urls[0]).toBe("https://gateway.pinata.cloud/ipfs/QmMockHash123456789");
 
     // Restore fetch
     global.fetch = originalFetch;
@@ -70,7 +70,7 @@ describe("Upload Evidence Route Test", () => {
     const textContent = "Fail this test";
     const blob = new Blob([textContent], { type: "text/plain" });
     const formData = new FormData();
-    formData.append("evidence", blob, "fail.txt");
+    formData.append("files", blob, "fail.txt");
 
     const req = new Request("http://localhost/upload-evidence", {
       method: "POST",
@@ -90,10 +90,10 @@ describe("Upload Evidence Route Test", () => {
 
   test("Should upload a real file (p2.png) to Pinata dashboard", async () => {
     // Load the actual file from disk
-    const realFile = Bun.file(__dirname + "/p2.png");
+    const realFile = Bun.file(__dirname + "/test_files/p2.png");
     
     const formData = new FormData();
-    formData.append("evidence", realFile, "p2.png");
+    formData.append("files", realFile, "/test_files/p2.png");
 
     const req = new Request("http://localhost/upload-evidence", {
       method: "POST",
@@ -109,8 +109,8 @@ describe("Upload Evidence Route Test", () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.ipfs_hash).toBeDefined();
+    expect(data.ipfs_hashes).toBeDefined();
     
-    console.log(`✅ Successfully uploaded p2.png! View it here: ${data.pinata_url}`);
+    console.log(`✅ Successfully uploaded p2.png! View it here: ${data.urls[0]}`);
   }, 30000); // 30 second timeout for real upload
 });
