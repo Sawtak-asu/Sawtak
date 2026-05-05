@@ -11,7 +11,7 @@ export const uploadRoutes = new Elysia({
     description: "Secure file upload for complaint evidence"
   }
 })
-  .use(authMiddleware) // 🔒 Only authenticated users can upload files
+  .use(authMiddleware) 
   .post("/", async ({ body, set }: any) => {
     const rawFiles = body.files;
 

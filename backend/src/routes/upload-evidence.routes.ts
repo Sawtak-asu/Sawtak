@@ -2,13 +2,14 @@ import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 export const uploadEvidenceRoutes = new Elysia({
+  prefix: "/api/upload",
   detail: {
     tags: ["File Upload"],
     description: "Pin evidence files to IPFS via Pinata",
   },
 }).use(authMiddleware)
 .post(
-  "/upload-evidence",
+  "/ipfs",
   async ({ body, set }) => {
     try {
       const rawFiles = body.files;

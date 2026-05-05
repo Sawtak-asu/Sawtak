@@ -199,16 +199,22 @@ export function ComplaintForm() {
 
     const isPublic = values.submissionMode === "public";
     let evidenceUrls: string[] = [];
+    let evidenceCids: string[] = [];
 
-    // Handle file upload for identified complaints
-    if (isPublic && values.evidence && values.evidence.length > 0) {
+    // Handle file upload for both identified and anonymous complaints
+    if (values.evidence && values.evidence.length > 0) {
       try {
         const formData = new FormData();
         Array.from(values.evidence as FileList).forEach((file) => {
           formData.append("files", file as File);
         });
 
-        const uploadResponse = await fetch(`/api/upload`, {
+        // Determine the correct upload endpoint based on submission mode
+        // Anonymous -> IPFS (Pinata)
+        // Public/Identified -> Default storage (Supabase/R2)
+        const uploadEndpoint = isPublic ? `/api/upload` : `/api/upload/ipfs`;
+
+        const uploadResponse = await fetch(uploadEndpoint, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -224,6 +230,9 @@ export function ComplaintForm() {
         const data = await uploadResponse.json();
         if (data.urls) {
           evidenceUrls = data.urls;
+        }
+        if (data.ipfs_hashes) {
+          evidenceCids = data.ipfs_hashes;
         }
       } catch (error: any) {
         console.error("Upload error:", error);
@@ -265,7 +274,7 @@ export function ComplaintForm() {
       directedTo: directedTo,
       area: values.area || undefined,
       incidentDate: values.date ? format(values.date, "yyyy-MM-dd") : undefined,
-      evidenceCids: [], // IPFS CIDs to be handled later
+      evidenceCids: evidenceCids, // Populated from IPFS response
     };
 
     mutation.mutate({ payload, mode: values.submissionMode });

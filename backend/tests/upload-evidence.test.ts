@@ -15,7 +15,7 @@ describe("Upload Evidence Route Test", () => {
     const formData = new FormData();
     formData.append("files", blob, "large_file.txt");
 
-    const req = new Request("http://localhost/upload-evidence", {
+    const req = new Request("http://localhost/api/upload/ipfs", {
       method: "POST",
       body: formData,
     });
@@ -41,7 +41,7 @@ describe("Upload Evidence Route Test", () => {
     const formData = new FormData();
     formData.append("files", blob, "test_evidence.txt");
 
-    const req = new Request("http://localhost/upload-evidence", {
+    const req = new Request("http://localhost/api/upload/ipfs", {
       method: "POST",
       body: formData,
     });
@@ -72,7 +72,7 @@ describe("Upload Evidence Route Test", () => {
     const formData = new FormData();
     formData.append("files", blob, "fail.txt");
 
-    const req = new Request("http://localhost/upload-evidence", {
+    const req = new Request("http://localhost/api/upload/ipfs", {
       method: "POST",
       body: formData,
     });
@@ -95,7 +95,7 @@ describe("Upload Evidence Route Test", () => {
     const formData = new FormData();
     formData.append("files", realFile, "/test_files/p2.png");
 
-    const req = new Request("http://localhost/upload-evidence", {
+    const req = new Request("http://localhost/api/upload/ipfs", {
       method: "POST",
       body: formData,
     });
