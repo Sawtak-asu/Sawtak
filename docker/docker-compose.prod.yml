@@ -93,6 +93,11 @@ services:
       R2_BUCKET_NAME: ${R2_BUCKET_NAME}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL}
       
+      # Pinata IPFS
+      PINATA_API_KEY: ${PINATA_API_KEY}
+      PINATA_API_SECERT_KEY: ${PINATA_API_SECERT_KEY}
+      PINATA_JWT: ${PINATA_JWT}
+      
       # Cosmos Chain
       COSMOS_CHAIN_ID: ${COSMOS_CHAIN_ID:-sawtak-mainnet-1}
       COSMOS_RPC_ENDPOINT: ${COSMOS_RPC_ENDPOINT}

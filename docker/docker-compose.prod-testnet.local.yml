@@ -179,9 +179,14 @@ services:
       INDEXER_START_HEIGHT: ${INDEXER_START_HEIGHT:-0}
       INDEXER_POLL_INTERVAL: ${INDEXER_POLL_INTERVAL:-10000}
 
-      # Indexer toggles
+      # Indexer flags
       ENABLE_HEDERA_INDEXER: "false"
       ENABLE_COSMOS_INDEXER: "true"
+
+      # Pinata IPFS
+      PINATA_API_KEY: ${PINATA_API_KEY:-}
+      PINATA_API_SECERT_KEY: ${PINATA_API_SECERT_KEY:-}
+      PINATA_JWT: ${PINATA_JWT:-}
 
       # Auth
       JWT_SECRET: ${JWT_SECRET}
@@ -202,6 +207,7 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_BUCKET_NAME: ${R2_BUCKET_NAME:-sawtak-public-evidence}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
+      
     networks:
       - internal
       - privacy
