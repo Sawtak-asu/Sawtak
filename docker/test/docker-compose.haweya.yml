@@ -1,0 +1,48 @@
+﻿networks:
+  internal:
+    external: true
+    name: sawtak_test_internal
+  proxy:
+    external: true
+    name: sawtak_test_proxy
+
+services:
+  haweya-db:
+    image: postgres:15-alpine
+    container_name: sawtak-haweya-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: haweya
+    volumes:
+      - haweya_postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d haweya"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  haweya-app:
+    build:
+      context: ../../haweya
+      dockerfile: Dockerfile
+    image: sawtak-haweya-app:latest
+    container_name: sawtak-haweya-app
+    restart: always
+    depends_on:
+      haweya-db: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@haweya-db:5432/haweya?schema=public
+      PORT: 3030
+    networks:
+      - proxy
+      - internal
+    ports:
+      - "3030:3030"
+
+volumes:
+  haweya_postgres_data:

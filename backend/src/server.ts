@@ -161,6 +161,15 @@ Anonymous complaints can be verified on the Cosmos network:
         hide: true
       }
     })
+    // Prometheus metrics endpoint for Grafana (via proxy)
+    .get("/api/metrics", ({ set }) => {
+      set.headers["content-type"] = "text/plain; charset=utf-8";
+      return getPrometheusMetrics();
+    }, {
+      detail: {
+        hide: true
+      }
+    })
     .listen(process.env.PORT || 8000);
 
   console.log(
