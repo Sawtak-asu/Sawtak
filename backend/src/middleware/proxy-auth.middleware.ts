@@ -19,6 +19,13 @@ export const proxyAuthMiddleware = (app: Elysia) => app
     const REQUIRE_PROXY_AUTH = process.env.REQUIRE_PROXY_AUTH === "true";
 
     const proxySecret = headers["x-proxy-secret"] as string | undefined;
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // Skip proxy auth for metrics endpoints (scrapeable by Prometheus)
+    if (path === "/metrics" || path === "/api/metrics") {
+      return;
+    }
 
     if (REQUIRE_PROXY_AUTH) {
       if (!PROXY_SECRET) {
