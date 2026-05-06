@@ -54,7 +54,7 @@ export default function LoginPage() {
                             <div>{t('stat2Label')}</div>
                         </div>
                         <div>
-                            <div className="text-2xl font-semibold text-foreground">Hedera</div>
+                            <div className="text-2xl font-semibold text-foreground">Sawtak</div>
                             <div>{t('stat3Label')}</div>
                         </div>
                     </div>

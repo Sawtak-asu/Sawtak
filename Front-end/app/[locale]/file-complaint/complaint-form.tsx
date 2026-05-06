@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -7,6 +8,38 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
+
+import {
+  CalendarIcon,
+  Copy,
+  Check,
+  Shield,
+  Eye,
+  Lock,
+  Building2,
+  Upload,
+  Play,
+  FileIcon,
+  X,
+  Plus,
+  ImageIcon,
+  FileTextIcon,
+  VideoIcon,
+  MusicIcon,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAuth } from "@/lib/auth-context";
+import {
+  MINISTRIES,
+  GOVERNORATES,
+  COMPLAINT_CATEGORIES,
+  type DirectedTo,
+  type DirectedToType
+} from "@/lib/egypt-locations";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,18 +81,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarIcon, Copy, Check, Shield, Eye, Lock, Building2, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAuth } from "@/lib/auth-context";
-import {
-  MINISTRIES,
-  GOVERNORATES,
-  COMPLAINT_CATEGORIES,
-  type DirectedTo,
-  type DirectedToType
-} from "@/lib/egypt-locations";
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -72,7 +93,7 @@ const formSchema = z.object({
   }).max(5000, {
     message: "Main text must be at most 5000 characters.",
   }),
-  category: z.string().nonempty("Please select a category."),
+  category: z.string().min(1, "Please select a category."),
   directedToType: z.enum(["ministry", "governorate", "center"], {
     message: "Please select where to direct this complaint.",
   }),
@@ -81,23 +102,16 @@ const formSchema = z.object({
   directedToCenter: z.string().optional(),
   area: z.string().optional(),
   date: z.date().optional(),
-  evidence: z.any().optional(),
+  evidence: z.array(z.any()).optional(),
   submissionMode: z.enum(["anonymous", "public"]),
   visibility: z.enum(["public", "private"]),
 }).refine((data) => {
-  // Validate that the corresponding sub-field is filled based on directedToType
-  if (data.directedToType === "ministry") {
-    return !!data.directedToMinistry;
-  }
-  if (data.directedToType === "governorate") {
-    return !!data.directedToGovernorate;
-  }
-  if (data.directedToType === "center") {
-    return !!data.directedToGovernorate && !!data.directedToCenter;
-  }
-  return true;
+  if (data.directedToType === "ministry") return !!data.directedToMinistry;
+  if (data.directedToType === "governorate") return !!data.directedToGovernorate;
+  if (data.directedToType === "center") return !!data.directedToGovernorate && !!data.directedToCenter;
+  return false; // Should not reach here if enum matches
 }, {
-  message: "Please select the target entity.",
+  message: "Please select the specific entity (Ministry or Governorate).",
   path: ["directedToType"],
 });
 
@@ -107,9 +121,11 @@ export function ComplaintForm() {
   const { user, isLoggedIn, token } = useAuth();
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [showSpamWarningDialog, setShowSpamWarningDialog] = useState(false);
+  const [showAIErrorDialog, setShowAIErrorDialog] = useState(false);
+  const [isAIValidating, setIsAIValidating] = useState(false);
   const [copied, setCopied] = useState(false);
   const t = useTranslations("ComplaintForm");
-  const tToasts = useTranslations("Toasts");
   const locale = useLocale();
 
   const form = useForm<ComplaintFormData>({
@@ -125,8 +141,12 @@ export function ComplaintForm() {
       directedToCenter: "",
       submissionMode: "anonymous",
       visibility: "public",
+      evidence: [],
     },
   });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [previews, setPreviews] = useState<{ id: string, file: File, preview: string, type: string }[]>([]);
 
   // Watch directedToType and governorate for conditional rendering
   const directedToType = useWatch({ control: form.control, name: "directedToType" });
@@ -147,7 +167,7 @@ export function ComplaintForm() {
     mutationFn: async (data: { payload: any; mode: string }) => {
       // Both routes require authentication per backend middleware
       if (!token) {
-        throw new Error("You must be logged in to submit a complaint.");
+        throw new Error(t("loginRequired"));
       }
 
       // Correct endpoints: /api/complaints/{type}/submit
@@ -169,7 +189,7 @@ export function ComplaintForm() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("[ComplaintForm] Backend error response:", errorData);
-        throw new Error(errorData.error || "Failed to submit complaint.");
+        throw new Error(errorData.error || t("submitFailed"));
       }
 
       return response.json();
@@ -179,23 +199,78 @@ export function ComplaintForm() {
       if (variables.mode === "anonymous" && data.data?.trackingCode) {
         setTrackingCode(data.data.trackingCode);
         setShowTrackingDialog(true);
-        toast.success(tToasts("anonymousSubmitted"));
+        toast.success(t("anonymousSubmitted"));
       } else {
-        toast.success(tToasts("identifiedSubmitted"));
+        toast.success(t("identifiedSubmitted"));
       }
       form.reset();
     },
     onError: (error) => {
-      toast.error(error.message || tToasts("submitFailed"));
+      toast.error(error.message || t("submitFailed"));
       console.error("Submission error:", error);
     },
   });
 
+  /**
+   * Calls the backend AI validation endpoint before allowing submission.
+   * Returns "real" | "fake" | "error"
+   */
+  async function runAIValidation(title: string, text: string, category: string): Promise<string> {
+    if (!token) return "real"; // Skip validation if not authenticated (will be caught later)
+
+    try {
+      setIsAIValidating(true);
+      const response = await fetch("/api/complaints/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, text, category }),
+      });
+
+      if (!response.ok) {
+        console.warn("[ComplaintForm] AI validation request failed.");
+        return "error"; 
+      }
+
+      const data = await response.json();
+      const verdict: string = data.verdict;
+
+      console.log(`[ComplaintForm] AI verdict: ${verdict}`);
+      return verdict;
+    } catch (err) {
+      console.error("[ComplaintForm] AI validation error:", err);
+      return "error";
+    } finally {
+      setIsAIValidating(false);
+    }
+  }
+
   async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
-      toast.error(tToasts("loginRequired"));
+      toast.error(t("loginRequired"));
       return;
     }
+
+    // ── Step 1: AI Validation ────────────────────────────────────
+    const aiVerdict = await runAIValidation(
+      values.title,
+      values.mainText,
+      values.category
+    );
+
+    if (aiVerdict === "fake") {
+      setShowSpamWarningDialog(true);
+      return;
+    }
+
+    if (aiVerdict === "error") {
+      setShowAIErrorDialog(true);
+      return;
+    }
+
+    // ── Step 2: File uploads ─────────────────────────────────────
 
     const isPublic = values.submissionMode === "public";
     let evidenceUrls: string[] = [];
@@ -205,8 +280,8 @@ export function ComplaintForm() {
     if (values.evidence && values.evidence.length > 0) {
       try {
         const formData = new FormData();
-        Array.from(values.evidence as FileList).forEach((file) => {
-          formData.append("files", file as File);
+        (values.evidence as File[]).forEach((file) => {
+          formData.append("files", file);
         });
 
         // Determine the correct upload endpoint based on submission mode
@@ -224,7 +299,7 @@ export function ComplaintForm() {
 
         if (!uploadResponse.ok) {
           const errorData = await uploadResponse.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to upload evidence files.");
+          throw new Error(errorData.error || t("uploadFailed"));
         }
 
         const data = await uploadResponse.json();
@@ -236,7 +311,7 @@ export function ComplaintForm() {
         }
       } catch (error: any) {
         console.error("Upload error:", error);
-        toast.error(error.message || tToasts("uploadFailed"));
+        toast.error(error.message || t("uploadFailed"));
         return;
       }
     }
@@ -279,6 +354,41 @@ export function ComplaintForm() {
 
     mutation.mutate({ payload, mode: values.submissionMode });
   }
+
+  const handleFiles = (files: FileList | File[]) => {
+    const newFiles = Array.from(files);
+    const updatedEvidence = [...(form.getValues("evidence") || []), ...newFiles];
+    form.setValue("evidence", updatedEvidence, { shouldValidate: true });
+
+    const newPreviews = newFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: (file.type.startsWith('image/') || file.type.startsWith('video/')) ? URL.createObjectURL(file) : '',
+      type: file.type
+    }));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (id: string) => {
+    const fileToRemove = previews.find(p => p.id === id);
+    if (!fileToRemove) return;
+
+    if (fileToRemove.preview) URL.revokeObjectURL(fileToRemove.preview);
+
+    const updatedPreviews = previews.filter(p => p.id !== id);
+    setPreviews(updatedPreviews);
+
+    const updatedEvidence = updatedPreviews.map(p => p.file);
+    form.setValue("evidence", updatedEvidence, { shouldValidate: true });
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="h-6 w-6" />;
+    if (type.startsWith('video/')) return <VideoIcon className="h-6 w-6" />;
+    if (type.startsWith('audio/')) return <MusicIcon className="h-6 w-6" />;
+    if (type.includes('pdf')) return <FileTextIcon className="h-6 w-6" />;
+    return <FileIcon className="h-6 w-6" />;
+  };
 
   return (
     <Form {...form}>
@@ -661,37 +771,117 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("evidenceTitle")}</CardTitle>
-            <CardDescription>
-              {t("evidenceDescription")}
-            </CardDescription>
+        <Card className={cn(isDragging && "border-primary border-dashed bg-primary/5")}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t("evidenceTitle")}</CardTitle>
+              <CardDescription>
+                {t("evidenceDescription")}
+              </CardDescription>
+            </div>
+            {previews.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => document.getElementById('evidence-upload')?.click()}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("browse")}
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             <FormField
               control={form.control}
               name="evidence"
-              render={({ field }) => (
+              render={({ }) => (
                 <FormItem>
-                  <FormLabel>{t("evidenceLabel")}</FormLabel>
                   <FormControl>
-                    <input
-                      type="file"
-                      multiple={true}
-                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-                      ref={field.ref}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                      onChange={(e) => {
-                        field.onChange(e.target.files);
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
                       }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
+                      className={cn(
+                        "relative min-h-[160px] rounded-xl transition-all duration-200",
+                        previews.length === 0 
+                          ? "border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
+                          : "bg-background p-4"
+                      )}
+                      onClick={() => previews.length === 0 && document.getElementById('evidence-upload')?.click()}
+                    >
+                      <input
+                        id="evidence-upload"
+                        type="file"
+                        multiple
+                        className="hidden"
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+                        onChange={(e) => {
+                          if (e.target.files) handleFiles(e.target.files);
+                        }}
+                      />
+
+                      {previews.length === 0 ? (
+                        <div className="text-center">
+                          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                            <Upload className="h-6 w-6 text-primary" />
+                          </div>
+                          <p className="text-sm font-medium text-foreground mb-1">
+                            {t("dragAndDropTitle")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("dragAndDropSubtitle")}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          {previews.map((p) => (
+                            <div key={p.id} className="group relative aspect-square rounded-lg border bg-muted overflow-hidden">
+                              {p.type.startsWith('video/') ? (
+                                <div className="relative h-full w-full">
+                                  <video 
+                                    src={`${p.preview}#t=1`} 
+                                    className="h-full w-full object-cover"
+                                    onLoadedMetadata={(e) => {
+                                      // Force seeking to 1s to show a frame
+                                      (e.target as HTMLVideoElement).currentTime = 1;
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                    <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+                                      <Play className="h-6 w-6 text-white fill-white" />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : p.preview ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={p.preview} alt="preview" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex flex-col items-center justify-center p-2 text-center">
+                                  {getFileIcon(p.type)}
+                                  <span className="mt-1 text-[10px] text-muted-foreground truncate w-full px-1">
+                                    {p.file.name}
+                                  </span>
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeFile(p.id)}
+                                className="absolute top-1 right-1 p-1 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-10"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t("evidenceHint")}
-                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -699,8 +889,21 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={mutation.isPending || form.formState.isSubmitting}>
-          {mutation.isPending || form.formState.isSubmitting ? t("submitting") : t("submit")}
+        <Button
+          type="submit"
+          disabled={mutation.isPending || form.formState.isSubmitting || isAIValidating}
+          className="relative"
+        >
+          {isAIValidating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {t("aiValidating")}
+            </>
+          ) : mutation.isPending || form.formState.isSubmitting ? (
+            t("submitting")
+          ) : (
+            t("submit")
+          )}
         </Button>
       </form>
 
@@ -751,6 +954,67 @@ export function ComplaintForm() {
           <DialogFooter>
             <Button onClick={() => setShowTrackingDialog(false)}>
               {t("savedCode")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* AI Spam Warning Dialog */}
+      <Dialog open={showSpamWarningDialog} onOpenChange={setShowSpamWarningDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {t("aiSpamWarningTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("aiSpamWarningDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm mt-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                {t("aiSpamWarningHint")}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowSpamWarningDialog(false)}
+              className="w-full"
+            >
+              {t("aiSpamDismiss")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Service Error Dialog */}
+      <Dialog open={showAIErrorDialog} onOpenChange={setShowAIErrorDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-500">
+              <AlertTriangle className="h-5 w-5" />
+              {t("aiValidationErrorTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("aiValidationErrorDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm mt-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                {t("aiValidationErrorHint")}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowAIErrorDialog(false)}
+              className="w-full"
+            >
+              {t("aiValidationDismiss")}
             </Button>
           </DialogFooter>
         </DialogContent>

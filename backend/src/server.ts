@@ -19,6 +19,7 @@ import { uploadRoutes } from "./routes/upload.routes";
 import { uploadEvidenceRoutes } from "./routes/upload-evidence.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { teamRoutes } from "./routes/team.routes";
+import { complaintValidationRoutes } from "./routes/complaint-validation.routes";
 import { startIndexer as startHederaIndexer } from "./services/hedera-indexer.service";
 import { startIndexer as startCosmosIndexer } from "./services/cosmos-indexer.service";
 import { prisma } from "./db";
@@ -87,6 +88,7 @@ Anonymous complaints can be verified on the Cosmos network:
           { name: "Authentication", description: "OAuth login and token management" },
           { name: "Anonymous Complaints", description: "Submit anonymous complaints to the blockchain" },
           { name: "Identified Complaints", description: "Submit identified complaints linked to user accounts" },
+          { name: "Complaint Validation", description: "AI-powered pre-submission complaint validation" },
           { name: "Public Feed", description: "Browse public complaints" },
           { name: "Tracking", description: "Track complaint status using tracking codes" },
           { name: "Voting", description: "Upvote public complaints" },
@@ -122,6 +124,7 @@ Anonymous complaints can be verified on the Cosmos network:
     .use(uploadEvidenceRoutes)
     .use(voteRoutes)
     .use(teamRoutes)
+    .use(complaintValidationRoutes)
     .get("/", () => "Sawtak API v1.0.0 - Visit /swagger for documentation", {
       detail: {
         hide: true

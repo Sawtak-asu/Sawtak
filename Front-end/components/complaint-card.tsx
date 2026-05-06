@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
-import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText } from "lucide-react";
+import { MapPin, Hash, Shield, ArrowBigUp, MessageCircle, Share2, LogIn, Image as ImageIcon, FileText, Play } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -74,6 +74,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const [hasVoted, setHasVoted] = useState(complaint.hasVoted || false);
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
     // Check if user has voted on mount
     useEffect(() => {
@@ -101,6 +102,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
     const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
     const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isVideoUrl = (url: string) => /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
     const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
     const toIpfsGatewayUrl = (cid: string) => {
         if (!cid) return "";
@@ -116,8 +118,8 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean);
 
-    // Filter for images only for preview
-    const imageEvidence = allEvidence.filter((url) => isImageUrl(url) || isIpfsUrl(url));
+    // Filter for images and videos for preview
+    const previewEvidence = allEvidence.filter((url) => isImageUrl(url) || isVideoUrl(url) || isIpfsUrl(url));
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -321,47 +323,74 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                             </p>
 
                             {/* Image Grid - Max 4 images */}
-                            {imageEvidence.length > 0 && (
+                            {previewEvidence.length > 0 && (
                                 <div className={cn(
                                     "grid gap-1 mt-3 rounded-2xl overflow-hidden",
-                                    imageEvidence.length === 1 && "grid-cols-1",
-                                    imageEvidence.length === 2 && "grid-cols-2",
-                                    imageEvidence.length >= 3 && "grid-cols-2"
+                                    previewEvidence.length === 1 && "grid-cols-1",
+                                    previewEvidence.length === 2 && "grid-cols-2",
+                                    previewEvidence.length >= 3 && "grid-cols-2"
                                 )}>
-                                    {imageEvidence.slice(0, 4).map((url, i) => {
+                                    {previewEvidence.slice(0, 4).map((url, i) => {
+                                        const isVideo = isVideoUrl(url);
                                         const isLastVisible = i === 3;
-                                        const hasMore = imageEvidence.length > 4;
-                                        const remaining = imageEvidence.length - 4;
+                                        const hasMore = previewEvidence.length > 4;
+                                        const remaining = previewEvidence.length - 4;
 
                                         // For 3 images: first is tall
-                                        const isTall = imageEvidence.length === 3 && i === 0;
+                                        const isTall = previewEvidence.length === 3 && i === 0;
 
                                         return (
                                             <div
                                                 key={i}
                                                 className={cn(
                                                     "relative bg-muted/50 overflow-hidden",
-                                                    imageEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
+                                                    previewEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
                                                     isTall && "row-span-2",
                                                     // Corner rounding based on position for multi-image grids
-                                                    imageEvidence.length === 2 && i === 0 && "rounded-l-2xl",
-                                                    imageEvidence.length === 2 && i === 1 && "rounded-r-2xl",
-                                                    imageEvidence.length >= 3 && i === 0 && "rounded-tl-2xl",
-                                                    imageEvidence.length >= 3 && !isTall && i === 1 && "rounded-tr-2xl",
-                                                    imageEvidence.length >= 3 && i === 2 && "rounded-bl-2xl",
-                                                    imageEvidence.length >= 3 && i === 3 && "rounded-br-2xl",
-                                                    imageEvidence.length === 3 && i === 0 && "rounded-l-2xl",
-                                                    imageEvidence.length === 3 && i === 1 && "rounded-tr-2xl",
-                                                    imageEvidence.length === 3 && i === 2 && "rounded-br-2xl"
+                                                    previewEvidence.length === 2 && i === 0 && "rounded-l-2xl",
+                                                    previewEvidence.length === 2 && i === 1 && "rounded-r-2xl",
+                                                    previewEvidence.length >= 3 && i === 0 && "rounded-tl-2xl",
+                                                    previewEvidence.length >= 3 && !isTall && i === 1 && "rounded-tr-2xl",
+                                                    previewEvidence.length >= 3 && i === 2 && "rounded-bl-2xl",
+                                                    previewEvidence.length >= 3 && i === 3 && "rounded-br-2xl",
+                                                    previewEvidence.length === 3 && i === 0 && "rounded-l-2xl",
+                                                    previewEvidence.length === 3 && i === 1 && "rounded-tr-2xl",
+                                                    previewEvidence.length === 3 && i === 2 && "rounded-br-2xl"
                                                 )}
-                                                onClick={(e) => e.stopPropagation()}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (isVideo) {
+                                                        setActiveVideoUrl(url);
+                                                    } else {
+                                                        // For images, maybe open in new tab or just let the card click handle it
+                                                        // but since we stop propagation, we should probably open it.
+                                                        window.open(url, "_blank");
+                                                    }
+                                                }}
                                             >
-                                                <img
-                                                    src={url}
-                                                    alt=""
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
+                                                {isVideo ? (
+                                                    <div className="relative w-full h-full">
+                                                        <video
+                                                            src={`${url}#t=0.1`}
+                                                            className="w-full h-full object-cover"
+                                                            preload="metadata"
+                                                            muted
+                                                            playsInline
+                                                        />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                            <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                                                                <Play className="h-6 w-6 fill-white" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={url}
+                                                        alt=""
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                    />
+                                                )}
                                                 {isLastVisible && hasMore && (
                                                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                                         <span className="text-xl font-bold text-white">+{remaining}</span>
@@ -448,6 +477,26 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                     </div>
                 </Card>
             </motion.div>
+ 
+            {/* Video Player Dialog */}
+            <Dialog open={!!activeVideoUrl} onOpenChange={(open) => !open && setActiveVideoUrl(null)}>
+                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Video Preview</DialogTitle>
+                    </DialogHeader>
+                    {activeVideoUrl && (
+                        <div className="relative aspect-video w-full">
+                            <video
+                                src={activeVideoUrl}
+                                className="w-full h-full"
+                                controls
+                                autoPlay
+                                playsInline
+                            />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

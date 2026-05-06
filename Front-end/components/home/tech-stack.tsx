@@ -8,10 +8,10 @@ import { TiltCard, StaggerContainer, StaggerItem } from "@/components/parallax-e
 export function TechStack() {
     const stack = [
         {
-            name: "Hedera Hashgraph",
+            name: "Sawtak Blockchain",
             role: "Blockchain Layer",
             icon: Lock,
-            description: "High-performance distributed ledger technology for immutable record-keeping."
+            description: "Our own sovereign blockchain built on Cosmos SDK & Tendermint for immutable, fast-finality record-keeping."
         },
         {
             name: "Next.js 14",

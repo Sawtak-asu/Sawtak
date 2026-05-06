@@ -26,7 +26,7 @@ export default function ContentSection() {
                                     <Cpu className="size-4" />
                                     <h3 className="text-sm font-medium">Blockchain Transparency</h3>
                                 </div>
-                                <p className="text-muted-foreground text-sm">All anonymous complaints are stored on the Hedera Consensus Service, providing an immutable audit trail.</p>
+                                <p className="text-muted-foreground text-sm">All anonymous complaints are stored on the Sawtak Blockchain, providing an immutable audit trail.</p>
                             </div>
                         </div>
                     </div>

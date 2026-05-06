@@ -23,6 +23,18 @@ export const uploadRoutes = new Elysia({
     // Ensure we work with an array even if only one file is uploaded
     const files = Array.isArray(rawFiles) ? rawFiles : [rawFiles];
 
+    // 3. File Size Check (50MB per file)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    for (const file of files as any[]) {
+      if (file.size > MAX_FILE_SIZE) {
+        set.status = 400;
+        return {
+          success: false,
+          error: `File ${file.name} exceeds the 50MB limit.`,
+        };
+      }
+    }
+
     try {
       // Handle multiple files concurrently
       const uploadPromises = files.map((file: any) => storageService.uploadFile(file));
@@ -47,7 +59,7 @@ export const uploadRoutes = new Elysia({
 
 **Supported formats:** Images (jpg, png, gif, webp), Videos (mp4, webm), Documents (pdf, doc, docx)
 
-**Size limits:** Max 10MB per file, max 5 files per upload
+**Size limits:** Max 50MB per file, max 5 files per upload
 
 **Security:** Files are encrypted at rest. Only accessible via generated URLs.`,
       security: [{ bearerAuth: [] }],

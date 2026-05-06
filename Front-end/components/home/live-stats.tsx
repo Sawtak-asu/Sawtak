@@ -61,7 +61,7 @@ export function LiveStats() {
                             Transparency <span className="text-zinc-500">Monitor</span>
                         </h2>
                         <p className="mt-4 text-zinc-400 max-w-xl">
-                            Real-time metrics from the Hedera Consensus Service.
+                            Real-time metrics from the Sawtak Blockchain network.
                             Verifiable proof that the platform is active and secure.
                         </p>
                     </div>
