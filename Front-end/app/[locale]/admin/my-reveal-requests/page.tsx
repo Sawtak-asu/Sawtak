@@ -12,8 +12,6 @@ import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface RevealRequest {
     id: string;
     complaint_id: string;
@@ -57,7 +55,7 @@ function MyRevealRequestsContent() {
     const { data, isLoading } = useQuery({
         queryKey: ["my-reveal-requests"],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/api/admin/my-reveal-requests?limit=50`, {
+            const res = await fetch(`/api/admin/my-reveal-requests?limit=50`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch your reveal requests");

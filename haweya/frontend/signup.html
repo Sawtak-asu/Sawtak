@@ -1,11 +1,12 @@
-<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Account - Haweya</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
   <div class="card">
     <div class="logo">
@@ -23,50 +24,24 @@
     <form id="signup-form">
       <div class="form-group">
         <label class="form-label" for="name">Full Name</label>
-        <input 
-          type="text" 
-          id="name" 
-          class="form-input" 
-          placeholder="Ahmed Mohamed"
-          required
-        >
+        <input type="text" id="name" class="form-input" placeholder="Ahmed Mohamed" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="nationalId">National ID</label>
-        <input 
-          type="text" 
-          id="nationalId" 
-          class="form-input" 
-          placeholder="14 digits"
-          pattern="[0-9]{14}"
-          maxlength="14"
-          required
-        >
+        <input type="text" id="nationalId" class="form-input" placeholder="14 digits" pattern="[0-9]{14}" maxlength="14"
+          required>
         <p class="form-hint">Enter your 14-digit Egyptian National ID</p>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          class="form-input" 
-          placeholder="name@example.com"
-          required
-        >
+        <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          class="form-input" 
-          placeholder="••••••••"
-          minlength="8"
-          required
-        >
+        <input type="password" id="password" class="form-input" placeholder="••••••••" minlength="8" required>
         <p class="form-hint">Minimum 8 characters</p>
       </div>
 
@@ -78,7 +53,7 @@
     <div class="divider"><span>or</span></div>
 
     <p style="text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">
-      Already have an account? 
+      Already have an account?
       <a href="/login.html" class="link" id="login-link">Sign in</a>
     </p>
   </div>
@@ -102,10 +77,10 @@
 
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const btn = document.getElementById('submit-btn');
       const alert = document.getElementById('alert');
-      
+
       btn.disabled = true;
       btn.textContent = 'Creating account...';
       alert.style.display = 'none';
@@ -143,7 +118,7 @@
           });
 
           const authorizeData = await authorizeRes.json();
-          
+
           if (authorizeRes.ok && authorizeData.redirect_to) {
             window.location.href = authorizeData.redirect_to;
             return;
@@ -154,7 +129,7 @@
         alert.classList.remove('alert-error');
         alert.classList.add('alert-success');
         alert.style.display = 'block';
-        
+
         setTimeout(() => {
           window.location.href = '/';
         }, 1500);
@@ -169,4 +144,5 @@
     });
   </script>
 </body>
+
 </html>

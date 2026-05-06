@@ -50,8 +50,6 @@ import {
 } from "@/components/ui/dialog";
 import { useTranslations, useLocale } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface Complaint {
     id: string;
     title: string;
@@ -137,7 +135,7 @@ export default function ComplaintPage() {
         queryKey: ["complaint", complaintId],
         queryFn: async () => {
             // URL-encode the ID when sending to API to handle special characters
-            const res = await fetch(`${API_URL}/api/feed/${encodeURIComponent(complaintId)}`);
+            const res = await fetch(`/api/feed/${encodeURIComponent(complaintId)}`);
             const json = await res.json();
 
             if (!json.success) throw new Error(json.error);
@@ -160,7 +158,7 @@ export default function ComplaintPage() {
         if (!isAnonymous && isLoggedIn && token) {
             const checkVoteStatus = async () => {
                 try {
-                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                    const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -179,7 +177,7 @@ export default function ComplaintPage() {
             // For public complaints without auth, just get vote count
             const getVoteCount = async () => {
                 try {
-                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`);
+                    const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`);
                     const data = await res.json();
                     if (data.success) {
                         setLocalUpvotes(data.data.voteCount);
@@ -204,7 +202,7 @@ export default function ComplaintPage() {
                 if (token) headers.Authorization = `Bearer ${token}`;
 
                 const res = await fetch(
-                    `${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`,
+                    `/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`,
                     { headers }
                 );
                 if (res.ok) {
@@ -221,7 +219,6 @@ export default function ComplaintPage() {
         fetchHistory();
     }, [complaint, token]);
 
-
     const handleUpvote = useCallback(async () => {
         if (!complaint) return;
 
@@ -234,7 +231,7 @@ export default function ComplaintPage() {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -266,7 +263,7 @@ export default function ComplaintPage() {
         if (!token || !complaint) return;
         setIsUpdating(true);
         try {
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -330,11 +327,21 @@ export default function ComplaintPage() {
         return null;
     };
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = complaint ? [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean) : [];
 
     if (isLoading) {
@@ -488,7 +495,7 @@ export default function ComplaintPage() {
                                     allEvidence.length >= 4 && "grid-cols-2"
                                 )}>
                                     {allEvidence.slice(0, 4).map((url, i) => {
-                                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
+                                        const isImage = isImageUrl(url) || isIpfsUrl(url);
                                         const isLast = i === 3 && allEvidence.length > 4;
                                         const remaining = allEvidence.length - 4;
 

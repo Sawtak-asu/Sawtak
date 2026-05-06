@@ -65,8 +65,6 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface Team {
     id: string;
     entity_id: string;
@@ -112,7 +110,7 @@ export default function TeamsPage() {
     const { data: teamsData, isLoading, isError, refetch } = useQuery({
         queryKey: ["admin-teams"],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/api/admin/teams`, {
+            const res = await fetch(`/api/admin/teams`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch teams");
@@ -125,7 +123,7 @@ export default function TeamsPage() {
     const { data: availableData } = useQuery({
         queryKey: ["available-entities"],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/api/admin/teams/available-entities`, {
+            const res = await fetch(`/api/admin/teams/available-entities`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch entities");
@@ -138,7 +136,7 @@ export default function TeamsPage() {
     const createMutation = useMutation({
         mutationFn: async ({ entityId, type }: { entityId: string; type: string }) => {
             console.log("User:", user);
-            const res = await fetch(`${API_URL}/api/admin/teams`, {
+            const res = await fetch(`/api/admin/teams`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -167,7 +165,7 @@ export default function TeamsPage() {
     // Delete team mutation
     const deleteMutation = useMutation({
         mutationFn: async (teamId: string) => {
-            const res = await fetch(`${API_URL}/api/admin/teams/${teamId}`, {
+            const res = await fetch(`/api/admin/teams/${teamId}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });

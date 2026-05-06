@@ -21,8 +21,6 @@ import {
 import { type DirectedTo } from "@/lib/egypt-locations";
 import { useTranslations } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface FeedResponse {
     success: boolean;
     data?: {
@@ -66,7 +64,7 @@ async function fetchFeed(params: {
     if (params.submissionMode && params.submissionMode !== "all") searchParams.set("submissionMode", params.submissionMode);
     if (params.directedTo) searchParams.set("directedTo", JSON.stringify(params.directedTo));
 
-    const response = await fetch(`${API_URL}/api/feed?${searchParams.toString()}`);
+    const response = await fetch(`/api/feed?${searchParams.toString()}`);
     return response.json();
 }
 

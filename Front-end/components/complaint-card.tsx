@@ -25,8 +25,6 @@ import { useRouter } from "next/navigation";
 import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
 import { useTranslations, useLocale } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export interface Complaint {
     id: string;
     title: string;
@@ -83,7 +81,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
         const checkVoteStatus = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -101,15 +99,25 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         checkVoteStatus();
     }, [complaint.id, token, isLoggedIn, canUpvote]);
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean);
 
     // Filter for images only for preview
-    const imageEvidence = allEvidence.filter(url => /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url));
+    const imageEvidence = allEvidence.filter((url) => isImageUrl(url) || isIpfsUrl(url));
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -124,7 +132,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

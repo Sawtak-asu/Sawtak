@@ -276,7 +276,6 @@ function CircuitLines() {
     );
 }
 
-
 function TechCard({
     techKey,
     icon: Icon,

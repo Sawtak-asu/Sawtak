@@ -43,9 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyStoredToken = async (storedToken: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${apiUrl}/api/auth/verify`,
+            const response = await fetch(
+        `/api/auth/verify`,
         {
           headers: {
             Authorization: `Bearer ${storedToken}`,
@@ -89,9 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) return false;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${apiUrl}/api/auth/verify`,
+            const response = await fetch(
+        `/api/auth/verify`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -56,8 +56,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
       }
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const res = await fetch(`${API_URL}/api/admin/teams/my-teams`, {
+                const res = await fetch(`/api/admin/teams/my-teams`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

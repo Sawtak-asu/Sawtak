@@ -139,7 +139,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ]
   ]
 
-
   // Team Admin navigation - legal escalation, audits
   const teamAdminNav = [
     [

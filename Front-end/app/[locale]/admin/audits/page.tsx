@@ -24,8 +24,6 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { MINISTRIES, GOVERNORATES } from "@/lib/egypt-locations";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface AuditEntry {
     id: string;
     complaint_id: string;
@@ -106,7 +104,7 @@ function AuditsContent() {
             params.set("page", String(page));
             params.set("limit", "50");
 
-            const res = await fetch(`${API_URL}/api/admin/audits?${params}`, {
+            const res = await fetch(`/api/admin/audits?${params}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) {

@@ -24,8 +24,6 @@ import { formatDistanceToNow } from "date-fns";
 import { GridBackground } from "@/components/grid-background";
 import { useTranslations } from "next-intl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface TrackingResult {
     found: boolean;
     type?: "anonymous" | "identified";
@@ -73,7 +71,7 @@ export default function TrackPage() {
 
     const trackMutation = useMutation({
         mutationFn: async (code: string) => {
-            const res = await fetch(`${API_URL}/api/track/${encodeURIComponent(code)}`);
+            const res = await fetch(`/api/track/${encodeURIComponent(code)}`);
             const data = await res.json();
             if (!data.success) throw new Error(data.error);
             return data.data as TrackingResult;
