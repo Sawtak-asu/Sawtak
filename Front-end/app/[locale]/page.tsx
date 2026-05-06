@@ -7,6 +7,7 @@ import { PoweredBy } from "@/components/home/powered-by";
 import { Team } from "@/components/home/team";
 import { CTA } from "@/components/home/cta";
 import { FAQ } from "@/components/home/faq";
+import { ComplaintFlow } from "@/components/home/complaint-flow";
 // import { TechMarquee } from "@/components/home/tech-marquee";
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
         <Aim />
         <HowItWorks />
         <PoweredBy />
+        <ComplaintFlow />
         <FAQ />
         <Team />
         <CTA />

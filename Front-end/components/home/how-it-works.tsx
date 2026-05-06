@@ -70,12 +70,12 @@ const timelineSteps = [
         title: "Distributed Ledger",
         subtitle: "Immutability Layer",
         icon: Globe,
-        description: "A cryptographic hash of the encrypted payload is submitted to the Hedera Consensus Service (HCS).",
-        tech: ["Hedera HCS", "Consensus Timestamp", "Public Topic"],
+        description: "A cryptographic hash of the encrypted payload is submitted to the Sawtak Blockchain via our custom Tendermint consensus module.",
+        tech: ["Sawtak Chain", "Consensus Timestamp", "Public Topic"],
         visual: (
             <div className="w-full p-4 bg-background border border-border rounded-lg flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-mono text-muted-foreground border-b border-border pb-2">
-                    <span>HCS Topic 0.0.12345</span>
+                    <span>SAWTAK-TX-0.0.12345</span>
                     <span className="flex items-center gap-1 text-green-600"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />Live</span>
                 </div>
                 {[1, 2, 3].map((i) => (
