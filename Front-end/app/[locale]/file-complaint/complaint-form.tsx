@@ -8,6 +8,39 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 
+import {
+  CalendarIcon,
+  Copy,
+  Check,
+  Shield,
+  Eye,
+  Lock,
+  Building2,
+  MapPin,
+  Upload,
+  CheckCircle,
+  MessageSquare,
+  Play,
+  FileIcon,
+  X,
+  Plus,
+  ImageIcon,
+  FileTextIcon,
+  VideoIcon,
+  MusicIcon
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAuth } from "@/lib/auth-context";
+import {
+  MINISTRIES,
+  GOVERNORATES,
+  COMPLAINT_CATEGORIES,
+  type DirectedTo,
+  type DirectedToType
+} from "@/lib/egypt-locations";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -48,18 +81,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarIcon, Copy, Check, Shield, Eye, Lock, Building2, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAuth } from "@/lib/auth-context";
-import {
-  MINISTRIES,
-  GOVERNORATES,
-  COMPLAINT_CATEGORIES,
-  type DirectedTo,
-  type DirectedToType
-} from "@/lib/egypt-locations";
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -72,7 +93,7 @@ const formSchema = z.object({
   }).max(5000, {
     message: "Main text must be at most 5000 characters.",
   }),
-  category: z.string().nonempty("Please select a category."),
+  category: z.string().min(1, "Please select a category."),
   directedToType: z.enum(["ministry", "governorate", "center"], {
     message: "Please select where to direct this complaint.",
   }),
@@ -81,23 +102,16 @@ const formSchema = z.object({
   directedToCenter: z.string().optional(),
   area: z.string().optional(),
   date: z.date().optional(),
-  evidence: z.any().optional(),
+  evidence: z.array(z.any()).optional(),
   submissionMode: z.enum(["anonymous", "public"]),
   visibility: z.enum(["public", "private"]),
 }).refine((data) => {
-  // Validate that the corresponding sub-field is filled based on directedToType
-  if (data.directedToType === "ministry") {
-    return !!data.directedToMinistry;
-  }
-  if (data.directedToType === "governorate") {
-    return !!data.directedToGovernorate;
-  }
-  if (data.directedToType === "center") {
-    return !!data.directedToGovernorate && !!data.directedToCenter;
-  }
-  return true;
+  if (data.directedToType === "ministry") return !!data.directedToMinistry;
+  if (data.directedToType === "governorate") return !!data.directedToGovernorate;
+  if (data.directedToType === "center") return !!data.directedToGovernorate && !!data.directedToCenter;
+  return false; // Should not reach here if enum matches
 }, {
-  message: "Please select the target entity.",
+  message: "Please select the specific entity (Ministry or Governorate).",
   path: ["directedToType"],
 });
 
@@ -125,8 +139,12 @@ export function ComplaintForm() {
       directedToCenter: "",
       submissionMode: "anonymous",
       visibility: "public",
+      evidence: [],
     },
   });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [previews, setPreviews] = useState<{ id: string, file: File, preview: string, type: string }[]>([]);
 
   // Watch directedToType and governorate for conditional rendering
   const directedToType = useWatch({ control: form.control, name: "directedToType" });
@@ -205,8 +223,8 @@ export function ComplaintForm() {
     if (values.evidence && values.evidence.length > 0) {
       try {
         const formData = new FormData();
-        Array.from(values.evidence as FileList).forEach((file) => {
-          formData.append("files", file as File);
+        (values.evidence as File[]).forEach((file) => {
+          formData.append("files", file);
         });
 
         // Determine the correct upload endpoint based on submission mode
@@ -279,6 +297,41 @@ export function ComplaintForm() {
 
     mutation.mutate({ payload, mode: values.submissionMode });
   }
+
+  const handleFiles = (files: FileList | File[]) => {
+    const newFiles = Array.from(files);
+    const updatedEvidence = [...(form.getValues("evidence") || []), ...newFiles];
+    form.setValue("evidence", updatedEvidence, { shouldValidate: true });
+
+    const newPreviews = newFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: (file.type.startsWith('image/') || file.type.startsWith('video/')) ? URL.createObjectURL(file) : '',
+      type: file.type
+    }));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (id: string) => {
+    const fileToRemove = previews.find(p => p.id === id);
+    if (!fileToRemove) return;
+
+    if (fileToRemove.preview) URL.revokeObjectURL(fileToRemove.preview);
+
+    const updatedPreviews = previews.filter(p => p.id !== id);
+    setPreviews(updatedPreviews);
+
+    const updatedEvidence = updatedPreviews.map(p => p.file);
+    form.setValue("evidence", updatedEvidence, { shouldValidate: true });
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="h-6 w-6" />;
+    if (type.startsWith('video/')) return <VideoIcon className="h-6 w-6" />;
+    if (type.startsWith('audio/')) return <MusicIcon className="h-6 w-6" />;
+    if (type.includes('pdf')) return <FileTextIcon className="h-6 w-6" />;
+    return <FileIcon className="h-6 w-6" />;
+  };
 
   return (
     <Form {...form}>
@@ -661,12 +714,26 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("evidenceTitle")}</CardTitle>
-            <CardDescription>
-              {t("evidenceDescription")}
-            </CardDescription>
+        <Card className={cn(isDragging && "border-primary border-dashed bg-primary/5")}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t("evidenceTitle")}</CardTitle>
+              <CardDescription>
+                {t("evidenceDescription")}
+              </CardDescription>
+            </div>
+            {previews.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => document.getElementById('evidence-upload')?.click()}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("browse")}
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             <FormField
@@ -674,24 +741,89 @@ export function ComplaintForm() {
               name="evidence"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("evidenceLabel")}</FormLabel>
                   <FormControl>
-                    <input
-                      type="file"
-                      multiple={true}
-                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-                      ref={field.ref}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                      onChange={(e) => {
-                        field.onChange(e.target.files);
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
                       }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
+                      className={cn(
+                        "relative min-h-[160px] rounded-xl transition-all duration-200",
+                        previews.length === 0 
+                          ? "border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
+                          : "bg-background p-4"
+                      )}
+                      onClick={() => previews.length === 0 && document.getElementById('evidence-upload')?.click()}
+                    >
+                      <input
+                        id="evidence-upload"
+                        type="file"
+                        multiple
+                        className="hidden"
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+                        onChange={(e) => {
+                          if (e.target.files) handleFiles(e.target.files);
+                        }}
+                      />
+
+                      {previews.length === 0 ? (
+                        <div className="text-center">
+                          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                            <Upload className="h-6 w-6 text-primary" />
+                          </div>
+                          <p className="text-sm font-medium text-foreground mb-1">
+                            {t("dragAndDropTitle")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("dragAndDropSubtitle")}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          {previews.map((p) => (
+                            <div key={p.id} className="group relative aspect-square rounded-lg border bg-muted overflow-hidden">
+                              {p.type.startsWith('video/') ? (
+                                <div className="relative h-full w-full">
+                                  <video 
+                                    src={`${p.preview}#t=1`} 
+                                    className="h-full w-full object-cover"
+                                    onLoadedMetadata={(e) => {
+                                      // Force seeking to 1s to show a frame
+                                      (e.target as HTMLVideoElement).currentTime = 1;
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                    <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+                                      <Play className="h-6 w-6 text-white fill-white" />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : p.preview ? (
+                                <img src={p.preview} alt="preview" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex flex-col items-center justify-center p-2 text-center">
+                                  {getFileIcon(p.type)}
+                                  <span className="mt-1 text-[10px] text-muted-foreground truncate w-full px-1">
+                                    {p.file.name}
+                                  </span>
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeFile(p.id)}
+                                className="absolute top-1 right-1 p-1 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-10"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t("evidenceHint")}
-                  </p>
                   <FormMessage />
                 </FormItem>
               )}

@@ -47,7 +47,7 @@ export const uploadRoutes = new Elysia({
 
 **Supported formats:** Images (jpg, png, gif, webp), Videos (mp4, webm), Documents (pdf, doc, docx)
 
-**Size limits:** Max 10MB per file, max 5 files per upload
+**Size limits:** Max 50MB per file, max 5 files per upload
 
 **Security:** Files are encrypted at rest. Only accessible via generated URLs.`,
       security: [{ bearerAuth: [] }],
