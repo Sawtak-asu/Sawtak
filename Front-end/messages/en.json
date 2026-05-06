@@ -319,7 +319,18 @@
     "copied": "Copied!",
     "importantWarning": "⚠️ Important: Write this down!",
     "trackingHint": "You can use this code at /track to check your complaint status. Your identity is not linked to this code.",
-    "savedCode": "I've Saved My Code"
+    "savedCode": "I've Saved My Code",
+    "aiValidating": "Reviewing your complaint...",
+    "aiValidatingDesc": "Our AI is checking your complaint for authenticity before submission. This takes a few seconds.",
+    "aiSpamWarningTitle": "Complaint Not Accepted",
+    "aiSpamWarningDesc": "Our AI has determined this complaint does not appear to be a genuine grievance. The platform is intended for serious complaints about real misconduct. Spam, advertisements, and test submissions are not permitted.",
+    "aiSpamWarningHint": "If you believe this is a mistake, please ensure your complaint clearly describes the actual incident with enough detail.",
+    "aiSpamDismiss": "Edit My Complaint",
+    "anonymousSubmitted": "Complaint submitted anonymously! Save your tracking code.",
+    "identifiedSubmitted": "Complaint submitted successfully!",
+    "submitFailed": "Failed to submit complaint. Please try again.",
+    "uploadFailed": "Failed to upload evidence files.",
+    "loginRequired": "Please log in to submit a complaint."
   },
   "Docs": {
     "sidebarTitle": "Documentation",

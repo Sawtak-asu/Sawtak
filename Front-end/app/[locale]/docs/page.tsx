@@ -11,12 +11,10 @@ import {
   Database,
   Hash,
   FileText,
-  ChevronRight,
   Server,
   Key,
   Globe,
   Eye,
-  Users,
   AlertTriangle,
   CheckCircle,
   MessageSquare
@@ -28,6 +26,7 @@ export default function DocsPage() {
   const [activeSection, setActiveSection] = React.useState("overview");
   const t = useTranslations("Docs");
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const sections = [
     { id: "overview", title: t("sections.overview"), icon: FileText },
     { id: "architecture", title: t("sections.architecture"), icon: Server },
@@ -69,7 +68,7 @@ export default function DocsPage() {
         }
       });
     };
-  }, []);
+  }, [sections]);
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -86,7 +85,7 @@ export default function DocsPage() {
       <div className="container max-w-7xl mx-auto px-6 py-12" dir="ltr">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Sidebar Navigation */}
-          <aside className="lg:w-64 flex-shrink-0">
+          <aside className="lg:w-64 shrink-0">
             <div className="sticky top-24 space-y-8">
               <div className="hidden lg:block">
                 <h3 className="font-semibold text-lg mb-4 px-4 flex items-center gap-2">
@@ -430,7 +429,7 @@ export default function DocsPage() {
           </main>
 
           {/* Right side TOC (Desktop) */}
-          <div className="hidden xl:block w-64 flex-shrink-0">
+          <div className="hidden xl:block w-64 shrink-0">
             <div className="sticky top-24">
               <h4 className="font-medium text-sm mb-4 text-muted-foreground">{t("onThisPage")}</h4>
               <nav className="space-y-2 border-l border-border/50">

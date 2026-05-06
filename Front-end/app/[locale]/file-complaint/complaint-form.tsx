@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -16,10 +17,7 @@ import {
   Eye,
   Lock,
   Building2,
-  MapPin,
   Upload,
-  CheckCircle,
-  MessageSquare,
   Play,
   FileIcon,
   X,
@@ -27,7 +25,9 @@ import {
   ImageIcon,
   FileTextIcon,
   VideoIcon,
-  MusicIcon
+  MusicIcon,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -121,9 +121,10 @@ export function ComplaintForm() {
   const { user, isLoggedIn, token } = useAuth();
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [showSpamWarningDialog, setShowSpamWarningDialog] = useState(false);
+  const [isAIValidating, setIsAIValidating] = useState(false);
   const [copied, setCopied] = useState(false);
   const t = useTranslations("ComplaintForm");
-  const tToasts = useTranslations("Toasts");
   const locale = useLocale();
 
   const form = useForm<ComplaintFormData>({
@@ -165,7 +166,7 @@ export function ComplaintForm() {
     mutationFn: async (data: { payload: any; mode: string }) => {
       // Both routes require authentication per backend middleware
       if (!token) {
-        throw new Error("You must be logged in to submit a complaint.");
+        throw new Error(t("loginRequired"));
       }
 
       // Correct endpoints: /api/complaints/{type}/submit
@@ -187,7 +188,7 @@ export function ComplaintForm() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("[ComplaintForm] Backend error response:", errorData);
-        throw new Error(errorData.error || "Failed to submit complaint.");
+        throw new Error(errorData.error || t("submitFailed"));
       }
 
       return response.json();
@@ -197,23 +198,79 @@ export function ComplaintForm() {
       if (variables.mode === "anonymous" && data.data?.trackingCode) {
         setTrackingCode(data.data.trackingCode);
         setShowTrackingDialog(true);
-        toast.success(tToasts("anonymousSubmitted"));
+        toast.success(t("anonymousSubmitted"));
       } else {
-        toast.success(tToasts("identifiedSubmitted"));
+        toast.success(t("identifiedSubmitted"));
       }
       form.reset();
     },
     onError: (error) => {
-      toast.error(error.message || tToasts("submitFailed"));
+      toast.error(error.message || t("submitFailed"));
       console.error("Submission error:", error);
     },
   });
 
+  /**
+   * Calls the backend AI validation endpoint before allowing submission.
+   * Returns true if the complaint passed (real or validation error),
+   * false if Gemini classified it as fake/spam.
+   */
+  async function runAIValidation(title: string, text: string, category: string): Promise<boolean> {
+    if (!token) return true; // Skip validation if not authenticated (will be caught later)
+
+    try {
+      setIsAIValidating(true);
+      const response = await fetch("/api/complaints/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, text, category }),
+      });
+
+      if (!response.ok) {
+        console.warn("[ComplaintForm] AI validation request failed — allowing submission.");
+        return true; // Fail open
+      }
+
+      const data = await response.json();
+      const verdict: string = data.verdict;
+
+      console.log(`[ComplaintForm] AI verdict: ${verdict}`);
+
+      if (verdict === "fake") {
+        return false; // Block submission
+      }
+
+      return true; // "real" or "error" — allow submission
+    } catch (err) {
+      console.error("[ComplaintForm] AI validation error:", err);
+      return true; // Fail open on network errors
+    } finally {
+      setIsAIValidating(false);
+    }
+  }
+
   async function onSubmit(values: ComplaintFormData) {
     if (!isLoggedIn || !user) {
-      toast.error(tToasts("loginRequired"));
+      toast.error(t("loginRequired"));
       return;
     }
+
+    // ── Step 1: AI Validation ────────────────────────────────────
+    const passedAI = await runAIValidation(
+      values.title,
+      values.mainText,
+      values.category
+    );
+
+    if (!passedAI) {
+      setShowSpamWarningDialog(true);
+      return;
+    }
+
+    // ── Step 2: File uploads ─────────────────────────────────────
 
     const isPublic = values.submissionMode === "public";
     let evidenceUrls: string[] = [];
@@ -242,7 +299,7 @@ export function ComplaintForm() {
 
         if (!uploadResponse.ok) {
           const errorData = await uploadResponse.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to upload evidence files.");
+          throw new Error(errorData.error || t("uploadFailed"));
         }
 
         const data = await uploadResponse.json();
@@ -254,7 +311,7 @@ export function ComplaintForm() {
         }
       } catch (error: any) {
         console.error("Upload error:", error);
-        toast.error(error.message || tToasts("uploadFailed"));
+        toast.error(error.message || t("uploadFailed"));
         return;
       }
     }
@@ -739,7 +796,7 @@ export function ComplaintForm() {
             <FormField
               control={form.control}
               name="evidence"
-              render={({ field }) => (
+              render={({ }) => (
                 <FormItem>
                   <FormControl>
                     <div
@@ -802,6 +859,7 @@ export function ComplaintForm() {
                                   </div>
                                 </div>
                               ) : p.preview ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img src={p.preview} alt="preview" className="h-full w-full object-cover" />
                               ) : (
                                 <div className="h-full w-full flex flex-col items-center justify-center p-2 text-center">
@@ -831,8 +889,21 @@ export function ComplaintForm() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={mutation.isPending || form.formState.isSubmitting}>
-          {mutation.isPending || form.formState.isSubmitting ? t("submitting") : t("submit")}
+        <Button
+          type="submit"
+          disabled={mutation.isPending || form.formState.isSubmitting || isAIValidating}
+          className="relative"
+        >
+          {isAIValidating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {t("aiValidating")}
+            </>
+          ) : mutation.isPending || form.formState.isSubmitting ? (
+            t("submitting")
+          ) : (
+            t("submit")
+          )}
         </Button>
       </form>
 
@@ -883,6 +954,36 @@ export function ComplaintForm() {
           <DialogFooter>
             <Button onClick={() => setShowTrackingDialog(false)}>
               {t("savedCode")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* AI Spam Warning Dialog */}
+      <Dialog open={showSpamWarningDialog} onOpenChange={setShowSpamWarningDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {t("aiSpamWarningTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("aiSpamWarningDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm mt-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                {t("aiSpamWarningHint")}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowSpamWarningDialog(false)}
+              className="w-full"
+            >
+              {t("aiSpamDismiss")}
             </Button>
           </DialogFooter>
         </DialogContent>
