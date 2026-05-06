@@ -1,0 +1,36 @@
+Issue Type,Summary,Description,Priority,Parent
+Epic,Backend Migration - Cosmos SDK Integration,Migration from Hedera to Cosmos SDK blockchain backend,High,
+Story,Blockchain Service Replacement - Create SawtakCosmosService,"As a backend developer, I want to replace HederaService with SawtakCosmosService so that complaint submissions work with our Cosmos SDK blockchain",High,MG-1
+Sub-task,Implement submitMessage() using CosmJS,Create SawtakCosmosService implementing IBlockchainService interface,High,MG-2
+Sub-task,Map message payloads to Cosmos SDK Msg types,Map message payloads to Cosmos SDK Msg types (MsgCreateAnonymousComplaint, etc.),High,MG-2
+Sub-task,Add CosmJS dependencies to package.json,"Add @cosmjs/stargate, @cosmjs/proto-signing to package.json",High,MG-2
+Sub-task,Add COSMOS_* environment variables to config,"Add COSMOS_* environment variables (RPC, gRPC, WS, mnemonic, chain ID, gas price)",High,MG-2
+Story,Indexer Service Migration - Create CosmosIndexerService,"As an indexer operator, I want to replace HederaIndexerService with CosmosIndexerService so that complaint data is indexed from our Cosmos blockchain",High,MG-1
+Sub-task,Implement processBlock(),Implement processBlock() to decode tx events and filter by message.action,High,MG-7
+Sub-task,Implement indexAnonymousComplaint() handlers,Implement indexAnonymousComplaint() / indexIdentifiedComplaint() / indexStatusUpdate() handlers,High,MG-7
+Sub-task,Add indexer endpoints,Add indexer endpoints (status, start, reindex),High,MG-7
+Story,Prisma Schema Update,"As a database admin, I want to update the Prisma schema so that indexedComplaint supports cosmos_hash fields",High,MG-1
+Sub-task,Add cosmos_hash field to indexedComplaint,Add cosmos_hash field (primary key) to replace/alongside hcs_hash,High,MG-11
+Sub-task,Add chain_type field,Add chain_type field ('hedera' | 'cosmos') for dual-chain transition,Medium,MG-11
+Sub-task,Update indexedStatusUpdate schema,Update indexedStatusUpdate to use cosmos_tx_hash + sequence,Medium,MG-11
+Story,Service Injection Refactor,"As a backend developer, I want to update dependency injection so that Cosmos services replace Hedera services",High,MG-1
+Sub-task,Update AnonymousSubmissionService constructor,Update AnonymousSubmissionService constructor to default to SawtakCosmosService,High,MG-15
+Sub-task,Update ComplaintStatusService,Update ComplaintStatusService to use Cosmos blockchain service,High,MG-15
+Story,Route Documentation Update,"As an API consumer, I want updated endpoint documentation so I understand Cosmos-based responses",Medium,MG-1
+Sub-task,Update POST /api/complaints/anonymous/submit response schema,"Remove HCS/Topic references, add Cosmos tx hash",Medium,MG-17
+Sub-task,Update route descriptions,Update route descriptions to remove 'Hedera blockchain' references,Medium,MG-17
+Story,Testing Updates,"As a QA engineer, I want updated tests for Cosmos so I can verify the migration works",High,MG-1
+Sub-task,Update Anonymous-submission.test.ts,"Update to use Cosmos test setup instead of @hiero-ledger/sdk",High,MG-19
+Sub-task,Add CosmosIndexerService integration tests,"Add integration tests for CosmosIndexerService (mock Tendermint WebSocket)",Medium,MG-19
+Sub-task,Add COSMOS_* environment validation tests,"Add environment validation tests for COSMOS_* variables",Medium,MG-19
+Story,Hedera Deprecation,"As a DevOps engineer, I want to remove Hedera dependencies so the codebase is clean and only supports Cosmos",High,MG-1
+Sub-task,Remove @hiero-ledger/sdk package,Remove @hiero-ledger/sdk package dependency from package.json,High,MG-25
+Sub-task,Delete hedera.service.ts and hedera.config.ts,Delete Hedera service files,High,MG-25
+Sub-task,Delete hedera-indexer.service.ts,Delete hedera-indexer.service.ts (replaced by CosmosIndexerService),High,MG-25
+Sub-task,Remove HEDERA_CONFIG,Remove HEDERA_CONFIG from codebase and environment configs,High,MG-25
+Sub-task,Remove HEDERA_* environment variables,"Remove HEDERA_* environment variables from .env.example and deployment configs",Medium,MG-25
+Sub-task,Migrate hcs_hash to cosmos_hash,"Migrate existing hcs_hash values to cosmos_hash column in indexedComplaint table",Medium,MG-25
+Sub-task,Drop hcs_hash column,Drop hcs_hash column after successful migration,Low,MG-25
+Sub-task,Remove chain_type column,Remove chain_type column from indexedComplaint (no longer needed - Cosmos only),Low,MG-25
+Sub-task,Export Hedera topic messages,Export Hedera topic messages to JSON archive file,Low,MG-25
+Sub-task,Document Hedera topic IDs,Document Hedera topic IDs and archive location for reference,Low,MG-25

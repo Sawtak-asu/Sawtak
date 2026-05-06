@@ -6,24 +6,24 @@ build:
 accounts:
     - name: admin
       coins:
-        - 10000000000000usawtak
+          - 10000000000000stake
       mnemonic: "tenant mutual lab resist together wrestle tribe drop girl negative unit intact fiction island rapid inform amateur west reject hood lottery issue athlete brief"
     - name: ministry
       coins:
-        - 50000usawtak
+          - 50000stake
     - name: university
       coins:
-        - 50000usawtak
+          - 50000stake
     - name: ngo
       coins:
-        - 50000usawtak
+          - 50000stake
     - name: elysia_relayer
       coins:
-        - 10000000usawtak
+          - 10000000stake
 client:
     typescript:
         path: ts-client
-default_denom: usawtak
+default_denom: stake
 genesis:
     app_state:
         poa:
@@ -31,4 +31,4 @@ genesis:
                 admin: sawtak1czwnf95lklf68kahvxynmqc09wll04pmfcex84
 validators:
     - name: admin
-      bonded: 10000000000usawtak
+      bonded: 10000000000stake

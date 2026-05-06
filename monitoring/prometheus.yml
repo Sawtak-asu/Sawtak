@@ -9,7 +9,7 @@ scrape_configs:
   # Sawtak Backend
   - job_name: 'sawtak-backend'
     static_configs:
-      - targets: ['sawtak-backend:8000']
+      - targets: ['172.19.0.1:8000']
     metrics_path: /metrics
     scrape_interval: 10s
 

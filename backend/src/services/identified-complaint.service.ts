@@ -11,6 +11,7 @@ interface CreateIdentifiedComplaintDTO {
     incidentDate?: Date;
     evidenceUrls?: string[];
     visibility?: string;
+    cosmosTxHash?: string;
 }
 
 export class IdentifiedComplaintService {
@@ -30,7 +31,8 @@ export class IdentifiedComplaintService {
                 incident_date: data.incidentDate || new Date(),
                 evidence_urls: data.evidenceUrls || [],
                 visibility: data.visibility || "private",
-                status: "submitted"
+                status: "submitted",
+                cosmos_tx_hash: data.cosmosTxHash || null
             }
         });
     }

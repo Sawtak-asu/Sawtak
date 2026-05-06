@@ -199,7 +199,7 @@ func New(
 	}
 
 	// Register the PoA AnteDecorator to enforce Proof of Authority rules.
-	// CRITICAL: We must run the existing default ante handler FIRST because it performs 
+	// CRITICAL: We must run the existing default ante handler FIRST because it performs
 	// cryptographic signature verification. If PoA checks run before signature verification,
 	// anyone could spoof the admin address!
 	poaDecorator := poaante.NewPoaDecorator(app.PoaKeeper)

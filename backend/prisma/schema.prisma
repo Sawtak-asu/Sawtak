@@ -11,16 +11,15 @@ datasource db {
 model User {
   id                   String  @id @default(uuid())
   email                String  @unique
-  password             String? // Optional for OAuth users
-  name                 String? // User's display name (from OAuth)
-  picture              String? // Profile picture URL (from OAuth)
+  password             String?
+  name                 String?
+  picture              String?
   anonymous_identifier String  @unique
-  role                 String  @default("user") // user, platform_admin
-  is_blocked           Boolean @default(false) // Block user from platform
+  role                 String  @default("user")
+  is_blocked           Boolean @default(false)
 
-  // OAuth / Future Identity Provider fields
-  auth_provider    String  @default("email") // email, google, github, civil_id
-  auth_provider_id String? // The ID from the external provider
+  auth_provider    String  @default("email")
+  auth_provider_id String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -43,11 +42,12 @@ model IdentifiedComplaint {
   text          String
   category      String
   area          String
-  directed_to   Json? // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
+  directed_to   Json?
   incident_date DateTime  @default(now())
   status        String    @default("submitted")
-  visibility    String    @default("private") // private, public
-  evidence_urls Json? // Array of URLs
+  visibility    String    @default("private")
+  evidence_urls Json?
+  cosmos_tx_hash String?  @unique
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   deleted_at    DateTime?
@@ -55,19 +55,21 @@ model IdentifiedComplaint {
   user  User            @relation(fields: [user_id], references: [id])
   votes ComplaintVote[]
 
-  @@index([directed_to]) // For admin filtering
+  @@index([directed_to])
   @@index([category])
 }
 
 model IndexedComplaint {
   hcs_hash             String   @id
+  chain_hash           String   @unique
+  chain_type           String   @default("hedera")
   anonymous_identifier String
-  tracking_hash        String? // Hashed tracking code for user lookup
+  tracking_hash        String?
   title                String
   complaint_text       String
   category             String
   area                 String
-  directed_to          Json? // { type: "ministry"|"governorate"|"center", ministryId?, governorateId?, centerId? }
+  directed_to          Json?
   severity             String
   incident_date        DateTime
   evidence_cids        Json?
@@ -77,6 +79,7 @@ model IndexedComplaint {
 
   @@index([anonymous_identifier])
   @@index([tracking_hash])
+  @@index([chain_hash])
   @@index([category])
   @@index([area])
   @@index([status])
@@ -85,6 +88,7 @@ model IndexedComplaint {
 
 model IndexedStatusUpdate {
   hcs_hash            String   @id
+  cosmos_tx_hash      String   @unique
   complaint_hash      String
   old_status          String
   new_status          String
@@ -100,35 +104,31 @@ model IndexedStatusUpdate {
 model AdminAudit {
   id          String   @id @default(uuid())
   admin_id    String
-  action_type String // "BAN_USER" or "DELETE_COMPLAINT"
-  target_id   String // Complaint ID that was acted upon
-  reason      String? // Optional reason for the action
+  action_type String
+  target_id   String
+  reason      String?
   timestamp   DateTime @default(now())
 
   admin User @relation(fields: [admin_id], references: [id])
 }
 
-// Track upvotes for public identified complaints only
-// Anonymous complaints cannot be upvoted, and users must be logged in to vote
 model ComplaintVote {
   id           String   @id @default(uuid())
-  complaint_id String // ID of the IdentifiedComplaint
-  voter_id     String // User ID (required - must be logged in)
+  complaint_id String
+  voter_id     String
   created_at   DateTime @default(now())
 
-  // Relations
   complaint IdentifiedComplaint @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
   voter     User                @relation(fields: [voter_id], references: [id], onDelete: Cascade)
 
-  @@unique([complaint_id, voter_id]) // One vote per user per complaint
+  @@unique([complaint_id, voter_id])
   @@index([complaint_id])
 }
 
-// Entity/Team model (maps to egypt-locations.ts ministries/governorates/centers)
 model Team {
   id         String   @id @default(uuid())
-  entity_id  String   @unique // ID from egypt-locations.ts (e.g., "min_interior", "gov_cairo")
-  type       String // "ministry" | "governorate" | "center"
+  entity_id  String   @unique
+  type       String
   created_at DateTime @default(now())
 
   members TeamMember[]
@@ -136,31 +136,29 @@ model Team {
   @@index([type])
 }
 
-// Admin-Team relationship with role type
 model TeamMember {
   id         String   @id @default(uuid())
   user_id    String
   team_id    String
-  role       String // "reviewer" | "manager" | "team_admin"
+  role       String
   created_at DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
   team Team @relation(fields: [team_id], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, team_id]) // One role per team per user
+  @@unique([user_id, team_id])
   @@index([team_id])
   @@index([user_id])
 }
 
-// Complaint action history/audit trail
 model ComplaintHistory {
   id             String   @id @default(uuid())
   complaint_id   String
-  complaint_type String // "identified" | "anonymous"
-  action         String // "status_change" | "escalate" | "flag_inaccurate" | "flag_legal" | "identity_reveal" | "ban_user"
+  complaint_type String
+  action         String
   old_status     String?
   new_status     String?
-  note           String? // Optional note from reviewer/manager
+  note           String?
   performed_by   String
   created_at     DateTime @default(now())
 
@@ -170,16 +168,15 @@ model ComplaintHistory {
   @@index([performed_by])
 }
 
-// Escalation tracking with priority and assignment
 model Escalation {
   id             String    @id @default(uuid())
   complaint_id   String
-  complaint_type String // "identified" | "anonymous"
-  from_user_id   String // Who escalated
-  to_user_id     String? // Assigned manager (optional)
-  priority       String // "low" | "medium" | "high" | "urgent"
-  note           String? // Reason for escalation
-  status         String    @default("pending") // "pending" | "accepted" | "resolved"
+  complaint_type String
+  from_user_id   String
+  to_user_id     String?
+  priority       String
+  note           String?
+  status         String    @default("pending")
   created_at     DateTime  @default(now())
   resolved_at    DateTime?
 
@@ -191,19 +188,18 @@ model Escalation {
   @@index([status])
 }
 
-// Identity Reveal Request - Team Admin requests, Platform Admin approves
 model IdentityRevealRequest {
   id             String    @id @default(uuid())
-  complaint_id   String    // HCS hash of the anonymous complaint
-  complaint_type String    @default("anonymous") // Always anonymous for reveal requests
-  requested_by   String    // Team Admin who requested
-  reason         String    // Justification for reveal
-  status         String    @default("pending") // "pending" | "approved" | "rejected"
-  reviewed_by    String?   // Platform Admin who reviewed
-  review_note    String?   // Optional note from platform admin
-  revealed_user_id    String?  // User ID if revealed (after approval)
-  revealed_user_name  String?  // User name if revealed
-  revealed_user_email String?  // User email if revealed
+  complaint_id   String
+  complaint_type String    @default("anonymous")
+  requested_by   String
+  reason         String
+  status         String    @default("pending")
+  reviewed_by    String?
+  review_note    String?
+  revealed_user_id    String?
+  revealed_user_name  String?
+  revealed_user_email String?
   created_at     DateTime  @default(now())
   reviewed_at    DateTime?
 

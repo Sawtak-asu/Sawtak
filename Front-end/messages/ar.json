@@ -153,11 +153,18 @@
         "helpText2": "للشكاوى المجهولة، لا يمكننا استرداد رمز التتبع لأنه غير مرتبط بأي حساب. للشكاوى المعرّفة، يرجى التواصل مع الدعم.",
         "newComplaintCta": "هل تحتاج لتقديم شكوى جديدة؟"
     },
-    "Status": {
-        "submitted": "قيد المراجعة",
+    "Statuses": {
+        "submitted": "تم التقديم",
+        "pending": "قيد الانتظار",
+        "in_progress": "قيد المعالجة",
         "investigating": "قيد التحقيق",
+        "under_investigation": "تحت التحقيق",
         "resolved": "تم الحل",
-        "dismissed": "مرفوضة"
+        "closed": "مغلق",
+        "flagged": "تم وضع علامة",
+        "flagged_inaccurate": "تم وضع علامة - غير دقيق",
+        "flagged_legal": "تم وضع علامة - قانوني",
+        "dismissed": "مرفوض"
     },
     "LanguageSwitcher": {
         "label": "اللغة"

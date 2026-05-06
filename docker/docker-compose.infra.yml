@@ -1,0 +1,178 @@
+# ============================================
+# Sawtak - Development Docker Compose
+# ============================================
+# Usage: docker-compose up -d
+# Architecture: 4 containers (Postgres, Redis, Backend, Frontend)
+# ============================================
+
+services:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: sawtak-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-sawtak}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sawtak}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Redis - Rate Limiting & Caching
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: sawtak-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Backend Service (Monolith API)
+  # ==========================================
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: sawtak-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 8000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sawtak}?schema=public
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      
+      # Rate Limiting
+      RATE_LIMIT_ANONYMOUS_HOURLY: ${RATE_LIMIT_ANONYMOUS_HOURLY:-5}
+      RATE_LIMIT_IDENTIFIED_HOURLY: ${RATE_LIMIT_IDENTIFIED_HOURLY:-20}
+      RATE_LIMIT_API_HOURLY: ${RATE_LIMIT_API_HOURLY:-100}
+      
+      # JWT & Encryption
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      PLATFORM_SECRET: ${PLATFORM_SECRET}
+      
+      # Cloudflare R2
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+      
+      # Hedera
+      HEDERA_NETWORK: ${HEDERA_NETWORK:-testnet}
+      HEDERA_OPERATOR_ID: ${HEDERA_OPERATOR_ID}
+      HEDERA_OPERATOR_KEY: ${HEDERA_OPERATOR_KEY}
+      HEDERA_TOPIC_COMPLAINTS: ${HEDERA_TOPIC_COMPLAINTS}
+      HEDERA_TOPIC_STATUS: ${HEDERA_TOPIC_STATUS}
+      ENABLE_HEDERA_INDEXER: ${ENABLE_HEDERA_INDEXER:-false}
+      
+      # Cosmos
+      COSMOS_RPC_ENDPOINT: http://sawtak-node-1:26657
+      COSMOS_GRPC_ENDPOINT: http://sawtak-node-1:9090
+      COSMOS_CHAIN_ID: sawtak-testnet-1
+      COSMOS_BACKEND_MNEMONIC: ${COSMOS_BACKEND_MNEMONIC:-tenant mutual lab resist together wrestle tribe drop girl negative unit intact fiction island rapid inform amateur west reject hood lottery issue athlete brief}
+      COSMOS_BACKEND_ADDRESS: ${COSMOS_BACKEND_ADDRESS:-sawtak1czwnf95lklf68kahvxynmqc09wll04pmfcex84}
+      
+      # IPFS
+      WEB3_STORAGE_TOKEN: ${WEB3_STORAGE_TOKEN}
+      
+      # Google Auth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend/src:/app/src:ro  # Mount source for development
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Sawtak Cosmos Chain
+  # ==========================================
+  sawtak-chain:
+    build:
+      context: ../network/Sawtak
+      dockerfile: Dockerfile
+    container_name: sawtak-chain
+    restart: unless-stopped
+    ports:
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+    volumes:
+      - sawtak_chain_data:/root/.sawtak
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Haweya (Decentralized Identity)
+  # ==========================================
+  haweya:
+    build:
+      context: ../haweya
+      dockerfile: Dockerfile
+    container_name: sawtak-haweya
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3030
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/haweya?schema=public
+    ports:
+      - "3030:3030"
+
+  # ==========================================
+  # Infrastructure Only (Backend & DBs)
+  # ==========================================
+
+volumes:
+  postgres_data:
+    external: true
+    name: sawtak_postgres_data
+  redis_data:
+    external: true
+    name: sawtak_redis_data
+  sawtak_chain_data:
+    name: sawtak_chain_data
+
+networks:
+  default:
+    name: sawtak-network
+    driver: bridge

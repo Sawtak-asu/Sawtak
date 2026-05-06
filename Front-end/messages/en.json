@@ -153,10 +153,17 @@
     "helpText2": "For anonymous complaints, we cannot recover your tracking code as it's not linked to any account. For identified complaints, please contact support.",
     "newComplaintCta": "Need to file a new complaint?"
   },
-  "Status": {
-    "submitted": "Pending Review",
-    "investigating": "Under Investigation",
+  "Statuses": {
+    "submitted": "Submitted",
+    "pending": "Pending",
+    "in_progress": "In Progress",
+    "investigating": "Investigating",
+    "under_investigation": "Under Investigation",
     "resolved": "Resolved",
+    "closed": "Closed",
+    "flagged": "Flagged",
+    "flagged_inaccurate": "Flagged Inaccurate",
+    "flagged_legal": "Flagged Legal",
     "dismissed": "Dismissed"
   },
   "LanguageSwitcher": {
