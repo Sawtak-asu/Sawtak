@@ -122,6 +122,7 @@ export function ComplaintForm() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
   const [showSpamWarningDialog, setShowSpamWarningDialog] = useState(false);
+  const [showAIErrorDialog, setShowAIErrorDialog] = useState(false);
   const [isAIValidating, setIsAIValidating] = useState(false);
   const [copied, setCopied] = useState(false);
   const t = useTranslations("ComplaintForm");
@@ -212,11 +213,10 @@ export function ComplaintForm() {
 
   /**
    * Calls the backend AI validation endpoint before allowing submission.
-   * Returns true if the complaint passed (real or validation error),
-   * false if Gemini classified it as fake/spam.
+   * Returns "real" | "fake" | "error"
    */
-  async function runAIValidation(title: string, text: string, category: string): Promise<boolean> {
-    if (!token) return true; // Skip validation if not authenticated (will be caught later)
+  async function runAIValidation(title: string, text: string, category: string): Promise<string> {
+    if (!token) return "real"; // Skip validation if not authenticated (will be caught later)
 
     try {
       setIsAIValidating(true);
@@ -230,23 +230,18 @@ export function ComplaintForm() {
       });
 
       if (!response.ok) {
-        console.warn("[ComplaintForm] AI validation request failed — allowing submission.");
-        return true; // Fail open
+        console.warn("[ComplaintForm] AI validation request failed.");
+        return "error"; 
       }
 
       const data = await response.json();
       const verdict: string = data.verdict;
 
       console.log(`[ComplaintForm] AI verdict: ${verdict}`);
-
-      if (verdict === "fake") {
-        return false; // Block submission
-      }
-
-      return true; // "real" or "error" — allow submission
+      return verdict;
     } catch (err) {
       console.error("[ComplaintForm] AI validation error:", err);
-      return true; // Fail open on network errors
+      return "error";
     } finally {
       setIsAIValidating(false);
     }
@@ -259,14 +254,19 @@ export function ComplaintForm() {
     }
 
     // ── Step 1: AI Validation ────────────────────────────────────
-    const passedAI = await runAIValidation(
+    const aiVerdict = await runAIValidation(
       values.title,
       values.mainText,
       values.category
     );
 
-    if (!passedAI) {
+    if (aiVerdict === "fake") {
       setShowSpamWarningDialog(true);
+      return;
+    }
+
+    if (aiVerdict === "error") {
+      setShowAIErrorDialog(true);
       return;
     }
 
@@ -984,6 +984,37 @@ export function ComplaintForm() {
               className="w-full"
             >
               {t("aiSpamDismiss")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Service Error Dialog */}
+      <Dialog open={showAIErrorDialog} onOpenChange={setShowAIErrorDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-500">
+              <AlertTriangle className="h-5 w-5" />
+              {t("aiValidationErrorTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("aiValidationErrorDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm mt-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                {t("aiValidationErrorHint")}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowAIErrorDialog(false)}
+              className="w-full"
+            >
+              {t("aiValidationDismiss")}
             </Button>
           </DialogFooter>
         </DialogContent>

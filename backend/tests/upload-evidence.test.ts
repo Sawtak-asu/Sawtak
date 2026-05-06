@@ -8,9 +8,9 @@ dotenv.config({ path: "../.env" });
 const app = new Elysia().use(uploadEvidenceRoutes);
 
 describe("Upload Evidence Route Test", () => {
-  test("Should fail if file is larger than 5MB", async () => {
-    // Create a dummy file of 6MB
-    const largeBuffer = new Uint8Array(6 * 1024 * 1024);
+  test("Should fail if file is larger than 50MB", async () => {
+    // Create a dummy file of 51MB
+    const largeBuffer = new Uint8Array(51 * 1024 * 1024);
     const blob = new Blob([largeBuffer], { type: "text/plain" });
     const formData = new FormData();
     formData.append("files", blob, "large_file.txt");
@@ -25,16 +25,16 @@ describe("Upload Evidence Route Test", () => {
     
     const data = await response.json() as any;
     expect(data.success).toBe(false);
-    expect(data.error).toBe("File large_file.txt exceeds the 5MB limit.");
+    expect(data.error).toBe("File large_file.txt exceeds the 50MB limit.");
   });
 
   test("Should successfully upload a small file to Pinata", async () => {
     // Mock fetch for success
     const originalFetch = global.fetch;
-    global.fetch = async () => new Response(JSON.stringify({ IpfsHash: "QmMockHash123456789" }), {
+    global.fetch = (async () => new Response(JSON.stringify({ IpfsHash: "QmMockHash123456789" }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
-    });
+    })) as any;
 
     const textContent = "Hello from Sawtak automated testing! This is evidence.";
     const blob = new Blob([textContent], { type: "text/plain" });
@@ -62,10 +62,10 @@ describe("Upload Evidence Route Test", () => {
   test("Should handle Pinata API failure gracefully", async () => {
     // Mock fetch for failure
     const originalFetch = global.fetch;
-    global.fetch = async () => new Response("Forbidden", {
+    global.fetch = (async () => new Response("Forbidden", {
       status: 403,
       statusText: "Forbidden"
-    });
+    })) as any;
 
     const textContent = "Fail this test";
     const blob = new Blob([textContent], { type: "text/plain" });

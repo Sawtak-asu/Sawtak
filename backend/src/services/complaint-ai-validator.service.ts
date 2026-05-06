@@ -1,25 +1,14 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 /**
  * Complaint AI Validator Service
  *
  * Uses Google Gemini AI to classify incoming complaints as either "real"
  * (legitimate grievance) or "fake" (spam, advertisement, joke, etc.)
  * before allowing them to be submitted to the platform.
- *
- * Responds with a single lowercase word: "real" or "fake"
  */
 
-/** Shape of a successful Gemini generateContent response */
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
-    };
-  }>;
-}
-
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export type AIValidationResult = "real" | "fake" | "error";
 
@@ -30,13 +19,7 @@ export interface ComplaintValidationPayload {
 }
 
 /**
- * Validates a complaint using Google Gemini AI.
- *
- * Returns:
- *   - "real"  → complaint looks genuine, allow submission
- *   - "fake"  → complaint looks like spam/ad/joke, block submission
- *   - "error" → Gemini call failed; in this case we allow submission
- *               to avoid blocking legitimate users due to API downtime
+ * Validates a complaint using Google Gemini AI SDK.
  */
 export async function validateComplaintWithAI(
   payload: ComplaintValidationPayload
@@ -45,23 +28,30 @@ export async function validateComplaintWithAI(
     console.warn(
       "[AIValidator] GEMINI_API_KEY is not set. Skipping AI validation."
     );
-    return "real"; // Fail open — don't block submissions if key is missing
+    return "real";
   }
 
-  const prompt = `You are a content moderation AI for a whistleblowing platform. Your job is to determine if a complaint submission is genuine or fake (spam/advertisement/joke/test).
+  try {
+    console.log(`[AIValidator] Validating complaint: "${payload.title}"`);
+    
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `You are a content moderation AI for a whistleblowing platform. Your job is to determine if a complaint submission is genuine or fake (spam/advertisement/joke/test/low-effort).
 
 A "real" complaint:
-- Describes an actual grievance, misconduct, corruption, fraud, harassment, or similar serious issue
-- Has coherent, meaningful content related to the complaint category
-- Is written in a way that indicates a genuine concern
+- Describes a specific, serious grievance, misconduct, corruption, fraud, or harassment.
+- Contains substantial detail that indicates an actual event or situation.
+- Is written with professional or serious intent.
 
 A "fake" complaint:
-- Is spam or an advertisement
-- Is clearly a test or random gibberish
-- Is a joke or nonsensical content
-- Is unrelated to any real complaint
+- Is an advertisement or promotion (e.g., "Check out this...", "ad: ...").
+- Contains low-effort filler text (e.g., "bla bla bla", "asdfghjkl", "test test").
+- Is clearly a developer test or a joke.
+- Is nonsensical, incoherent, or contains random characters.
+- Lacks enough detail to be considered a legitimate report.
 
-Analyze the following complaint:
+Analyze the following complaint carefully. Even if it sounds frustrated, if it lacks details and uses filler text like "bla bla", it is "fake".
 
 Category: ${payload.category}
 Title: ${payload.title}
@@ -69,55 +59,22 @@ Description: ${payload.text}
 
 Respond with ONLY one word, lowercase: either "real" or "fake". Do not include any explanation or punctuation.`;
 
-  try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.1, // Low temperature for consistent classification
-          maxOutputTokens: 5, // We only need one word
-          topP: 0.8,
-          topK: 10,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `[AIValidator] Gemini API error ${response.status}: ${errorText}`
-      );
-      return "error";
-    }
-
-    const data = await response.json() as GeminiResponse;
-    const rawText: string =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.toLowerCase() ?? "";
+    console.log("[AIValidator] Calling Gemini SDK...");
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rawText = response.text().trim().toLowerCase();
 
     console.log(`[AIValidator] Gemini response: "${rawText}"`);
 
-    if (rawText === "real" || rawText === "fake") {
-      return rawText;
-    }
-
-    // If response contains "real" or "fake" as substring, extract it
     if (rawText.includes("real")) return "real";
     if (rawText.includes("fake")) return "fake";
 
     console.warn(
       `[AIValidator] Unexpected Gemini response: "${rawText}". Defaulting to "real".`
     );
-    return "real"; // Fail open on unexpected responses
+    return "real";
   } catch (err) {
-    console.error("[AIValidator] Failed to call Gemini API:", err);
+    console.error("[AIValidator] SDK Error:", err);
     return "error";
   }
 }

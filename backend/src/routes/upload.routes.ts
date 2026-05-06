@@ -23,6 +23,18 @@ export const uploadRoutes = new Elysia({
     // Ensure we work with an array even if only one file is uploaded
     const files = Array.isArray(rawFiles) ? rawFiles : [rawFiles];
 
+    // 3. File Size Check (50MB per file)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    for (const file of files as any[]) {
+      if (file.size > MAX_FILE_SIZE) {
+        set.status = 400;
+        return {
+          success: false,
+          error: `File ${file.name} exceeds the 50MB limit.`,
+        };
+      }
+    }
+
     try {
       // Handle multiple files concurrently
       const uploadPromises = files.map((file: any) => storageService.uploadFile(file));

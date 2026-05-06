@@ -163,6 +163,9 @@ services:
       PINATA_API_KEY: ${PINATA_API_KEY:-}
       PINATA_API_SECERT_KEY: ${PINATA_API_SECERT_KEY:-}
       PINATA_JWT: ${PINATA_JWT:-}
+      
+      # Gemini AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     networks:
       - internal
       - privacy

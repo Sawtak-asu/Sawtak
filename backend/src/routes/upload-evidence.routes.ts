@@ -22,14 +22,14 @@ export const uploadEvidenceRoutes = new Elysia({
       // Ensure it's an array
       const files = Array.isArray(rawFiles) ? rawFiles : [rawFiles];
 
-      // 3. File Size Check (5MB per file)
-      const MAX_FILE_SIZE = 5 * 1024 * 1024;
+      // 3. File Size Check (50MB per file)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
       for (const file of files) {
         if (file.size > MAX_FILE_SIZE) {
           set.status = 400;
           return {
             success: false,
-            error: `File ${file.name} exceeds the 5MB limit.`,
+            error: `File ${file.name} exceeds the 50MB limit.`,
           };
         }
       }

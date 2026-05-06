@@ -112,6 +112,9 @@ services:
       HAWEYA_CLIENT_ID: ${HAWEYA_CLIENT_ID}
       HAWEYA_CLIENT_SECRET: ${HAWEYA_CLIENT_SECRET}
 
+      # Gemini AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+
       # Privacy Proxy Trust
       PROXY_SECRET: ${PROXY_SECRET}
       REQUIRE_PROXY_AUTH: "true"
