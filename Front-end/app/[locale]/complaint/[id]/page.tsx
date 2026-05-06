@@ -33,7 +33,8 @@ import {
     LogIn,
     AlertCircle,
     Clock,
-    Loader2
+    Loader2,
+    Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -105,6 +106,7 @@ export default function ComplaintPage() {
     const [hasVoted, setHasVoted] = useState(false);
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
     // Complaint history state
     interface HistoryItem {
@@ -329,6 +331,7 @@ export default function ComplaintPage() {
 
     const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
     const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isVideoUrl = (url: string) => /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
     const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
     const toIpfsGatewayUrl = (cid: string) => {
         if (!cid) return "";
@@ -496,25 +499,39 @@ export default function ComplaintPage() {
                                 )}>
                                     {allEvidence.slice(0, 4).map((url, i) => {
                                         const isImage = isImageUrl(url) || isIpfsUrl(url);
+                                        const isVideo = isVideoUrl(url);
                                         const isLast = i === 3 && allEvidence.length > 4;
                                         const remaining = allEvidence.length - 4;
-
+ 
                                         return (
-                                            <a
+                                            <div
                                                 key={i}
-                                                href={url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
                                                 className={cn(
-                                                    "relative aspect-video bg-muted/50",
+                                                    "relative aspect-video bg-muted/50 overflow-hidden cursor-pointer group",
                                                     allEvidence.length === 3 && i === 0 && "row-span-2 aspect-square"
                                                 )}
+                                                onClick={() => isVideo ? setActiveVideoUrl(url) : window.open(url, "_blank")}
                                             >
-                                                {isImage ? (
+                                                {isVideo ? (
+                                                    <div className="relative w-full h-full">
+                                                        <video
+                                                            src={`${url}#t=0.1`}
+                                                            className="w-full h-full object-cover"
+                                                            preload="metadata"
+                                                            muted
+                                                        />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                            <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                                                                <Play className="h-8 w-8 fill-white" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : isImage ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
                                                     <img
                                                         src={url}
                                                         alt={`Evidence ${i + 1}`}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                                         loading="lazy"
                                                     />
                                                 ) : (
@@ -527,7 +544,7 @@ export default function ComplaintPage() {
                                                         <span className="text-2xl font-bold text-white">+{remaining}</span>
                                                     </div>
                                                 )}
-                                            </a>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -735,7 +752,7 @@ export default function ComplaintPage() {
                                                 </div>
                                                 {item.note && (
                                                     <p className="text-base mt-2 bg-background p-3 rounded border text-muted-foreground italic">
-                                                        "{item.note}"
+                                                        &quot;{item.note}&quot;
                                                     </p>
                                                 )}
                                             </div>
@@ -747,6 +764,26 @@ export default function ComplaintPage() {
                     )}
                 </div>
             </div>
+ 
+            {/* Video Player Dialog */}
+            <Dialog open={!!activeVideoUrl} onOpenChange={(open) => !open && setActiveVideoUrl(null)}>
+                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Video Preview</DialogTitle>
+                    </DialogHeader>
+                    {activeVideoUrl && (
+                        <div className="relative aspect-video w-full">
+                            <video
+                                src={activeVideoUrl}
+                                className="w-full h-full"
+                                controls
+                                autoPlay
+                                playsInline
+                            />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </GridBackground>
     );
 }
