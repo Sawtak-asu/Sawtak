@@ -18,7 +18,8 @@ import {
   Eye,
   Users,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -112,12 +113,12 @@ export default function DocsPage() {
               </div>
 
               <div className="rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm">
-                <h4 className="font-medium text-sm mb-2">{t("hcsTopicTitle")}</h4>
+                <h4 className="font-medium text-sm mb-2">{t("blockchainIdTitle")}</h4>
                 <code className="block bg-muted p-2 rounded text-xs font-mono text-muted-foreground break-all">
-                  0.0.7303531
+                  sawtak-mainnet-1
                 </code>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {t("hcsTopicHint")}
+                  {t("blockchainIdHint")}
                 </p>
               </div>
             </div>
@@ -254,12 +255,13 @@ export default function DocsPage() {
                   <div className="my-6 rounded-lg bg-zinc-950 p-4 font-mono text-sm text-zinc-50 border border-zinc-800 overflow-x-auto">
                     <div className="flex items-center justify-between text-zinc-500 mb-2 border-b border-zinc-800 pb-2">
                       <span>{t("blockchain.exampleTitle")}</span>
-                      <span>Topic: 0.0.1234567</span>
+                      <span>Hash: 5A7B3C...2D1F</span>
                     </div>
                     <pre className="text-green-400">
                       {`{
   "timestamp": "2024-03-15T10:30:00.000Z",
-  "sequenceNumber": 42,
+  "height": 14205,
+  "tx_hash": "8f434346648f6b96df89dda901c5176b...",
   "message": {
     "hash": "8f434346648f6b96df89dda901c5176b...",
     "category": "corruption",
@@ -270,8 +272,8 @@ export default function DocsPage() {
                   </div>
                   <p className="text-muted-foreground">
                     {t("blockchain.proof")}
-                    <a href="https://hashscan.io/testnet/topic/0.0.7303531" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1 font-medium inline-flex items-center gap-1">
-                      HashScan
+                    <a href="#" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1 font-medium inline-flex items-center gap-1">
+                      Sawtak Explorer
                       <Globe className="h-3 w-3" />
                     </a>.
                   </p>
@@ -335,31 +337,31 @@ export default function DocsPage() {
                     </ul>
                   </div>
 
-                  {/* Community Moderation */}
+                  {/* Official Response */}
                   <div className="rounded-xl border border-border/50 bg-card/50 p-6">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
-                      <Users className="h-4 w-4 text-blue-500" />
-                      {t("moderation.communityTitle")}
+                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      {t("moderation.officialResponseTitle")}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {t("moderation.communityIntro")}
+                      {t("moderation.officialResponseIntro")}
                     </p>
                     <ul className="space-y-3 text-sm text-muted-foreground">
                       <li className="flex gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">1</span>
-                        <span>{t("moderation.communityStep1")}</span>
+                        <span>{t("moderation.officialResponseStep1")}</span>
                       </li>
                       <li className="flex gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">2</span>
-                        <span>{t("moderation.communityStep2")}</span>
+                        <span>{t("moderation.officialResponseStep2")}</span>
                       </li>
                       <li className="flex gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">3</span>
-                        <span>{t("moderation.communityStep3")}</span>
+                        <span>{t("moderation.officialResponseStep3")}</span>
                       </li>
                       <li className="flex gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-medium text-blue-500">4</span>
-                        <span>{t("moderation.communityStep4")}</span>
+                        <span>{t("moderation.officialResponseStep4")}</span>
                       </li>
                     </ul>
                   </div>

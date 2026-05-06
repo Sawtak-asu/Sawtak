@@ -5,7 +5,7 @@ import { Marquee } from "@/components/ui/marquee";
 import { Server, Database, Lock, Globe, Zap, Cpu, Shield, FileCode, Cloud, Fingerprint } from "lucide-react";
 
 const technologies = [
-    { name: "Hedera Hashgraph", icon: Lock, color: "text-purple-500" },
+    { name: "Sawtak Blockchain", icon: Lock, color: "text-purple-500" },
     { name: "Next.js", icon: Globe, color: "text-white" },
     { name: "Bun Runtime", icon: Zap, color: "text-amber-400" },
     { name: "IPFS", icon: Cloud, color: "text-cyan-400" },
