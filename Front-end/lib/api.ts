@@ -1,14 +1,24 @@
 /**
  * Returns the base URL for all API calls.
  * In Capacitor (mobile), this points directly to the privacy-proxy.
- * In web dev, Next.js rewrites handle /api/* automatically.
+ * In web, Next.js rewrites handle /api/* automatically.
  */
 export function getApiBase(): string {
-  // Set this in your .env file:
-  // NEXT_PUBLIC_API_URL=https://your-privacy-proxy.com
-  return process.env.NEXT_PUBLIC_API_URL ?? "";
+  // Check if we are running inside Capacitor
+  const isCapacitor = typeof window !== 'undefined' && (window as any).Capacitor;
+  
+  if (isCapacitor) {
+    // Mobile must use the absolute URL from environment
+    return process.env.NEXT_PUBLIC_API_URL || "";
+  }
+  
+  // Web should use relative path to leverage Next.js rewrites
+  return ""; 
 }
 
 export function apiUrl(path: string): string {
-  return `${getApiBase()}${path}`;
+  const base = getApiBase();
+  // Ensure the path starts with /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${cleanPath}`;
 }
