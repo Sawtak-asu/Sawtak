@@ -20,8 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+import { isMobileApp } from "@/lib/is-mobile";
+
 interface NavbarProps {
   variant?: "floating" | "sticky";
+  hideLinks?: boolean;
 }
 
 // Truncate name to first 2 words
@@ -31,14 +34,19 @@ function truncateName(name: string | null | undefined): string {
   return words.slice(0, 2).join(" ");
 }
 
-export function Navbar({ variant = "sticky" }: NavbarProps) {
+export function Navbar({ variant = "sticky", hideLinks: hideLinksProp }: NavbarProps) {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [hasTeamAccess, setHasTeamAccess] = React.useState(false);
+  const [isNative, setIsNative] = React.useState(false);
   const { logout, user, isLoggedIn, isLoading, token } = useAuth();
   const pathname = usePathname();
   const t = useTranslations("Navbar");
   const tCommon = useTranslations("Common");
+
+  React.useEffect(() => {
+    setIsNative(isMobileApp());
+  }, []);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -78,7 +86,9 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
   // Check if user has any admin access
   const isAnyAdmin = user?.role === "admin" || user?.role === "platform_admin" || hasTeamAccess;
 
-  const navLinks = [
+  const hideLinks = hideLinksProp || isNative;
+
+  const navLinks = hideLinks ? [] : [
     { href: "/feed", label: t("feed") },
     { href: "/file-complaint", label: t("fileComplaint") },
     { href: "/track", label: t("track") },
