@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Stage 1: Install dependencies
 COPY backend/package.json backend/bun.lock* ./
-RUN bun install --frozen-lockfile --verbose
+RUN bun install --verbose
 
 COPY backend/ .
 COPY network/Sawtak/ts-client /network/Sawtak/ts-client

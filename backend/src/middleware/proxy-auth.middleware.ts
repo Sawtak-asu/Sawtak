@@ -14,11 +14,12 @@ import { Elysia } from "elysia";
 
 
 export const proxyAuthMiddleware = (app: Elysia) => app
-  .onBeforeHandle(({ request, set, headers }) => {
+  .onBeforeHandle(({ request, set }) => {
     const PROXY_SECRET = process.env.PROXY_SECRET || "";
     const REQUIRE_PROXY_AUTH = process.env.REQUIRE_PROXY_AUTH === "true";
 
-    const proxySecret = headers["x-proxy-secret"] as string | undefined;
+    // Use request.headers (raw Fetch API) to bypass Elysia header schema filtering
+    const proxySecret = request.headers.get("x-proxy-secret") ?? undefined;
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -35,18 +36,18 @@ export const proxyAuthMiddleware = (app: Elysia) => app
 
       if (!proxySecret || proxySecret !== PROXY_SECRET) {
         console.warn(
-          `[ProxyAuth] ⛔ Rejected direct access attempt: ${request.method} ${new URL(request.url).pathname}`
+          `[ProxyAuth] ⛔ Rejected direct access attempt: ${request.method} ${path}`
         );
         set.status = 403;
         return { error: "Direct backend access is not allowed" };
       }
     }
   })
-  .derive(({ headers }) => {
-    const proxySecret = headers["x-proxy-secret"] as string | undefined;
-    const proxyRequestId = headers["x-proxy-request-id"] as string | undefined;
-    const proxySessionId = headers["x-proxy-session-id"] as string | undefined;
+  .derive(({ request }) => {
     const PROXY_SECRET = process.env.PROXY_SECRET || "";
+    const proxySecret = request.headers.get("x-proxy-secret") ?? undefined;
+    const proxyRequestId = request.headers.get("x-proxy-request-id") ?? undefined;
+    const proxySessionId = request.headers.get("x-proxy-session-id") ?? undefined;
 
     return {
       proxyRequestId: proxyRequestId || null,

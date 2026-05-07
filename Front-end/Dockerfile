@@ -35,7 +35,7 @@ ENV NEXT_FONT_GOOGLE_MOCKED=1
 RUN bun run build
 
 # Stage 3: Final production image
-FROM node:20-alpine AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -55,4 +55,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["bun", "run", "server.js"]

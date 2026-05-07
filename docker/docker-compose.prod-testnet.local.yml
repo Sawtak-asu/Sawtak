@@ -33,8 +33,8 @@ services:
       - SAWTAK_BACKEND_PUBKEY=${SAWTAK_BACKEND_PUBKEY}
     ports:
       - "26657:26657" # RPC
-      - "1317:1317"   # REST
-      - "9090:9090"   # gRPC
+      - "1317:1317" # REST
+      - "9090:9090" # gRPC
     volumes:
       - sawtak_node_1_data:/root/.sawtak
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
@@ -99,7 +99,7 @@ services:
   # Infrastructure — Postgres
   # ==========================================
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: sawtak-postgres
     restart: always
     environment:
@@ -111,7 +111,11 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-sawtak}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-sawtak}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -200,6 +204,9 @@ services:
       PINATA_API_KEY: ${PINATA_API_KEY:-}
       PINATA_SECRET_API_KEY: ${PINATA_SECRET_API_KEY:-}
 
+      # Gemini AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+
       # Cloudflare R2
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
@@ -249,6 +256,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
+        INTERNAL_API_URL: http://privacy-proxy:4000
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
         NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}
@@ -259,6 +267,7 @@ services:
       - privacy-proxy
     environment:
       NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
+      INTERNAL_API_URL: http://privacy-proxy:4000
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
       NEXT_PUBLIC_HAWEYA_URL: ${NEXT_PUBLIC_HAWEYA_URL:-http://localhost:3030}
       NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${NEXT_PUBLIC_HAWEYA_CLIENT_ID:-sawtak_client}

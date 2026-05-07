@@ -41,9 +41,14 @@ export async function forwardRequest(
   const startTime = performance.now();
 
   try {
+    const headersObj = new Headers();
+    for (const [key, value] of Object.entries(headers)) {
+      headersObj.set(key, value);
+    }
+
     const fetchOptions: RequestInit = {
       method,
-      headers,
+      headers: headersObj,
     };
 
     // Only include body for methods that support it
