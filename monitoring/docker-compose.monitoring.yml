@@ -1,0 +1,73 @@
+﻿name: sawtak-monitoring
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: sawtak-prometheus
+    restart: always
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    ports:
+      - "19100:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./alertmanager.yml:/etc/prometheus/alertmanager.yml:ro,z
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro,z
+      - prometheus_data:/prometheus
+
+    networks:
+      - internal
+      - privacy
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: sawtak-grafana
+    restart: always
+    ports:
+      - "3100:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro,z
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro,z
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - internal
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: sawtak-redis-exporter
+    restart: always
+    env_file: ../.env
+    environment:
+      REDIS_ADDR: redis://sawtak-redis:6379
+    networks:
+      - internal
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: sawtak-postgres-exporter
+    restart: always
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@sawtak-postgres:5432/${POSTGRES_DB:-sawtak}?sslmode=disable
+    networks:
+      - internal
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  internal:
+    external: true
+    name: sawtak_internal
+  privacy:
+    external: true
+    name: sawtak_privacy

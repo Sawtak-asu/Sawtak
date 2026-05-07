@@ -1,14 +1,15 @@
 # ============================================
-# Sawtak - Windows-Specific Testnet Stack
-# ============================================
 name: sawtak
 
 services:
+  # ==========================================
+  # Custom Cosmos Chain - Node 1
+  # ==========================================
   sawtak-node-1:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
+    # build:
+    #   context: ../network/Sawtak
+    #   dockerfile: Dockerfile
     container_name: sawtak-node-1
     restart: always
     environment:
@@ -23,15 +24,16 @@ services:
     volumes:
       - sawtak_node_1_data:/root/.sawtak
       - sawtak_shared_genesis:/shared
+      # Note: Windows line endings might still be an issue here
       - ../network/Sawtak/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro,Z
     networks:
       - internal
 
   sawtak-node-2:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
+    # build:
+    #   context: ../network/Sawtak
+    #   dockerfile: Dockerfile
     container_name: sawtak-node-2
     restart: always
     environment:
@@ -53,9 +55,6 @@ services:
       - internal
 
   sawtak-node-3:
-    build:
-      context: ../network/Sawtak
-      dockerfile: Dockerfile
     image: sawtak-node:latest
     container_name: sawtak-node-3
     restart: always
@@ -77,6 +76,9 @@ services:
     networks:
       - internal
 
+  # ==========================================
+  # Infrastructure
+  # ==========================================
   postgres:
     image: postgres:15-alpine
     container_name: sawtak-postgres
@@ -111,16 +113,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # ==========================================
+  # Backend - WINDOWS OPTIMIZED
+  # ==========================================
   backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
     image: sawtak-backend:latest
+    # build:
+    #   context: ..
+    #   dockerfile: backend/Dockerfile
     container_name: sawtak-backend
     restart: always
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
+    # WINDOWS FIX: Use 'db push' instead of 'migrate deploy' to handle both fresh DBs and existing unmigrated data safely.
     command: >
       sh -c "bunx prisma db push --accept-data-loss && bun run dist/server.js"
     environment:
@@ -170,11 +176,14 @@ services:
       - internal
       - privacy
 
+  # ==========================================
+  # Privacy Proxy
+  # ==========================================
   privacy-proxy:
-    build:
-      context: ../privacy-proxy
-      dockerfile: Dockerfile
     image: sawtak-privacy-proxy:latest
+    # build:
+    #   context: ../privacy-proxy
+    #   dockerfile: Dockerfile
     container_name: sawtak-privacy-proxy
     restart: always
     depends_on:
@@ -195,6 +204,9 @@ services:
     ports:
       - "4000:4000"
 
+  # ==========================================
+  # Frontend
+  # ==========================================
   frontend:
     build:
       context: ../Front-end
@@ -208,6 +220,12 @@ services:
         # compiles rewrites() into routes-manifest.json at build time (not runtime).
         INTERNAL_API_URL: http://privacy-proxy:4000
     image: sawtak-frontend:latest
+    # build:
+    #   context: ../Front-end
+    #   dockerfile: Dockerfile
+    #   args:
+    #     NEXT_PUBLIC_API_URL: http://privacy-proxy:4000
+    #     NEXT_PUBLIC_HAWEYA_URL: http://localhost:3030
     container_name: sawtak-frontend
     restart: always
     depends_on:
@@ -226,6 +244,9 @@ services:
     ports:
       - "3000:3000"
 
+  # ==========================================
+  # Haweya (Mock Identity Provider)
+  # ==========================================
   haweya-db:
     image: postgres:15-alpine
     container_name: sawtak-haweya-db
@@ -243,10 +264,10 @@ services:
       retries: 5
 
   haweya-app:
-    build:
-      context: ../haweya
-      dockerfile: Dockerfile
     image: sawtak-haweya-app:latest
+    # build:
+    #   context: ../haweya
+    #   dockerfile: Dockerfile
     container_name: sawtak-haweya-app
     restart: always
     depends_on:
