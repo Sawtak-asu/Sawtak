@@ -37,21 +37,20 @@ export async function validateComplaintWithAI(
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `You are a content moderation AI for a whistleblowing platform. Your job is to determine if a complaint submission is genuine or fake (spam/advertisement/joke/test/low-effort).
+    const prompt = `You are a content moderation AI for a citizen grievance and whistleblowing platform. Your job is to determine if a complaint submission is a "real" legitimate report or "fake" (spam, ads, or nonsense).
 
 A "real" complaint:
-- Describes a specific, serious grievance, misconduct, corruption, fraud, or harassment.
-- Contains substantial detail that indicates an actual event or situation.
-- Is written with professional or serious intent.
+- Describes any legitimate grievance, service issue (e.g., internet out, power cuts, road issues), or misconduct.
+- Can be short or detailed, as long as it describes a possible real-world problem.
+- Shows a genuine intent to report an issue to the authorities.
 
 A "fake" complaint:
-- Is an advertisement or promotion (e.g., "Check out this...", "ad: ...").
-- Contains low-effort filler text (e.g., "bla bla bla", "asdfghjkl", "test test").
-- Is clearly a developer test or a joke.
-- Is nonsensical, incoherent, or contains random characters.
-- Lacks enough detail to be considered a legitimate report.
+- Is an advertisement, promotion, or link-spam.
+- Is complete gibberish, random characters, or nonsensical text (e.g., "asdfghjkl", "123456").
+- Is an obvious system test (e.g., "test", "testing 123", "ignore this").
+- Lacks any meaning or context (e.g., just "hello" or "ok").
 
-Analyze the following complaint carefully. Even if it sounds frustrated, if it lacks details and uses filler text like "bla bla", it is "fake".
+Analyze the following complaint:
 
 Category: ${payload.category}
 Title: ${payload.title}

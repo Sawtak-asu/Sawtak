@@ -135,7 +135,7 @@ export function ComplaintForm() {
       mainText: "",
       area: "",
       category: "",
-      directedToType: undefined,
+      directedToType: "" as any,
       directedToMinistry: "",
       directedToGovernorate: "",
       directedToCenter: "",
@@ -203,6 +203,15 @@ export function ComplaintForm() {
       } else {
         toast.success(t("identifiedSubmitted"));
       }
+      
+      // Comprehensive cleanup
+      // 1. Revoke all preview URLs to prevent memory leaks
+      previews.forEach(p => {
+        if (p.preview) URL.revokeObjectURL(p.preview);
+      });
+      // 2. Clear state-managed fields
+      setPreviews([]);
+      // 3. Reset the form
       form.reset();
     },
     onError: (error) => {
@@ -253,7 +262,7 @@ export function ComplaintForm() {
       return;
     }
 
-    // ── Step 1: AI Validation ────────────────────────────────────
+    // ── Step 1: AI Validation (Always run for both modes) ─────────
     const aiVerdict = await runAIValidation(
       values.title,
       values.mainText,
@@ -415,7 +424,7 @@ export function ComplaintForm() {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="grid grid-cols-1 md:grid-cols-2 gap-4"
                     >
                       <FormItem>
@@ -468,7 +477,7 @@ export function ComplaintForm() {
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
                         <FormItem>
@@ -543,7 +552,7 @@ export function ComplaintForm() {
                   <FormLabel>{t("category")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}>
+                    value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t("categoryPlaceholder")} />
@@ -592,7 +601,7 @@ export function ComplaintForm() {
                         form.setValue("directedToCenter", "");
                       }
                     }}
-                    defaultValue={field.value}>
+                    value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t("directedToPlaceholder")} />
@@ -622,7 +631,7 @@ export function ComplaintForm() {
                     <FormLabel>{t("ministry")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}>
+                      value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectMinistry")} />
@@ -655,7 +664,7 @@ export function ComplaintForm() {
                         field.onChange(value);
                         form.setValue("directedToCenter", "");
                       }}
-                      defaultValue={field.value}>
+                      value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectGovernorate")} />
@@ -685,7 +694,7 @@ export function ComplaintForm() {
                     <FormLabel>{t("center")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}>
+                      value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectCenter")} />

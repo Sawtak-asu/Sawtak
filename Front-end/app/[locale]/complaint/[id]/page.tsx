@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -107,6 +107,9 @@ export default function ComplaintPage() {
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+    // Map of url → "image" | "video" | "unknown" for IPFS URLs without extension
+    const [mediaTypes, setMediaTypes] = useState<Record<string, "image" | "video" | "unknown">>({});
+    const probedRef = useRef<Set<string>>(new Set());
 
     // Complaint history state
     interface HistoryItem {
@@ -347,6 +350,40 @@ export default function ComplaintPage() {
         ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean) : [];
 
+    // Probe Content-Type for IPFS URLs that have no recognisable extension
+    useEffect(() => {
+        const unknownUrls = allEvidence.filter(
+            (url) => !isImageUrl(url) && !isVideoUrl(url) && isIpfsUrl(url) && !probedRef.current.has(url)
+        );
+        if (unknownUrls.length === 0) return;
+
+        unknownUrls.forEach((url) => {
+            probedRef.current.add(url);
+            fetch(url, { method: "HEAD" })
+                .then((res) => {
+                    const ct = res.headers.get("content-type") ?? "";
+                    const kind: "image" | "video" | "unknown" = ct.startsWith("video/")
+                        ? "video"
+                        : ct.startsWith("image/")
+                        ? "image"
+                        : "unknown";
+                    setMediaTypes((prev) => ({ ...prev, [url]: kind }));
+                })
+                .catch(() => {
+                    setMediaTypes((prev) => ({ ...prev, [url]: "unknown" }));
+                });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allEvidence.join(",")]);
+
+    /** Returns true only when we are certain the URL is a video */
+    const resolveIsVideo = (url: string): boolean => {
+        if (isVideoUrl(url)) return true;
+        if (isImageUrl(url)) return false;
+        // IPFS URL without extension – use probed result
+        return mediaTypes[url] === "video";
+    };
+
     if (isLoading) {
         return (
             <GridBackground>
@@ -498,8 +535,8 @@ export default function ComplaintPage() {
                                     allEvidence.length >= 4 && "grid-cols-2"
                                 )}>
                                     {allEvidence.slice(0, 4).map((url, i) => {
-                                        const isImage = isImageUrl(url) || isIpfsUrl(url);
-                                        const isVideo = isVideoUrl(url);
+                                        const isVideo = resolveIsVideo(url);
+                                        const isImage = isImageUrl(url) || (isIpfsUrl(url) && !isVideo);
                                         const isLast = i === 3 && allEvidence.length > 4;
                                         const remaining = allEvidence.length - 4;
  
@@ -510,21 +547,40 @@ export default function ComplaintPage() {
                                                     "relative aspect-video bg-muted/50 overflow-hidden cursor-pointer group",
                                                     allEvidence.length === 3 && i === 0 && "row-span-2 aspect-square"
                                                 )}
-                                                onClick={() => isVideo ? setActiveVideoUrl(url) : window.open(url, "_blank")}
+                                                onClick={() => {
+                                                    if (isVideo) {
+                                                        setActiveVideoUrl(url);
+                                                    } else {
+                                                        window.open(url, "_blank");
+                                                    }
+                                                }}
                                             >
                                                 {isVideo ? (
                                                     <div className="relative w-full h-full">
-                                                        <video
-                                                            src={`${url}#t=0.1`}
-                                                            className="w-full h-full object-cover"
-                                                            preload="metadata"
-                                                            muted
-                                                        />
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                                            <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
-                                                                <Play className="h-8 w-8 fill-white" />
-                                                            </div>
-                                                        </div>
+                                                        {activeVideoUrl === url ? (
+                                                            <video
+                                                                src={url}
+                                                                className="w-full h-full object-contain bg-black"
+                                                                controls
+                                                                autoPlay
+                                                                playsInline
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        ) : (
+                                                            <>
+                                                                <video
+                                                                    src={`${url}#t=0.1`}
+                                                                    className="w-full h-full object-cover"
+                                                                    preload="metadata"
+                                                                    muted
+                                                                />
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                                    <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                                                                        <Play className="h-8 w-8 fill-white" />
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 ) : isImage ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
@@ -765,25 +821,6 @@ export default function ComplaintPage() {
                 </div>
             </div>
  
-            {/* Video Player Dialog */}
-            <Dialog open={!!activeVideoUrl} onOpenChange={(open) => !open && setActiveVideoUrl(null)}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
-                    <DialogHeader className="sr-only">
-                        <DialogTitle>Video Preview</DialogTitle>
-                    </DialogHeader>
-                    {activeVideoUrl && (
-                        <div className="relative aspect-video w-full">
-                            <video
-                                src={activeVideoUrl}
-                                className="w-full h-full"
-                                controls
-                                autoPlay
-                                playsInline
-                            />
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </GridBackground>
     );
 }
