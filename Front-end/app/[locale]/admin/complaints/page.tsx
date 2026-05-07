@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 import { useAdmin } from "@/lib/admin-context";
 import { useSearchParams } from "next/navigation";
 import { ComplaintCard, Complaint } from "@/components/admin.complaint-card";
@@ -74,7 +75,7 @@ function ComplaintsQueueContent() {
                 params.set("entity", selectedTeam.entity_id);
             }
 
-            const res = await fetch(`/api/admin/complaints?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints?${params}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch complaints");
@@ -89,7 +90,7 @@ function ComplaintsQueueContent() {
     const closeMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/status`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints/${selectedComplaint.id}/status`), {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -119,7 +120,7 @@ function ComplaintsQueueContent() {
     const escalateMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/escalate`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints/${selectedComplaint.id}/escalate`), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

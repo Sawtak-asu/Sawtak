@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 import { useAdmin } from "@/lib/admin-context";
 import { useTranslations } from "next-intl";
 import {
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
                 params.set("entity", selectedTeam.entity_id);
             }
 
-            const res = await fetch(`/api/admin/complaints?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints?${params}`), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -127,7 +128,7 @@ export default function AdminDashboard() {
     const closeMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/status`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints/${selectedComplaint.id}/status`), {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ status: "closed", note: closeNote })
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
     const escalateMutation = useMutation({
         mutationFn: async () => {
             if (!selectedComplaint) return;
-            const res = await fetch(`/api/admin/complaints/${selectedComplaint.id}/escalate`, {
+            const res = await fetch(apiUrl(`/api/admin/complaints/${selectedComplaint.id}/escalate`), {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ priority: escalatePriority, note: escalateNote })

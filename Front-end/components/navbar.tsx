@@ -9,7 +9,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useAuth } from "@/lib/auth-context";
 import { usePathname } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { apiUrl } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,7 +57,7 @@ export function Navbar({ variant = "sticky" }: NavbarProps) {
       }
 
       try {
-                const res = await fetch(`/api/admin/teams/my-teams`, {
+                const res = await fetch(apiUrl(`/api/admin/teams/my-teams`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

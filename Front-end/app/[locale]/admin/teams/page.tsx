@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 import { AdminLayout } from "@/components/admin-layout";
 import {
     Search,
@@ -110,7 +111,7 @@ export default function TeamsPage() {
     const { data: teamsData, isLoading, isError, refetch } = useQuery({
         queryKey: ["admin-teams"],
         queryFn: async () => {
-            const res = await fetch(`/api/admin/teams`, {
+            const res = await fetch(apiUrl(`/api/admin/teams`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch teams");
@@ -123,7 +124,7 @@ export default function TeamsPage() {
     const { data: availableData } = useQuery({
         queryKey: ["available-entities"],
         queryFn: async () => {
-            const res = await fetch(`/api/admin/teams/available-entities`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/available-entities`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch entities");
@@ -136,7 +137,7 @@ export default function TeamsPage() {
     const createMutation = useMutation({
         mutationFn: async ({ entityId, type }: { entityId: string; type: string }) => {
             console.log("User:", user);
-            const res = await fetch(`/api/admin/teams`, {
+            const res = await fetch(apiUrl(`/api/admin/teams`), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -165,7 +166,7 @@ export default function TeamsPage() {
     // Delete team mutation
     const deleteMutation = useMutation({
         mutationFn: async (teamId: string) => {
-            const res = await fetch(`/api/admin/teams/${teamId}`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/${teamId}`), {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });

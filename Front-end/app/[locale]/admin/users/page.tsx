@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 import { AdminLayout } from "@/components/admin-layout";
 import {
     Search,
@@ -110,7 +111,7 @@ function UsersPageContent() {
             if (search) params.set("search", search);
             if (blockedParam) params.set("blocked", blockedParam);
 
-            const res = await fetch(`/api/admin/users?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/users?${params}`), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -125,7 +126,7 @@ function UsersPageContent() {
 
     const blockMutation = useMutation({
         mutationFn: async ({ userId, action }: { userId: string; action: "block" | "unblock" }) => {
-            const res = await fetch(`/api/admin/users/${userId}/${action}`, {
+            const res = await fetch(apiUrl(`/api/admin/users/${userId}/${action}`), {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
