@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -75,6 +75,9 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+    // Map of url → "image" | "video" | "unknown" for IPFS URLs without extension
+    const [mediaTypes, setMediaTypes] = useState<Record<string, "image" | "video" | "unknown">>({});
+    const probedRef = useRef<Set<string>>(new Set());
 
     // Check if user has voted on mount
     useEffect(() => {
@@ -120,6 +123,40 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
     // Filter for images and videos for preview
     const previewEvidence = allEvidence.filter((url) => isImageUrl(url) || isVideoUrl(url) || isIpfsUrl(url));
+
+    // Probe Content-Type for IPFS URLs that have no recognisable extension
+    useEffect(() => {
+        const unknownUrls = previewEvidence.filter(
+            (url) => !isImageUrl(url) && !isVideoUrl(url) && isIpfsUrl(url) && !probedRef.current.has(url)
+        );
+        if (unknownUrls.length === 0) return;
+
+        unknownUrls.forEach((url) => {
+            probedRef.current.add(url);
+            fetch(url, { method: "HEAD" })
+                .then((res) => {
+                    const ct = res.headers.get("content-type") ?? "";
+                    const kind: "image" | "video" | "unknown" = ct.startsWith("video/")
+                        ? "video"
+                        : ct.startsWith("image/")
+                        ? "image"
+                        : "unknown";
+                    setMediaTypes((prev) => ({ ...prev, [url]: kind }));
+                })
+                .catch(() => {
+                    setMediaTypes((prev) => ({ ...prev, [url]: "unknown" }));
+                });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [previewEvidence.join(",")]);
+
+    /** Returns true only when we are certain the URL is a video */
+    const resolveIsVideo = (url: string): boolean => {
+        if (isVideoUrl(url)) return true;
+        if (isImageUrl(url)) return false;
+        // IPFS URL without extension – use probed result
+        return mediaTypes[url] === "video";
+    };
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -331,7 +368,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     previewEvidence.length >= 3 && "grid-cols-2"
                                 )}>
                                     {previewEvidence.slice(0, 4).map((url, i) => {
-                                        const isVideo = isVideoUrl(url);
+                                        const isVideo = resolveIsVideo(url);
                                         const isLastVisible = i === 3;
                                         const hasMore = previewEvidence.length > 4;
                                         const remaining = previewEvidence.length - 4;
@@ -344,7 +381,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                                 key={i}
                                                 className={cn(
                                                     "relative bg-muted/50 overflow-hidden",
-                                                    previewEvidence.length === 1 ? "aspect-video max-h-72 rounded-2xl" : "aspect-square",
+                                                    previewEvidence.length === 1 ? "min-w-[300px] max-w-[500px] max-h-[500px] rounded-2xl" : "aspect-square",
                                                     isTall && "row-span-2",
                                                     // Corner rounding based on position for multi-image grids
                                                     previewEvidence.length === 2 && i === 0 && "rounded-l-2xl",
@@ -370,18 +407,31 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                             >
                                                 {isVideo ? (
                                                     <div className="relative w-full h-full">
-                                                        <video
-                                                            src={`${url}#t=0.1`}
-                                                            className="w-full h-full object-cover"
-                                                            preload="metadata"
-                                                            muted
-                                                            playsInline
-                                                        />
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                                            <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
-                                                                <Play className="h-6 w-6 fill-white" />
-                                                            </div>
-                                                        </div>
+                                                        {activeVideoUrl === url ? (
+                                                            <video
+                                                                src={url}
+                                                                className="w-full h-full object-contain bg-black"
+                                                                controls
+                                                                autoPlay
+                                                                playsInline
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        ) : (
+                                                            <>
+                                                                <video
+                                                                    src={`${url}#t=0.1`}
+                                                                    className="w-full h-full object-cover"
+                                                                    preload="metadata"
+                                                                    muted
+                                                                    playsInline
+                                                                />
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                                    <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                                                                        <Play className="h-6 w-6 fill-white" />
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <img
@@ -478,25 +528,6 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 </Card>
             </motion.div>
  
-            {/* Video Player Dialog */}
-            <Dialog open={!!activeVideoUrl} onOpenChange={(open) => !open && setActiveVideoUrl(null)}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
-                    <DialogHeader className="sr-only">
-                        <DialogTitle>Video Preview</DialogTitle>
-                    </DialogHeader>
-                    {activeVideoUrl && (
-                        <div className="relative aspect-video w-full">
-                            <video
-                                src={activeVideoUrl}
-                                className="w-full h-full"
-                                controls
-                                autoPlay
-                                playsInline
-                            />
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </>
     );
 }

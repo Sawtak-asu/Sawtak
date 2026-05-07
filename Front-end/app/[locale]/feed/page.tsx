@@ -77,7 +77,6 @@ export default function FeedPage() {
     const [dateTo, setDateTo] = useState<Date | undefined>();
     const [location, setLocation] = useState("");
     const [sort, setSort] = useState("newest");
-    const { user } = useAuth();
     const t = useTranslations("Feed");
     const tCommon = useTranslations("Common");
 
@@ -142,8 +141,7 @@ export default function FeedPage() {
 
     // Flatten all pages into a single array
     const allComplaints = data?.pages.flatMap(page => page.data?.complaints || []) || [];
-    const totalComplaints = data?.pages[0]?.data?.pagination.total || 0;
-
+    console.log("allComplaints: ", allComplaints);
     // Filter props shared between sidebar and mobile sheet
     const filterProps = {
         search,
