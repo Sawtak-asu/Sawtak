@@ -14,7 +14,7 @@ A secure platform that lets citizens anonymously report misconduct and corruptio
 
 Sawtak is split across four network trust zones — no component outside its zone can talk directly to components in a more trusted zone.
 
-
+```text
                                     PUBLIC INTERNET
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  ┌───────────┐  ┌──────────┐  ┌───────────┐  ┌──────────────────────────────┐   │
@@ -134,8 +134,10 @@ Sawtak is split across four network trust zones — no component outside its zon
 │  │  Alertmanager  ──→  Email / Webhook notifications                       │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ### Trust Zones
+```text
 
 | Zone           | Services                          | Accessible From         | Entry Points           |
 |----------------|-----------------------------------|-------------------------|------------------------|
@@ -144,8 +146,10 @@ Sawtak is split across four network trust zones — no component outside its zon
 | **Internal**   | Backend, PostgreSQL               | Proxy only (proxy-auth) | `backend:8000`         |
 | **Blockchain** | 3× Cosmos POA Nodes               | Backend only (REST/gRPC)| `:1317–1319`           |
 | **Monitoring** | Prometheus, Grafana, Exporters    | Admin network only      | `:19100`, `:3100`      |
+```
 
 ### Request Flow (Detailed)
+```text
 
   ┌─────┐  POST /api/complaints/anonymous/submit
   │User │  (full headers: IP, UA, cookies, ...)
@@ -175,7 +179,7 @@ Sawtak is split across four network trust zones — no component outside its zon
      └──→ IDENTIFIED ──→ Postgres (AES-256-GCM encrypted)
                              │
                              └──→ Cloudflare R2 (evidence, private)
-
+```
                              
 
 ### Key Design Decisions
