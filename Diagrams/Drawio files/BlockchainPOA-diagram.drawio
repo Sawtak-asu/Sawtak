@@ -1,0 +1,62 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+  <diagram name="Blockchain PoA Architecture" id="270a515a-480b-4f77-a7ba-1023bb3b317a">
+    <mxGraphModel dx="1410" dy="4025" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cosmos_network" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;verticalAlign=top;" value="Sawtak Blockchain Network (PoA)&lt;br&gt;(Testnet example)" vertex="1">
+          <mxGeometry height="500" width="670" x="265" y="-2545" as="geometry" />
+        </mxCell>
+        <mxCell id="val1" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Validator Node 1&#xa;(Admin Controlled)" vertex="1">
+          <mxGeometry height="80" width="180" x="385" y="-2441" as="geometry" />
+        </mxCell>
+        <mxCell id="val2" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Validator Node 2&#xa;(Admin Controlled)" vertex="1">
+          <mxGeometry height="80" width="180" x="643" y="-2441" as="geometry" />
+        </mxCell>
+        <mxCell id="val3" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Validator Node 3&#xa;(Admin Controlled)" vertex="1">
+          <mxGeometry height="80" width="180" x="515" y="-2295" as="geometry" />
+        </mxCell>
+        <mxCell id="rpc1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="RPC/API Endpoint" vertex="1">
+          <mxGeometry height="40" width="120" x="293" y="-2241" as="geometry" />
+        </mxCell>
+        <mxCell id="rpc2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="RPC/API Endpoint" vertex="1">
+          <mxGeometry height="40" width="120" x="767" y="-2241" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" parent="1" style="rounded=1;fillColor=#dae8fc;" value="Backend Services" vertex="1">
+          <mxGeometry height="60" width="160" x="510" y="-2755" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="val1" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="val2" value="P2P Gossip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="val2" style="endArrow=classic;html=1;rounded=0;" target="val3" value="P2P Gossip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="val3" style="endArrow=classic;html=1;rounded=0;strokeColor=default;" target="val1" value="P2P Gossip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="val1" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="rpc1" value="Exposes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="455" y="-2301" />
+              <mxPoint x="353" y="-2301" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="val2" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="rpc2" value="Exposes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="765" y="-2301" />
+              <mxPoint x="827" y="-2301" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="backend" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="rpc1" value="Submits Tx/Query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="backend" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="rpc2" value="Fallback Request">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

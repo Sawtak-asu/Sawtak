@@ -1,0 +1,84 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+  <diagram name="Container Architecture" id="6822f5b3-ad93-4298-b968-fa89510ebff3">
+    <mxGraphModel dx="1659" dy="971" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#000000;" value="2. Container Architecture: Internal Boundaries" vertex="1">
+          <mxGeometry height="40" width="700" x="200" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_dmz" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0052cc;dashed=1;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontColor=#0052cc;" value="DMZ / Gateway" vertex="1">
+          <mxGeometry height="600" width="320" x="50" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_internal" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0052cc;dashed=1;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontColor=#0052cc;" value="Internal Network (sawtak-network)" vertex="1">
+          <mxGeometry height="600" width="700" x="400" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0052cc;fontColor=#000000;strokeWidth=2;shadow=0;" value="Frontend Web Server&#xa;(Next.js 16 / React)" vertex="1">
+          <mxGeometry height="100" width="220" x="100" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="proxy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Privacy Proxy&#xa;(Elysia JS / Bun)" vertex="1">
+          <mxGeometry height="100" width="220" x="440" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Backend API&lt;br&gt;(Elysia.js/Bun)&lt;br&gt;&lt;font style=&quot;font-size: 7px;&quot;&gt;Accessible only through proxy&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="770" y="318" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;" value="Redis Store&#xa;(Sessions &amp; Rate Limits)" vertex="1">
+          <mxGeometry height="70" width="170" x="465" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;" value="PostgreSQL&#xa;(Relational Data)" vertex="1">
+          <mxGeometry height="80" width="220" x="770" y="154" as="geometry" />
+        </mxCell>
+        <mxCell id="cosmos" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Cosmos Node (x/poa)&#xa;(Blockchain Validator)" vertex="1">
+          <mxGeometry height="100" width="220" x="770" y="454" as="geometry" />
+        </mxCell>
+        <mxCell id="indexer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0052cc;fontColor=#000000;strokeWidth=2;shadow=0;" value="Cosmos Indexer Service" vertex="1">
+          <mxGeometry height="60" width="220" x="770" y="614" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="frontend" style="endArrow=block;html=1;rounded=1;strokeColor=#0052cc;strokeWidth=2;fontColor=#0052cc;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="proxy" value="HTTPS API Calls">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="400" />
+              <mxPoint x="450" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="proxy" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="backend" value="Sanitized Internal Requests">
+          <mxGeometry relative="1" x="-0.25" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="700" y="390" />
+              <mxPoint x="700" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="proxy" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="redis" value="Check Limits / Session">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="550" y="510" />
+              <mxPoint x="550" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="backend" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="postgres" value="Prisma ORM Queries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="backend" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="cosmos" value="gRPC / REST Txs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="cosmos" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="indexer" value="Block Events Stream">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="indexer" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="postgres" value="">
+          <mxGeometry relative="1" x="-0.1765" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1040" y="644" />
+              <mxPoint x="1040" y="194" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
