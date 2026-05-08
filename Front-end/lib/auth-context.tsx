@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiUrl } from "@/lib/api";
 
 interface User {
   id: string;
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyStoredToken = async (storedToken: string) => {
     try {
             const response = await fetch(
-        `/api/auth/verify`,
+        apiUrl(`/api/auth/verify`),
         {
           headers: {
             Authorization: `Bearer ${storedToken}`,
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
             const response = await fetch(
-        `/api/auth/verify`,
+        apiUrl(`/api/auth/verify`),
         {
           headers: {
             Authorization: `Bearer ${token}`,

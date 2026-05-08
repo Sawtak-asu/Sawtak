@@ -3,13 +3,19 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
+const isMobileBuild = process.env.NEXT_BUILD_TARGET === "mobile";
+
 const nextConfig: NextConfig = {
   /* config options here */
 
-  // Enable standalone output for Docker production builds
-  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+  // Mobile build (Capacitor) → static export
+  // Web/Docker build → standalone
+  output: isMobileBuild ? "export" : "standalone",
+  trailingSlash: isMobileBuild ? true : false,
 
   images: {
+    // Required for static export (mobile), or when using remote images
+    unoptimized: isMobileBuild ? true : false,
     remotePatterns: [
       {
         protocol: "https",
@@ -24,23 +30,24 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  async rewrites() {
-    // INTERNAL_API_URL: used server-side inside Docker (e.g. http://privacy-proxy:4000)
-    // NEXT_PUBLIC_API_URL: fallback for local dev outside Docker (e.g. http://localhost:4000)
-    const apiUrl =
-      process.env.INTERNAL_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:4000";
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${apiUrl}/api/:path*`,
-      },
-    ];
-  },
+  // Only use rewrites in web mode (Capacitor static export doesn't support rewrites)
+  ...(!isMobileBuild && {
+    async rewrites() {
+      const apiUrl =
+        process.env.INTERNAL_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:4000";
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${apiUrl}/api/:path*`,
+        },
+      ];
+    },
+  }),
 
   experimental: {
-    middlewareClientMaxBodySize: '50mb',
+    proxyClientMaxBodySize: '50mb',
     serverActions: {
       bodySizeLimit: '50mb',
     },

@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DirectedTo, GOVERNORATES, MINISTRIES } from "@/lib/egypt-locations";
@@ -85,7 +86,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
         const checkVoteStatus = async () => {
             try {
-                const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
+                const res = await fetch(apiUrl(`/api/vote/status?complaintId=${complaint.id}`), {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -171,7 +172,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`/api/vote`, {
+            const res = await fetch(apiUrl(`/api/vote`), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

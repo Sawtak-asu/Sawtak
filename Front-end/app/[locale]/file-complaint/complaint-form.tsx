@@ -82,6 +82,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { apiUrl } from "@/lib/api";
+
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "Title must be at least 5 characters.",
@@ -180,7 +182,7 @@ export function ComplaintForm() {
         "Authorization": `Bearer ${token}`,
       };
 
-      const response = await fetch(endpoint, {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers,
         body: JSON.stringify(data.payload),
@@ -229,7 +231,7 @@ export function ComplaintForm() {
 
     try {
       setIsAIValidating(true);
-      const response = await fetch("/api/complaints/validate", {
+      const response = await fetch(apiUrl("/api/complaints/validate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,7 +248,6 @@ export function ComplaintForm() {
       const data = await response.json();
       const verdict: string = data.verdict;
 
-      console.log(`[ComplaintForm] AI verdict: ${verdict}`);
       return verdict;
     } catch (err) {
       console.error("[ComplaintForm] AI validation error:", err);
@@ -298,7 +299,7 @@ export function ComplaintForm() {
         // Public/Identified -> Default storage (Supabase/R2)
         const uploadEndpoint = isPublic ? `/api/upload` : `/api/upload/ipfs`;
 
-        const uploadResponse = await fetch(uploadEndpoint, {
+        const uploadResponse = await fetch(apiUrl(uploadEndpoint), {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

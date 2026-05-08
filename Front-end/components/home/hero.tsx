@@ -9,9 +9,18 @@ import { TextEffect } from "@/components/ui/text-effect";
 import { motion } from "motion/react";
 import { useTranslations, useLocale } from "next-intl";
 
+import { isMobileApp } from "@/lib/is-mobile";
+import { Search, BookOpen, LayoutGrid, FilePlus2 } from "lucide-react";
+
 export function Hero() {
     const t = useTranslations("Hero");
+    const tNav = useTranslations("Navbar");
     const locale = useLocale();
+    const [isNative, setIsNative] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsNative(isMobileApp());
+    }, []);
 
     // Use Inter for English, inherit Cairo for Arabic
     const headingFontClass = locale === "ar" ? "font-harmattan" : "font-inter";
@@ -114,24 +123,69 @@ export function Hero() {
                     </TextEffect>
 
                     {/* CTA Buttons with fade in */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 1.8 }}
-                        className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
-                    >
-                        <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
-                            <Link href="/file-complaint">
-                                {t("cta1")}
-                                <ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80">
-                            <Link href="/feed">
-                                {t("cta2")}
-                            </Link>
-                        </Button>
-                    </motion.div>
+                    {isNative ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: 1.5 }}
+                            className="mt-12 grid grid-cols-2 gap-4 max-w-lg mx-auto px-2"
+                        >
+                            <Button asChild size="lg" className="h-28 flex-col gap-3 text-lg font-semibold shadow-xl shadow-primary/20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 border-none group transition-all active:scale-95">
+                                <Link href="/file-complaint">
+                                    <div className="p-2 bg-white/20 rounded-xl group-hover:scale-110 transition-transform">
+                                        <FilePlus2 className="h-6 w-6" />
+                                    </div>
+                                    {tNav("fileComplaint")}
+                                </Link>
+                            </Button>
+                            
+                            <Button asChild variant="outline" size="lg" className="h-28 flex-col gap-3 text-lg font-semibold rounded-2xl bg-background/50 backdrop-blur-md border-border/50 hover:border-primary/50 group transition-all active:scale-95">
+                                <Link href="/feed">
+                                    <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <LayoutGrid className="h-6 w-6 text-primary" />
+                                    </div>
+                                    {tNav("feed")}
+                                </Link>
+                            </Button>
+
+                            <Button asChild variant="outline" size="lg" className="h-28 flex-col gap-3 text-lg font-semibold rounded-2xl bg-background/50 backdrop-blur-md border-border/50 hover:border-primary/50 group transition-all active:scale-95">
+                                <Link href="/track">
+                                    <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <Search className="h-6 w-6 text-primary" />
+                                    </div>
+                                    {tNav("track")}
+                                </Link>
+                            </Button>
+
+                            <Button asChild variant="outline" size="lg" className="h-28 flex-col gap-3 text-lg font-semibold rounded-2xl bg-background/50 backdrop-blur-md border-border/50 hover:border-primary/50 group transition-all active:scale-95">
+                                <Link href="/docs">
+                                    <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <BookOpen className="h-6 w-6 text-primary" />
+                                    </div>
+                                    {tNav("docs")}
+                                </Link>
+                            </Button>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 1.8 }}
+                            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+                        >
+                            <Button asChild size="lg" className="h-12 px-8 text-base group shadow-lg shadow-primary/20">
+                                <Link href="/file-complaint">
+                                    {t("cta1")}
+                                    <ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180" />
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80">
+                                <Link href="/feed">
+                                    {t("cta2")}
+                                </Link>
+                            </Button>
+                        </motion.div>
+                    )}
 
                     {/* Trust indicators with staggered fade in */}
                     <motion.div
