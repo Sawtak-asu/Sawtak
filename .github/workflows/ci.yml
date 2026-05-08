@@ -150,6 +150,12 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           COSMOS_CHAIN_ID: ${{ secrets.COSMOS_CHAIN_ID }}
           COSMOS_BACKEND_MNEMONIC: ${{ secrets.COSMOS_BACKEND_MNEMONIC }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
 
       - name: Start privacy proxy
         working-directory: ./privacy-proxy
