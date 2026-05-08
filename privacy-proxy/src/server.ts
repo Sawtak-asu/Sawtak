@@ -218,6 +218,45 @@ const app = new Elysia()
     return result.body;
   })
 
+  // ─── Swagger Docs ────────────────────────────────────────────
+  // Forward swagger docs to the backend (no sanitization needed)
+  .all("/swagger*", async ({ request, set }) => {
+    metrics.requestsTotal++;
+    const proxyStart = performance.now();
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const query = request.method === "GET" ? url.search : "";
+
+    let body: ReadableStream<Uint8Array> | ArrayBuffer | string | null = null;
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase())) {
+      body = request.body;
+    }
+
+    const headers: Record<string, string> = {};
+    for (const [name, value] of request.headers) {
+      headers[name] = value;
+    }
+
+    const result = await forwardRequest(request.method, path + query, headers, body);
+    const totalMs = performance.now() - proxyStart;
+
+    if (!result.success) {
+      metrics.upstreamErrors++;
+      set.status = result.status;
+      return { error: "Service temporarily unavailable", proxy: true };
+    }
+
+    metrics.requestsForwarded++;
+    set.status = result.status;
+    for (const [name, value] of Object.entries(result.headers)) {
+      set.headers[name] = value;
+    }
+
+    console.log(`[Proxy] 📖 ${request.method} ${path} → ${result.status} (${totalMs.toFixed(1)}ms)`);
+    return result.body;
+  })
+
   // ─── Catch-all for non-API routes ──────────────────────────
   .all("*", ({ set }) => {
     set.status = 404;
