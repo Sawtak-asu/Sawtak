@@ -56,7 +56,7 @@ backup/
 #ignite - network env
 vue/node_modules
 vue/dist
-release/
+# release/
 .idea/
 .vscode/
 .DS_Store
@@ -77,7 +77,7 @@ wallets.md
 
 vue/node_modules
 vue/dist
-release/
+# release/
 .idea/
 .vscode/
 .DS_Store

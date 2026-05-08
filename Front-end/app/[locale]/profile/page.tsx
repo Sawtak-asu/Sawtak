@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import {
     User,
@@ -64,7 +65,7 @@ export default function ProfilePage() {
     const { data, isLoading } = useQuery({
         queryKey: ["my-complaints", user?.id],
         queryFn: async () => {
-            const res = await fetch(`/api/complaints/identified/user/${user?.id}`, {
+            const res = await fetch(apiUrl(`/api/complaints/identified/user/${user?.id}`), {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

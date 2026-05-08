@@ -19,7 +19,8 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { type DirectedTo } from "@/lib/egypt-locations";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { apiUrl } from "@/lib/api";
 
 interface FeedResponse {
     success: boolean;
@@ -64,7 +65,7 @@ async function fetchFeed(params: {
     if (params.submissionMode && params.submissionMode !== "all") searchParams.set("submissionMode", params.submissionMode);
     if (params.directedTo) searchParams.set("directedTo", JSON.stringify(params.directedTo));
 
-    const response = await fetch(`/api/feed?${searchParams.toString()}`);
+    const response = await fetch(apiUrl(`/api/feed?${searchParams.toString()}`));
     return response.json();
 }
 
@@ -141,7 +142,6 @@ export default function FeedPage() {
 
     // Flatten all pages into a single array
     const allComplaints = data?.pages.flatMap(page => page.data?.complaints || []) || [];
-    console.log("allComplaints: ", allComplaints);
     // Filter props shared between sidebar and mobile sheet
     const filterProps = {
         search,
