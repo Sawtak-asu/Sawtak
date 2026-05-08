@@ -1,0 +1,51 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+  <diagram name="Cosmos PoA" id="6fa0f48e-ec57-4e52-b19c-ceeaebac9690">
+    <mxGraphModel dx="1426" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#000000;" value="5. Blockchain Network: Proof of Authority (PoA)" vertex="1">
+          <mxGeometry height="40" width="700" x="235" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_net" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0052cc;dashed=1;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontColor=#0052cc;" value="Cosmos Peer-to-Peer Network" vertex="1">
+          <mxGeometry height="500" width="800" x="185" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="v1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0052cc;fontColor=#000000;strokeWidth=2;shadow=0;" value="Validator Node 1&#xa;(Admin Instance A)" vertex="1">
+          <mxGeometry height="80" width="200" x="285" y="244" as="geometry" />
+        </mxCell>
+        <mxCell id="v2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Validator Node 2&#xa;(Admin Instance B)" vertex="1">
+          <mxGeometry height="80" width="200" x="685" y="244" as="geometry" />
+        </mxCell>
+        <mxCell id="v3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Validator Node 3&#xa;(Admin Instance C)" vertex="1">
+          <mxGeometry height="80" width="200" x="485" y="414" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_poa" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="x/poa Module" vertex="1">
+          <mxGeometry height="60" width="140" x="285" y="514" as="geometry" />
+        </mxCell>
+        <mxCell id="ante" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="AnteHandler&#xa;(Restrict Txs)" vertex="1">
+          <mxGeometry height="60" width="140" x="705" y="514" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="v1" style="endArrow=block;html=1;rounded=1;strokeColor=#0052cc;strokeWidth=2;fontColor=#0052cc;edgeStyle=orthogonalEdgeStyle;endFill=1;startArrow=classic;startFill=1;" target="v2" value="CometBFT Consensus (P2P)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="v2" style="endArrow=block;html=1;rounded=1;strokeColor=#0052cc;strokeWidth=2;fontColor=#0052cc;edgeStyle=orthogonalEdgeStyle;endFill=1;startArrow=classic;startFill=1;" target="v3" value="CometBFT Consensus (P2P)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="v3" style="endArrow=block;html=1;rounded=1;strokeColor=#0052cc;strokeWidth=2;fontColor=#0052cc;edgeStyle=orthogonalEdgeStyle;endFill=1;startArrow=classic;startFill=1;" target="v1" value="CometBFT Consensus (P2P)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="v1" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="mod_poa" value="Utilizes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="355" y="364" />
+              <mxPoint x="355" y="364" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="mod_poa" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="ante" value="Triggers Validation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+backup/
+docker/backups/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Env files (sensitive)
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+docs/
+
+# Backups
+backup/
+
+# Test files
+__tests__/
+*.test.*
+*.spec.*
+
+# Misc
+coverage/
+.nyc_output/
+*.sql
