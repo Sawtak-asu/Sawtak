@@ -1,0 +1,19 @@
+{
+  "name": "sawtak-privacy-proxy",
+  "version": "1.0.0",
+  "description": "Privacy proxy layer for Sawtak - strips metadata and forwards sanitized requests",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "start": "bun run src/server.ts",
+    "build": "bun build src/server.ts --outdir dist --target bun --minify"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "latest",
+    "elysia": "latest",
+    "ioredis": "^5.10.1"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "dotenv": "^17.2.3"
+  }
+}

@@ -1,504 +1,474 @@
-# 🗣️ Sawtak - Anonymous Whistleblowing Platform
+# Sawtak - Anonymous Whistleblowing Platform
+A secure platform that lets citizens anonymously report misconduct and corruption, with cryptographic guarantees of data integrity and privacy.
 
-A secure, resilient, and trustworthy platform that allows citizens to anonymously report misconduct, corruption, or other complaints with cryptographic guarantees of data integrity and submission proof.
-
----
-
-### Key Features
-
-- **Dual Submission Modes**
-  - 🔒 **Anonymous Mode**: Immutable blockchain storage with public pseudonym
-  - 👤 **Identified Mode**: Traditional database with admin-visible identity
-
-- **Blockchain Transparency**
-  - All anonymous complaints stored on Hedera Consensus Service (HCS)
-  - Public verification via blockchain explorer
-  - Immutable audit trail
-
-- **Public Transparency Portal**
-  - Browse all anonymous complaints without login
-  - Advanced search and filtering by category, area, status
-  - Real-time statistics dashboard
-  - Community voting on complaints
-
-- **Secure Admin Portal**
-  - Multi-role access control
-  - Identity reveal workflow with multi-sig approval 
-  - Comprehensive audit logging
+[![Quick Start](https://img.shields.io/badge/▶_Quick_Start-2ea44f?style=for-the-badge)](#quick-start)
+[![API Docs](https://img.shields.io/badge/📖_API_Endpoints-1f6feb?style=for-the-badge)](#api-endpoints)
+[![Testing](https://img.shields.io/badge/🧪_Testing-6f42c1?style=for-the-badge)](#testing)
+[![Monitoring](https://img.shields.io/badge/📊_Monitoring-dc3545?style=for-the-badge)](#monitoring)
+[![Architecture](https://img.shields.io/badge/🏗_Architecture-343a40?style=for-the-badge)](#architecture)
+[![Security](https://img.shields.io/badge/🔒_Security-e67e22?style=for-the-badge)](#security)
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-### Current Architecture (Phase 1)
+Sawtak is split across four network trust zones — no component outside its zone can talk directly to components in a more trusted zone.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         SAWTAK                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Frontend (Next.js 14)             Backend (Bun + Elysia)   │
-│  ├── User Dashboard                ├── REST API             │
-│  ├── Admin Portal                  ├── Hedera Integration   │
-│  └── Public Browse                 ├── IPFS/Supabase        │
-│                                    └── Background Jobs      │
-│                                                             │
-│  Database (PostgreSQL)             Blockchain (Hedera)      │
-│  ├── Users & Profiles              ├── HCS Topic 1          │
-│  ├── Identified Complaints         │   (Complaints)         │
-│  ├── Tracking & Audit              └── HCS Topic 2          │
-│  └── Indexed Complaints                (Status Updates)     │
-│                                                             │
-│  Cache (Redis)                     Storage                  │
-│  ├── Sessions                      ├── IPFS (Anonymous)     │
-│  ├── Rate Limiting                 └── CloudflareR2 (Identified)│
-│  └── Job Queue                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Future Architecture (Phase 2 - Privacy Proxy Layer)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Client (Frontend)                        │
-│                 (Web Browser / Mobile App)                  │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         │ HTTPS
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│              🔒 Privacy Proxy Server 🔒                    │
-│             (Public-Facing, Port 443/8443)                  │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  Privacy Protection Layer                           │    │
-│  │  ├─ Session Management (Redis)                      │    │
-│  │  ├─ Rate Limiting (Per-Session + IP)                │    │
-│  │  ├─ IP Anonymization (VPN-like)                     │    │
-│  │  ├─ Browser Fingerprint Stripping                   │    │
-│  │  └─ Request Sanitization                            │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                             │
-│  Replaces: Client IP → Proxy IP                             │
-│  Strips: User-Agent, Referer, X-Forwarded-*                 │
-│  Forwards: Clean, anonymized requests                       │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         │ Internal Network Only
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│         Elysia.js Backend (Internal Only, Port 8000)        │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  Middleware: Auth, CORS, Logging                    │    │
-│  └─────────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  Services: Complaints, Storage, Blockchain          │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-          │              │               │
-          ▼              ▼               ▼
-┌──────────────┐ ┌─────────────┐ ┌──────────────┐
-│   Hedera     │ │  PostgreSQL │ │   Storage    │
-│  Blockchain  │ │  Database   │ │  (S3/IPFS)   │
-└──────────────┘ └─────────────┘ └──────────────┘
-```
-
-**Key Benefits of Phase 2:**
-- ✅ Privacy Proxy intercepts ALL client requests
-- ✅ Backend NEVER sees real client IPs or metadata
-- ✅ Session-based rate limiting (not IP-based)
-- ✅ VPN-like anonymization for whistleblowers
-- ✅ Optional Tor integration for maximum privacy
-- ✅ Backend runs on internal network (not publicly accessible)
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 16 
-- **State**: React Query (TanStack), Zustand
-- **Language**: TypeScript
-
-### Backend
-- **Runtime**: Bun
-- **Framework**: Elysia.js
-- **Language**: TypeScript
-- **Monitoring**: Prometheus + Grafana
-
-### Database & Storage
-- **Primary DB**: PostgreSQL 15
-- **ORM**: Prisma
-- **File Storage**: Supabase Storage (identified evidence), IPFS (anonymous evidence)
-
-### Blockchain
-- **Network**: Hedera Mainnet/Testnet
-- **SDK**: @hashgraph/sdk
-- **Service**: Hedera Consensus Service (HCS)
-
----
-
-## 📁 Project Structure
-
-```
-sawtak/
-├── backend/
-│   ├── src/
-│   │   ├── routes/           # API route definitions
-│   │   ├── controllers/      # Request handlers
-│   │   ├── services/         # Business logic
-│   │   │   ├── auth/
-│   │   │   │   ├── auth.service.ts
-│   │   │   │   ├── google.provider.ts
-│   │   │   │   └── haweya.provider.ts   # 🆕 Haweya OAuth
-│   │   │   ├── hedera.service.ts
-│   │   │   ├── hedera-indexer.service.ts
-│   │   │   ├── anonymous-submission.service.ts
-│   │   │   ├── identified-complaint.service.ts
-│   │   │   ├── feed.service.ts
-│   │   │   └── vote.service.ts
-│   │   ├── data/
-│   │   │   └── egypt-locations.ts      # 🆕 Egypt admin divisions
-│   │   ├── middleware/       # Auth, logging middleware
-│   │   ├── telemetry/        # Prometheus metrics
-│   │   ├── utils/            # Helper functions
-│   │   └── validators/       # Input validation
-│   ├── prisma/
-│   │   └── schema.prisma     # Database schema
-│   ├── package.json
-│   └── Dockerfile
-│
-├── Front-end/
-│   ├── app/
-│   │   ├── (auth)/           # Login, signup pages
-│   │   ├── feed/             # Public feed
-│   │   ├── admin/            # Admin portal
-│   │   ├── file-complaint/   # Complaint form with directedTo
-│   │   └── complaints/       # Complaint submission
-│   ├── components/           # React components
-│   ├── lib/
-│   │   ├── egypt-locations.ts  # 🆕 Egypt admin divisions
-│   │   └── auth-context.tsx
-│   └── package.json
-│
-├── haweya/                   # 🆕 Mock Haweya OAuth Provider
-│   ├── backend/
-│   │   └── src/
-│   │       ├── index.ts      # Elysia OAuth server
-│   │       └── db.ts         # In-memory store
-│   ├── frontend/
-│   │   ├── index.html
-│   │   ├── login.html
-│   │   ├── signup.html
-│   │   └── css/style.css
-│   ├── Dockerfile
-│   ├── package.json
-│   └── README.md             # Haweya documentation
-│
-├── docker/                   # Docker configurations
-├── monitoring/               # Grafana + Prometheus configs
-├── Makefile                  # Build automation
-├── docker-compose.yml
-└── README.md
+```text
+                                    PUBLIC INTERNET
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  ┌───────────┐  ┌──────────┐  ┌───────────┐  ┌──────────────────────────────┐   │
+│  │  Browser  │  │  Mobile  │  │   Admin   │  │  Haweya (Nat'l ID OAuth)     │   │
+│  │ (Citizen) │  │(Citizen) │  │(Official) │  │                              │   │
+│  └─────┬─────┘  └────┬─────┘  └─────┬─────┘  └──────────────┬───────────────┘   │
+└────────┼─────────────┼──────────────┼───────────────────────┼───────────────────┘
+         │             │              │                       │
+         ▼             ▼              ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  DMZ — PRIVACY PROXY  :4000                                                     │
+│  (only public endpoint — all external traffic enters here)                      │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Request Ingress ──→ Security Policy Engine ──→ Upstream Forwarder ──►  │    │
+│  │                              │                  │                       │    │
+│  │                     ┌────────┴───────┐   ┌──────┴───────┐               │    │
+│  │                     │   Anonymous    │   │  Sanitizer   │               │    │
+│  │                     │    Session     │   │  / Metadata  │               │    │
+│  │                     │   Management   │   │   Stripper   │               │    │
+│  │                     └────────┬───────┘   └──────┬───────┘               │    │
+│  │                              │                  │                       │    │
+│  │                     ┌────────┴──────────────────┴───────┐               │    │
+│  │                     │         Identity Anonymizer       │               │    │
+│  │                     └───────────────────────────────────┘               │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Redis Store  :6379                              ┌──────────────────┐   │    │
+│  │  ┌───────────────────┐  ┌──────────────────┐     │   Rate Limiter   │   │    │
+│  │  │ Sessions / Cache  │  │   Rate Limit     │     │ (Sliding Window) │   │    │
+│  │  └───────────────────┘  │    Counters      │     └──────────────────┘   │    │
+│  │                         └──────────────────┘                            │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────┬───────────────────────────────────────────┘
+                                      │ internal network (sawtak_internal)
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  INTERNAL — BACKEND  :8000  (proxy-auth required, no external exposure)         │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Middleware Layer                                                       │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐    │    │
+│  │  │ Proxy Auth  │  │ Auth (JWT)  │  │CORS / Helmet│  │ Teams / RBAC │    │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └──────────────┘    │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Services                                                               │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────────────┐   │    │
+│  │  │    Anonymous    │  │   Identified    │  │   AI Content Filter    │   │    │
+│  │  │   Submission    │  │   Submission    │  │  (Gemini Spam Check)   │   │    │
+│  │  └────────┬────────┘  └────────┬────────┘  └───────────┬────────────┘   │    │
+│  │           │                    │                       │                │    │
+│  │  ┌────────┴────────────────────┴───────────────────────┴────────────┐   │    │
+│  │  │          Auth Service (Google OAuth / Haweya OAuth / JWT)        │   │    │
+│  │  └──────────────────────────────────────────────────────────────────┘   │    │
+│  │                                                                         │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐    │    │
+│  │  │Feed Service │  │Vote Service │  │ Admin Panel │  │   Evidence   │    │    │
+│  │  │             │  │             │  │             │  │  Upload (R2) │    │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └──────────────┘    │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Data Stores (internal)                                                 │    │
+│  │  ┌───────────────────────────────────┐  ┌──────────────────────────┐    │    │
+│  │  │  PostgreSQL  :5432                │  │  Cosmos Indexer          │    │    │
+│  │  │  ┌──────────┐  ┌───────────────┐  │  │  (polls blockchain events│    │    │
+│  │  │  │  Users   │  │  Identified   │  │  │   → writes indexed data  │    │    │
+│  │  │  ├──────────┤  │  Complaints   │  │  │   to Postgres)           │    │    │
+│  │  │  │Anonymous │  ├───────────────┤  │  └──────────────────────────┘    │    │
+│  │  │  │ Tracking │  │  Audit Logs   │  │                                  │    │
+│  │  │  └──────────┘  └───────────────┘  │                                  │    │
+│  │  └───────────────────────────────────┘                                  │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  External Integrations                                                  │    │
+│  │  ┌──────────────────────┐  ┌──────────────────────┐  ┌───────────────┐  │    │
+│  │  │     Pinata IPFS      │  │     Cloudflare R2    │  │ Haweya OAuth  │  │    │
+│  │  │  (anon. evidence —   │  │  (ident. evidence —  │  │ (National ID) │  │    │
+│  │  │   CID goes on-chain) │  │   private, no chain) │  │               │  │    │
+│  │  └──────────────────────┘  └──────────────────────┘  └───────────────┘  │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────┬───────────────────────────────────────────┘
+                                      │ gRPC / REST
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  BLOCKCHAIN — Sawtak POA Testnet                                                │
+│  (3× Cosmos SDK validators, Proof of Authority consensus)                       │
+│                                                                                 │
+│  ┌───────────────────────┐  ┌───────────────────────┐  ┌─────────────────────┐  │
+│  │  Node 1  (Genesis)    │  │  Node 2  (Validator)  │  │  Node 3  (Val.)     │  │
+│  │                       │  │                       │  │                     │  │
+│  │  REST :1317           │  │  REST :1318           │  │  REST :1319         │  │
+│  │  RPC  :26657          │◄─┤  RPC  :26658          │◄─┤  RPC  :26659        │  │
+│  │  gRPC :9090           │  │  gRPC :9091           │  │  gRPC :9092         │  │
+│  │  P2P  :26656          │  │  P2P  :26656          │  │  P2P  :26656        │  │
+│  └───────────────────────┘  └───────────────────────┘  └─────────────────────┘  │
+│                                                                                 │
+│  Only pre-approved validators produce blocks. No public staking or inflation.   │
+│  Anonymous complaints stored on-chain with cryptographic proof of submission.   │
+└─────────────────────────────────────┬───────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  MONITORING — Prometheus + Grafana                                              │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Prometheus :19100  ──scrapes──→  Proxy :4000  +  Backend :8000         │    │
+│  │       │                                                                 │    │
+│  │       ├── Redis Exporter    :9121  (connected clients, memory, commands)│    │
+│  │       └── Postgres Exporter :9187  (connections, queries, deadlocks)    │    │
+│  │                                                                         │    │
+│  │  Grafana :3100  ←── Prometheus ──→  Pre-built dashboards                │    │
+│  │  Alertmanager  ──→  Email / Webhook notifications                       │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Trust Zones
+```text
 
-## 🇪🇬 Egypt-Specific Features
+| Zone           | Services                          | Accessible From         | Entry Points           |
+|----------------|-----------------------------------|-------------------------|------------------------|
+| **Public**     | Browser, Mobile, Admin, Haweya    | Internet                | 443 (HTTPS)            |
+| **DMZ**        | Privacy Proxy, Redis              | Internet :4000 only     | `proxy:4000`           |
+| **Internal**   | Backend, PostgreSQL               | Proxy only (proxy-auth) | `backend:8000`         |
+| **Blockchain** | 3× Cosmos POA Nodes               | Backend only (REST/gRPC)| `:1317–1319`           |
+| **Monitoring** | Prometheus, Grafana, Exporters    | Admin network only      | `:19100`, `:3100`      |
+```
 
-### Directed To (Complaint Routing)
+### Request Flow (Detailed)
+```text
 
-Complaints can be directed to specific government entities for better routing:
+  ┌─────┐  POST /api/complaints/anonymous/submit
+  │User │  (full headers: IP, UA, cookies, ...)
+  └──┬──┘
+     │
+     ▼
+┌──────────┐  1. Resolve/create anonymous session ID
+│ PRIVACY  │  2. Check rate limits (Redis sliding window)
+│  PROXY   │  3. Strip: x-forwarded-for, x-real-ip, user-agent, referer, cookies
+│  :4000   │  4. Replace User-Agent with "Sawtak-Proxy/1.0"
+│          │  5. Inject X-Proxy-Secret, X-Proxy-Session-Id
+└────┬─────┘
+     │  sanitized request (no PII)
+     ▼
+┌──────────┐  6. Verify proxy auth (X-Proxy-Secret)
+│ BACKEND  │  7. JWT authentication (if required)
+│  :8000   │  8. AI (LLM Based) content validation (spam, ads, invalid content)
+│          │  9. Route to service
+└────┬─────┘
+     │
+     ├──→ ANONYMOUS ──→ IPFS/Pinata (upload evidence, receive CID)
+     │                       │
+     │                       └──[CID in payload]──→ Cosmos POA Chain :1317
+     │                                                       │
+     │                                                       └──→ Indexer ──→ Postgres
+     │
+     └──→ IDENTIFIED ──→ Postgres (AES-256-GCM encrypted)
+                             │
+                             └──→ Cloudflare R2 (evidence, private)
+```
+                             
 
-- **Ministries**: 16 Egyptian ministries (Health, Education, Interior, etc.)
-- **Governorates**: 27 Egyptian governorates
-- **Centers/Townships**: Major cities and centers within each governorate
+### Key Design Decisions
 
-This enables admins from specific jurisdictions to filter and view complaints relevant to them.
+- **Privacy Proxy is the only public entrypoint** — the backend listens on an internal network with no external exposure. Proxy auth (`X-Proxy-Secret`) ensures even if an internal service is compromised, forged requests are rejected.
+- **Redis lives in the DMZ with the proxy** — rate limit counters and session data never leave the proxy layer. The backend only talks to Postgres.
+- **No IP logging at any layer** — the proxy strips IPs before forwarding and logs only session IDs. The backend never sees a client IP.
+- **IPFS before chain for anonymous submissions** — evidence is uploaded to IPFS/Pinata first, and the returned CID is embedded in the on-chain payload. This keeps large files off the chain while preserving a tamper-evident reference.
+- **Identified evidence never touches IPFS or the chain** — evidence for identified complaints is stored privately in Cloudflare R2 and never committed to the public blockchain.
+- **AI validation before persistence** — Gemini API filters spam, advertising, and invalid content before anything hits the database or chain.
 
-### Expanded Categories
+## How Privacy & Anonymity Work
 
-- General
-- Corruption
-- Misconduct
-- Harassment
-- Discrimination
-- Fraud
-- Safety Concerns
-- Environmental Issues
-- Infrastructure Problems
-- Healthcare Issues
-- Education Issues
-- Public Services
-- Other
+### What the Proxy Strips
 
----
+| Header             | Action                   | Why                      |
+|--------------------|--------------------------|--------------------------|
+| `x-forwarded-for`  | Removed                  | Client IP leak           |
+| `x-real-ip`        | Removed                  | Client IP leak           |
+| `cf-connecting-ip` | Removed                  | Cloudflare client IP     |
+| `user-agent`       | Replaced with generic    | Browser fingerprinting   |
+| `referer`          | Removed                  | Origin tracking          |
+| `cookie`           | Stripped (non-session)   | Cross-service tracking   |
 
-## 🆔 Haweya OAuth (Mock Identity Provider)
+### Cryptographic Guarantees
 
-Sawtak includes a mock OAuth 2.0 provider simulating Egypt's National ID (Haweya) system.
+- **Anonymous submissions** stored on Sawtak blockchain — immutable, publicly verifiable
+- **Evidence CIDs** committed on-chain — IPFS content addressed, tamper-evident
+- **User identity** encrypted with AES-256-GCM before any blockchain submission
+- **Tracking codes** use SHA-256 hashes — no way to reverse back to submitter
+- **Proof of submission** cryptographically signed with platform's private key
+- **No IP logging** — backend operates on internal network, proxy never logs IPs
+
+### Dual-Mode Submissions
+
+| Mode            | Evidence storage           | Complaint storage                          | Editable | Identity visible |
+|-----------------|----------------------------|--------------------------------------------|----------|------------------|
+| **Anonymous**   | IPFS/Pinata → CID on-chain | Sawtak blockchain, public pseudonym        | No       | No               |
+| **Identified**  | Cloudflare R2 (private)    | PostgreSQL (AES-256-GCM encrypted)         | Yes      | Admin only       |
+
+### Proof of Authority (POA) Blockchain
+
+Sawtak runs a custom Cosmos SDK chain with **Proof of Authority (POA)** consensus instead of the default Proof of Stake:
+
+- **Pre-approved validators**: Only vetted authorities (government bodies, oversight committees) can validate — no public staking or token voting
+- **No inflation/token rewards**: Removes the need for a native token economy; validators are designated by governance
+- **Censorship-resistant with accountability**: Complaints are immutable once committed, but only trusted entities operate the infrastructure
+- **Custom POA module**: The standard Cosmos SDK `staking` and `minting` modules are disabled; a custom `poa` validation module enforces the authority set
+- **3-node testnet**: The dev environment runs 3 validator nodes with internal governance; each node runs a full Cosmos SDK stack (REST :1317–1319, RPC :26657–26659, gRPC :9090–9092)
+
+Anonymous complaints are stored on-chain with cryptographic proofs of submission, ensuring tamper-evident record-keeping verified by all validators.
+
+## Tech Stack
+
+| Layer       | Technology                                         |
+|-------------|----------------------------------------------------|
+| Frontend    | Next.js 16, TypeScript, React Query, Zustand       |
+| Backend     | Bun, Elysia.js, TypeScript                         |
+| Database    | PostgreSQL 15, Prisma ORM                          |
+| Cache/Queue | Redis, Bull                                        |
+| Blockchain  | Cosmos SDK (custom chain), CosmJS                  |
+| Storage     | Cloudflare R2 (identified evidence), IPFS/Pinata (anonymous evidence) |
+| Monitoring  | Prometheus, Grafana                                |
+| Proxy       | Elysia.js privacy proxy (separate service)         |
+
+## Quick Start
+
+### Prerequisites
+- Podman **or** Docker with Compose plugin
+- Bun (for local dev)
 
 ### Setup
 
+Start by copying the env template — this is your **only** configuration file. All secrets, endpoints, and feature flags go here:
+
 ```bash
-cd haweya
-bun install
-bun run dev
+cp .env.example .env
+# Now edit .env with your actual values (API keys, secrets, database URLs, etc.)
 ```
 
-Runs on `http://localhost:3030`
+The `.env` file must contain all variables shown in [Required Env Vars](#required-env-vars-examples) below. Each service reads its own subset at runtime.
 
-### Integration
+### Using Compose (Recommended)
 
-1. Add env variables to Sawtak backend:
-```
-HAWEYA_CLIENT_ID=sawtak_client
-HAWEYA_CLIENT_SECRET=sawtak_secret
-HAWEYA_ISSUER_URL=http://localhost:3030
-```
-
-2. Use "Sign in with Haweya" button in frontend
-
-See `haweya/README.md` for full documentation.
-
----
-
-## 🔑 Key Concepts
-
-### Anonymous Identifier
-
-Every user gets an auto-generated anonymous identifier (e.g., `anon_a3f9c2e1d4`) on signup. This is used for anonymous submissions and is publicly visible on the blockchain while the user's real identity (email, name) remains encrypted in the database.
-
-### Dual-Mode Submission
-
-**Anonymous Mode:**
-- Stored on Hedera blockchain (immutable)
-- Public pseudonym visible
-- Cannot edit or delete
-- Evidence on IPFS (public)
-- Transaction fee ~$0.0001 (paid by platform)
-
-**Identified Mode:**
-- Stored in PostgreSQL database
-- Admin sees full identity
-- Can edit/delete
-- Evidence on Supabase Storage (private)
-- Free for users
-
-### HCS Indexer
-
-Background job that polls Hedera HCS topics every 2 seconds to:
-1. Fetch new complaint and status update messages
-2. Parse and validate JSON
-3. Store in local PostgreSQL for fast querying
-4. Enable search, filtering, and pagination
-
-Without the indexer, querying the blockchain directly would be too slow.
-
----
-
-## 🔐 Security Features
-
-- **Password Hashing**: bcrypt with cost factor 12
-- **JWT Authentication**: Access tokens with configurable expiry
-- **Encrypted Storage**: User IDs encrypted (AES-256-GCM) in anonymous tracking
-- **Audit Logging**: All admin actions logged immutably
-- **Identity Reveal Workflow**: Team Admins request reveals → Platform Admins approve with manual decryption key (✅ Implemented)
-- **Input Sanitization**: XSS and SQL injection prevention
-
----
-
-## 📊 Database Schema
-
-### Key Tables
-
-- `users`: User accounts with email, password, anonymous_identifier
-- `identified_complaints`: Database-stored complaints (editable)
-- `anonymous_complaint_tracking`: Links users to blockchain submissions (encrypted)
-- `indexed_complaints`: Local cache of HCS messages for fast queries
-- `indexed_status_updates`: Status changes from HCS Topic 2
-- `admin_audit`: Admin action audit trail
-- `user_complaint_votes`: Upvote/downvote tracking
-
----
-
-## 🎮 API Endpoints
-
-### Authentication
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/login` | ❌ | Login with email/password |
-| POST | `/api/auth/register` | ❌ | Register new user |
-| POST | `/api/auth/google/login` | ❌ | Login with Google OAuth |
-| GET | `/api/auth/verify` | ✅ | Verify JWT token |
-
-### Anonymous Complaints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/complaints/anonymous/submit` | ✅ | Submit anonymous complaint to blockchain |
-
-### Identified Complaints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/complaints/identified/submit` | ✅ | Submit identified complaint to database |
-| GET | `/api/complaints/identified/my` | ✅ | Get user's identified complaints |
-| PUT | `/api/complaints/identified/:id` | ✅ | Update complaint |
-| DELETE | `/api/complaints/identified/:id` | ✅ | Delete complaint |
-
-### Public Feed
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/feed/public` | ❌ | Get paginated public complaints |
-| GET | `/api/feed/public/:hash` | ❌ | Get single complaint by hash |
-| GET | `/api/feed/stats` | ❌ | Get platform statistics |
-
-### Tracking (User's Submissions)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/tracking/my-anonymous` | ✅ | Get user's anonymous submissions |
-| GET | `/api/tracking/my-identified` | ✅ | Get user's identified submissions |
-
-### Voting
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/votes/:hash/upvote` | ✅ | Upvote a complaint |
-| POST | `/api/votes/:hash/downvote` | ✅ | Downvote a complaint |
-| DELETE | `/api/votes/:hash` | ✅ | Remove vote |
-| GET | `/api/votes/:hash/status` | ✅ | Get user's vote status |
-
-### Admin
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/admin/complaints` | ✅ Admin | Get all complaints |
-| GET | `/api/admin/complaints/:id` | ✅ Admin | Get complaint details |
-| PUT | `/api/admin/complaints/:id/status` | ✅ Admin | Update complaint status |
-| GET | `/api/admin/stats` | ✅ Admin | Admin dashboard stats |
-| GET | `/api/admin/audit` | ✅ Admin | Get audit logs |
-
-### Identity Reveal (Escalation Workflow)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/admin/complaints/:id/request-identity-reveal` | ✅ Team Admin | Request identity reveal (creates pending request) |
-| GET | `/api/admin/identity-reveal-requests` | ✅ Platform Admin | List all reveal requests (search & filter) |
-| GET | `/api/admin/identity-reveal-requests/:id` | ✅ Platform Admin | Get reveal request details |
-| POST | `/api/admin/identity-reveal-requests/:id/approve` | ✅ Platform Admin | Approve with manual decryption key |
-| POST | `/api/admin/identity-reveal-requests/:id/reject` | ✅ Platform Admin | Reject reveal request |
-| GET | `/api/admin/my-reveal-requests` | ✅ Team Admin | Get own reveal requests |
-
-### Audits (Role-Based Access)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/admin/audits` | ✅ Manager+ | Get audit logs with role-based visibility |
-
-**Access Levels:**
-- Platform Admin: All audits, filter by entity
-- Team Admin: Audits from managers & reviewers in their team
-- Manager: Audits from reviewers in their team
-- Reviewer: No access
-
-### Uploads
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/upload` | ✅ | Upload evidence files |
-
-### Indexer (Internal)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/indexer/trigger` | ✅ Admin | Manually trigger indexer |
-| GET | `/api/indexer/status` | ✅ Admin | Get indexer status |
-
-### Health & Metrics
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/health` | ❌ | Health check |
-| GET | `/metrics` | ❌ | Prometheus metrics |
-
----
-
-## 📈 Monitoring
-
-Access monitoring dashboards:
-
-- **Grafana**: http://localhost:3001
-- **Prometheus**: http://localhost:9090
-- **Prisma Studio**: `bunx prisma studio`
-- **Swagger API Docs**: http://localhost:8000/swagger
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Bun** >= 1.0.0
-- **Node.js** >= 20.0.0 (for some dependencies)
-- **PostgreSQL** >= 15
-- **Docker** (recommended for local development)
-
-### 1. Clone Repository
+**Podman:**
 ```bash
-git clone https://github.com/yourusername/sawtak.git
-cd sawtak
+podman compose -f docker/docker-compose.prod-testnet.local.yml --env-file .env up -d
 ```
 
-### 2. Using Docker (Recommended)
+**Docker:**
 ```bash
-# Start all services
-make up
-
-# Or manually
-docker-compose up -d
+docker compose -f docker/docker-compose.prod-testnet.local.yml --env-file .env up -d
 ```
 
-### 3. Manual Setup
+```bash
+# Check health
+curl http://localhost:4000/health
+```
+
+This starts: Sawtak nodes (x3), PostgreSQL, Redis, Backend, Privacy Proxy, Frontend, Haweya OAuth.
+
+### Manual Setup
 
 **Backend:**
 ```bash
 cd backend
+cp .env.example .env  # edit with your values
 bun install
 bunx prisma generate
-bunx prisma migrate dev
-bun run dev
+bunx prisma db push
+bun run src/server.ts
+```
+
+**Privacy Proxy:**
+```bash
+cd privacy-proxy
+cp .env.example .env
+bun install
+bun run src/server.ts
 ```
 
 **Frontend:**
 ```bash
 cd Front-end
 bun install
-bun run dev
+NEXT_PUBLIC_API_URL=http://localhost:4000 bun run build
+bun run start
 ```
 
-### 4. Access Application
+### Required Env Vars (Examples)
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/swagger
+```bash
+# Backend
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sawtak?schema=public
+JWT_SECRET=your-secret
+PROXY_SECRET=your-proxy-secret
+ENCRYPTION_KEY=<32-byte-hex>
+COSMOS_CHAIN_ID=sawtak-testnet-1
+COSMOS_BACKEND_MNEMONIC="your wallet mnemonic"
+GEMINI_API_KEY=your-gemini-key
+GOOGLE_CLIENT_ID=your-google-client-id
 
----
+# Proxy
+PROXY_PORT=4000
+BACKEND_INTERNAL_URL=http://localhost:8000
+PROXY_SECRET=your-proxy-secret
+REDIS_HOST=localhost
 
-## � Future Roadmap
+# Frontend (build-time)
+NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+```
 
-### 1 - Privacy Proxy Layer
-- [ ] Dedicated privacy proxy server
-- [ ] Redis-based session management
-- [ ] IP anonymization and metadata stripping
-- [ ] Rate limiting per-session
+## Building Your Own Images
 
-### 2 - Enhanced Security
-- [x] ~~Multi-signature identity reveal workflow~~ → Implemented as escalation workflow (Team Admin → Platform Admin)
-- [ ] **Encryption Key Rotation** - Automatic periodic rotation of AES-256 encryption keys with re-encryption of sensitive data
-- [ ] **Immutable Audit Logs on Blockchain** - Record all audit entries on Hedera/blockchain for tamper-proof audit trail
-- [ ] Integration with Hweya (Egyptian national ID)
-- [ ] End-to-end encryption for identified complaints
-- [ ] Hardware Security Module (HSM) integration for key storage
+Since frontend vars are embedded at build time, build with your values:
 
-### 3 - Mobile & Accessibility
-- [ ] Progressive Web App (PWA)
-- [ ] Arabic RTL support improvements
-- [ ] Accessibility (WCAG 2.1 compliance)
+```bash
+# Frontend
+docker build -t sawtak-frontend Front-end \
+  --build-arg NEXT_PUBLIC_API_URL=https://your-domain.com \
+  --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-id
 
-### 4 - Custom Blockchain Network
-- [ ] Migration from Hedera to custom blockchain solution
-- [ ] Private/consortium blockchain for government/corporate deployments
-- [ ] Enhanced throughput and reduced transaction costs
-- [ ] Full control over consensus mechanisms
+# Backend
+docker build -t sawtak-backend -f backend/Dockerfile .
 
+# Proxy
+docker build -t sawtak-proxy privacy-proxy
+
+# Full stack (Podman)
+podman compose -f docker/docker-compose.prod-testnet.local.yml --env-file .env build
+
+# Full stack (Docker)
+docker compose -f docker/docker-compose.prod-testnet.local.yml --env-file .env build
+```
+
+## API Endpoints
+
+| Endpoint                              | Auth  | Description                        |
+|---------------------------------------|-------|------------------------------------|
+| `GET  /api/health`                    | —     | Health check                       |
+| `GET  /api/feed`                      | —     | Public complaint feed              |
+| `GET  /api/feed/stats`                | —     | Platform statistics                |
+| `POST /api/auth/login`                | —     | Email/password login               |
+| `POST /api/auth/register`             | —     | Register                           |
+| `POST /api/complaints/anonymous/submit` | JWT | Submit anonymous complaint         |
+| `POST /api/complaints/identified/submit`| JWT | Submit identified complaint        |
+| `GET  /api/tracking/:code`            | —     | Track complaint status             |
+| `POST /api/upload/ipfs`               | JWT   | Upload evidence to IPFS (anon only)|
+| `POST /api/vote/:hash/:dir`           | JWT   | Upvote / downvote                  |
+| `GET  /api/admin/complaints`          | Admin | Admin panel                        |
+| `GET  /api/indexer/status`            | —     | Cosmos indexer status              |
+| `GET  /swagger`                       | —     | Interactive API docs (Swagger UI)  |
+| `GET  /proxy-metrics`                 | —     | Proxy Prometheus metrics           |
+| `GET  /health`                        | —     | Proxy health check                 |
+
+## Testing
+
+```bash
+# Route-layer tests (184 tests, zero network)
+bun test
+
+# Integration tests (24 tests, needs running stack)
+bun run test:integration
+```
+
+Tests are classified:
+- **Unit/Route-layer**: Mocked dependencies, inline Elysia handlers, no network
+- **Integration**: Live proxy+backend pipeline against postgres+redis
+
+## Project Structure
+
+```
+sawtak/
+├── backend/           # Elysia.js API server (internal)
+├── privacy-proxy/     # Privacy proxy (public-facing)
+├── Front-end/         # Next.js frontend
+├── haweya/            # Mock Haweya OAuth provider
+├── network/Sawtak/    # Custom Cosmos POA blockchain
+│   └── tests/         # Chain-level consensus tests
+├── docker/            # Docker compose definitions
+├── monitoring/        # Prometheus, Grafana, Alertmanager
+└── .github/workflows/ # CI/CD pipeline
+```
+
+## Monitoring
+
+Sawtak ships with a **Prometheus + Grafana** stack for observability across all services.
+
+### Stack Components
+
+| Component               | Purpose                                                  | Port  |
+|-------------------------|----------------------------------------------------------|-------|
+| **Prometheus**          | Metrics collection & alert evaluation                    | 19100 |
+| **Grafana**             | Dashboards & visualization                               | 3100  |
+| **Redis Exporter**      | Redis metrics (memory, clients, commands)                | 9121  |
+| **PostgreSQL Exporter** | Database metrics (connections, queries, deadlocks)       | 9187  |
+| **Alertmanager**        | Alert routing & notifications (email, webhook)           | —     |
+
+### Metrics Collected
+
+| Job               | Source                                              | Endpoint          |
+|-------------------|-----------------------------------------------------|-------------------|
+| `sawtak-backend`  | Request rate, latency, errors                       | `/api/metrics`    |
+| `sawtak-proxy`    | Requests, stripped headers, rate limits             | `/proxy-metrics`  |
+| `redis`           | Connected clients, memory, rejected connections     | Redis Exporter :9121 |
+| `postgres`        | Active connections, slow queries, deadlocks         | Postgres Exporter :9187 |
+
+### Alerting Rules
+
+| Alert                      | Severity | Condition                              |
+|----------------------------|----------|----------------------------------------|
+| `BackendDown`              | Critical | Backend unreachable > 1m               |
+| `HighErrorRate`            | Critical | 5xx rate > 5% over 5m                  |
+| `HighLatency`              | Warning  | p95 latency > 1s over 5m              |
+| `RedisDown`                | Critical | Redis unreachable > 1m                 |
+| `RedisHighMemoryUsage`     | Warning  | Memory > 80% over 5m                  |
+| `PostgresDown`             | Critical | PostgreSQL unreachable > 1m            |
+| `PostgresHighConnections`  | Warning  | Connection usage > 80% over 5m        |
+| `RateLimitViolationsHigh`  | Warning  | > 100 violations in 1h                |
+
+### Running
+
+```bash
+# Podman
+podman compose -f monitoring/docker-compose.monitoring.yml --env-file .env up -d
+
+# Docker
+docker compose -f monitoring/docker-compose.monitoring.yml --env-file .env up -d
+```
+
+Requires the `sawtak_internal` and `sawtak_privacy` networks (created automatically by the main compose stack).
+
+### Dashboards
+
+- **Grafana**: http://localhost:3100 (default: `admin` / `admin`)
+- **Prometheus**: http://localhost:19100
+
+Pre-provisioned dashboards:
+- **Sawtak Overview** — Request rate, latency, error rate, rate limit violations
+- **Redis Overview** — Memory, connected clients, command rate
+- **PostgreSQL** — Connection count, query performance, deadlocks
+
+## Security
+
+- Passwords hashed with bcrypt (cost 12)
+- JWT access + refresh tokens
+- AES-256-GCM encryption for PII
+- Identity reveal requires 2-step approval (Team Admin → Platform Admin)
+- Audit logging for all admin actions
+- Rate limiting per session + per IP
+- Proxy auth — backend only accepts requests from the proxy

@@ -1,12 +1,13 @@
 import { Elysia, t } from "elysia";
-import { getIndexer, startIndexer, stopIndexer } from "../services/hedera-indexer.service";
+import { getIndexer as getHederaIndexer, startIndexer as startHederaIndexer, stopIndexer as stopHederaIndexer } from "../services/hedera-indexer.service";
+import { getIndexer as getCosmosIndexer, startIndexer as startCosmosIndexer, stopIndexer as stopCosmosIndexer } from "../services/cosmos-indexer.service";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 export const indexerRoutes = new Elysia({ 
   prefix: "/api/indexer",
   detail: {
     tags: ["Indexer"],
-    description: "Hedera blockchain indexer management endpoints"
+    description: "Blockchain indexer management endpoints for Hedera and Cosmos"
   }
 })
   /**
@@ -14,51 +15,29 @@ export const indexerRoutes = new Elysia({
    * Get the current indexer status (public)
    */
   .get("/status", () => {
-    const indexer = getIndexer();
+    const hedera = getHederaIndexer();
+    const cosmos = getCosmosIndexer();
     return {
       success: true,
-      data: indexer.getStatus(),
+      data: {
+        hedera: hedera.getStatus(),
+        cosmos: cosmos.getStatus(),
+      },
     };
   }, {
     detail: {
       summary: "Get Indexer Status",
-      description: "Get the current status of the Hedera HCS indexer. This is a public endpoint for monitoring.",
-      responses: {
-        200: {
-          description: "Indexer status",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  data: {
-                    type: "object",
-                    properties: {
-                      isRunning: { type: "boolean", description: "Whether the indexer is actively polling" },
-                      lastTimestamp: { type: "string", description: "Last processed consensus timestamp" },
-                      messagesProcessed: { type: "integer", description: "Total messages processed" },
-                      lastError: { type: "string", description: "Last error message if any" },
-                      pollingIntervalMs: { type: "integer", description: "Polling interval in milliseconds" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      description: "Get the current status of both Hedera and Cosmos indexers. This is a public endpoint for monitoring.",
     }
   })
-
   /**
-   * Protected admin routes for controlling the indexer
+   * Protected admin routes for controlling the indexers
    */
   .use(authMiddleware)
   
   /**
    * POST /api/indexer/start
-   * Start the indexer (admin only)
+   * Start the indexers (admin only)
    */
   .post("/start", ({ user, set }: any) => {
     if (!user || user.role !== "admin") {
@@ -66,42 +45,33 @@ export const indexerRoutes = new Elysia({
       return { success: false, error: "Admin access required" };
     }
 
-    startIndexer();
+    const chain = (user as any).chain || "all";
+    if (chain === "hedera" || chain === "all") {
+      startHederaIndexer();
+    }
+    if (chain === "cosmos" || chain === "all") {
+      startCosmosIndexer();
+    }
+
     return {
       success: true,
-      message: "Indexer started",
-      data: getIndexer().getStatus(),
+      message: `Indexer(s) started: ${chain}`,
+      data: {
+        hedera: getHederaIndexer().getStatus(),
+        cosmos: getCosmosIndexer().getStatus(),
+      },
     };
   }, {
     detail: {
-      summary: "Start Indexer",
-      description: "Start the Hedera HCS indexer. Requires admin privileges.",
+      summary: "Start Indexer(s)",
+      description: "Start the Hedera and/or Cosmos indexers. Requires admin privileges.",
       security: [{ bearerAuth: [] }],
-      responses: {
-        200: {
-          description: "Indexer started",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  message: { type: "string" },
-                  data: { type: "object" }
-                }
-              }
-            }
-          }
-        },
-        401: { description: "Authentication required" },
-        403: { description: "Admin access required" }
-      }
     }
   })
 
   /**
    * POST /api/indexer/stop
-   * Stop the indexer (admin only)
+   * Stop the indexers (admin only)
    */
   .post("/stop", ({ user, set }: any) => {
     if (!user || user.role !== "admin") {
@@ -109,42 +79,33 @@ export const indexerRoutes = new Elysia({
       return { success: false, error: "Admin access required" };
     }
 
-    stopIndexer();
+    const chain = (user as any).chain || "all";
+    if (chain === "hedera" || chain === "all") {
+      stopHederaIndexer();
+    }
+    if (chain === "cosmos" || chain === "all") {
+      stopCosmosIndexer();
+    }
+
     return {
       success: true,
-      message: "Indexer stopped",
-      data: getIndexer().getStatus(),
+      message: `Indexer(s) stopped: ${chain}`,
+      data: {
+        hedera: getHederaIndexer().getStatus(),
+        cosmos: getCosmosIndexer().getStatus(),
+      },
     };
   }, {
     detail: {
-      summary: "Stop Indexer",
-      description: "Stop the Hedera HCS indexer. Requires admin privileges.",
+      summary: "Stop Indexer(s)",
+      description: "Stop the Hedera and/or Cosmos indexers. Requires admin privileges.",
       security: [{ bearerAuth: [] }],
-      responses: {
-        200: {
-          description: "Indexer stopped",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  message: { type: "string" },
-                  data: { type: "object" }
-                }
-              }
-            }
-          }
-        },
-        401: { description: "Authentication required" },
-        403: { description: "Admin access required" }
-      }
     }
   })
 
   /**
    * POST /api/indexer/reindex
-   * Reindex from a specific timestamp (admin only)
+   * Reindex from a specific point (admin only)
    */
   .post("/reindex", async ({ user, set, body }: any) => {
     if (!user || user.role !== "admin") {
@@ -152,49 +113,45 @@ export const indexerRoutes = new Elysia({
       return { success: false, error: "Admin access required" };
     }
 
-    const { timestamp } = body || {};
-    if (!timestamp) {
+    const { chain, height, timestamp } = body || {};
+    if (chain === "cosmos" && !height) {
       set.status = 400;
-      return { success: false, error: "timestamp is required" };
+      return { success: false, error: "height is required for Cosmos reindex" };
+    }
+    if (chain === "hedera" && !timestamp) {
+      set.status = 400;
+      return { success: false, error: "timestamp is required for Hedera reindex" };
     }
 
-    const indexer = getIndexer();
-    await indexer.reindexFrom(timestamp);
+    if (chain === "cosmos") {
+      await getCosmosIndexer().reindexFrom(height);
+    } else if (chain === "hedera") {
+      await getHederaIndexer().reindexFrom(timestamp);
+    } else {
+      if (height) await getCosmosIndexer().reindexFrom(height);
+      if (timestamp) await getHederaIndexer().reindexFrom(timestamp);
+    }
 
     return {
       success: true,
-      message: `Reindexing from ${timestamp}`,
-      data: indexer.getStatus(),
+      message: `Reindexing: ${chain || "all"}`,
+      data: {
+        hedera: getHederaIndexer().getStatus(),
+        cosmos: getCosmosIndexer().getStatus(),
+      },
     };
   }, {
     body: t.Object({
-      timestamp: t.String({ description: "Consensus timestamp to reindex from (e.g., 1699999999.000000000)" })
+      chain: t.Optional(t.String({ description: "Chain: hedera, cosmos, or all (default)" })),
+      height: t.Optional(t.Number({ description: "Cosmos block height to reindex from" })),
+      timestamp: t.Optional(t.String({ description: "Hedera consensus timestamp to reindex from" }))
     }),
     detail: {
-      summary: "Reindex from Timestamp",
-      description: `Force reindex of HCS messages from a specific timestamp. Useful for recovering from missed messages or re-processing.
+      summary: "Reindex from Point",
+      description: `Force reindex of blockchain messages from a specific point. Requires admin privileges.
 
-**Warning:** This may cause duplicate processing. Use with caution.`,
+**For Cosmos:** provide block height
+**For Hedera:** provide consensus timestamp`,
       security: [{ bearerAuth: [] }],
-      responses: {
-        200: {
-          description: "Reindex started",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  message: { type: "string" },
-                  data: { type: "object" }
-                }
-              }
-            }
-          }
-        },
-        400: { description: "Timestamp is required" },
-        401: { description: "Authentication required" },
-        403: { description: "Admin access required" }
-      }
     }
   });

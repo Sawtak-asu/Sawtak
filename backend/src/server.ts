@@ -7,6 +7,7 @@ import { Elysia, t } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { requestLogger } from "./middleware/request-logger.middleware";
+import { proxyAuthMiddleware } from "./middleware/proxy-auth.middleware";
 import { authRoutes } from "./routes/auth.routes";
 import { anonymousComplaintRoutes } from "./routes/anonymous-complaint.routes";
 import { identifiedComplaintRoutes } from "./routes/identified-complaint.routes";
@@ -15,10 +16,13 @@ import { indexerRoutes } from "./routes/indexer.routes";
 import { adminRoutes } from "./routes/admin.routes";
 import { trackingRoutes } from "./routes/tracking.routes";
 import { uploadRoutes } from "./routes/upload.routes";
+import { uploadEvidenceRoutes } from "./routes/upload-evidence.routes";
 import { voteRoutes } from "./routes/vote.routes";
 import { teamRoutes } from "./routes/team.routes";
-import { startIndexer } from "./services/hedera-indexer.service";
-import { rateLimiter } from "./services/rate-limiter.service";
+import { complaintValidationRoutes } from "./routes/complaint-validation.routes";
+import { startIndexer as startHederaIndexer } from "./services/hedera-indexer.service";
+import { startIndexer as startCosmosIndexer } from "./services/cosmos-indexer.service";
+import { prisma } from "./db";
 import { openapi } from '@elysiajs/openapi'
 
 const startTime = Date.now();
@@ -29,12 +33,6 @@ const startTime = Date.now();
 async function bootstrap() {
   // Initialize telemetry/metrics
   await initTelemetry();
-
-  // Initialize Redis connection for rate limiting
-  const redisConnected = await rateLimiter.connect();
-  if (!redisConnected) {
-    console.warn("⚠️ Starting without Redis - rate limiting disabled");
-  }
 
   const app = new Elysia()
     .use(swagger({
@@ -49,7 +47,7 @@ Sawtak is a blockchain-secured whistleblowing platform that allows citizens to r
 
 ## Key Features
 
-- **Anonymous Submissions**: Complaints stored on Hedera blockchain with no IP logging
+- **Anonymous Submissions**: Complaints stored on Cosmos blockchain with no IP logging
 - **Identified Submissions**: Linked to user accounts for direct follow-up
 - **Immutable Records**: Blockchain ensures complaints cannot be deleted or altered
 - **Privacy by Design**: AES-256 encryption, no browser fingerprinting
@@ -72,10 +70,10 @@ Tokens are obtained via the \`/api/auth/login\` or OAuth callback endpoints.
 
 ## Blockchain Verification
 
-Anonymous complaints can be verified on the Hedera network:
-- **Topic ID**: ${process.env.HEDERA_TOPIC_COMPLAINTS || "0.0.XXXXXXX"}
-- **Network**: ${process.env.HEDERA_NETWORK || "testnet"}
-- **Explorer**: https://hashscan.io
+Anonymous complaints can be verified on the Cosmos network:
+- **Chain ID**: ${process.env.COSMOS_CHAIN_ID || "sawtak-testnet"}
+- **RPC Endpoint**: ${process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657"}
+- **REST Endpoint**: ${process.env.COSMOS_REST_ENDPOINT || "http://localhost:1317"}
           `,
           contact: {
             name: "Sawtak Team",
@@ -90,12 +88,13 @@ Anonymous complaints can be verified on the Hedera network:
           { name: "Authentication", description: "OAuth login and token management" },
           { name: "Anonymous Complaints", description: "Submit anonymous complaints to the blockchain" },
           { name: "Identified Complaints", description: "Submit identified complaints linked to user accounts" },
+          { name: "Complaint Validation", description: "AI-powered pre-submission complaint validation" },
           { name: "Public Feed", description: "Browse public complaints" },
           { name: "Tracking", description: "Track complaint status using tracking codes" },
           { name: "Voting", description: "Upvote public complaints" },
           { name: "File Upload", description: "Upload evidence files" },
           { name: "Admin", description: "Admin endpoints for complaint management" },
-          { name: "Indexer", description: "Hedera blockchain indexer management" }
+          { name: "Indexer", description: "Cosmos blockchain indexer management" }
         ],
         components: {
           securitySchemes: {
@@ -112,6 +111,7 @@ Anonymous complaints can be verified on the Hedera network:
       exclude: ["/metrics", "/"]
     }))
     .use(cors())
+    .use(proxyAuthMiddleware) // Validate proxy trust boundary
     .use(requestLogger) // Log all requests
     .use(authRoutes)
     .use(anonymousComplaintRoutes)
@@ -121,24 +121,32 @@ Anonymous complaints can be verified on the Hedera network:
     .use(adminRoutes)
     .use(trackingRoutes)
     .use(uploadRoutes)
+    .use(uploadEvidenceRoutes)
     .use(voteRoutes)
     .use(teamRoutes)
+    .use(complaintValidationRoutes)
     .get("/", () => "Sawtak API v1.0.0 - Visit /swagger for documentation", {
       detail: {
         hide: true
       }
     })
 
-    .get("/api/health", async () => {
-      const redisHealth = await rateLimiter.healthCheck();
+    .get("/api/health", async ({ set }) => {
+      // Add Prisma DB check
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+      } catch (e) {
+        set.status = 503;
+        return { status: "error", message: "Database connection failed" };
+      }
+
       return {
-        status: "healthy",
+        status: "ok",
         service: "sawtak-backend",
         version: process.env.npm_package_version || "1.0.0",
         environment: process.env.NODE_ENV || "development",
         uptime: Math.floor((Date.now() - startTime) / 1000),
         timestamp: new Date().toISOString(),
-        redis: redisHealth,
       };
     }, {
       detail: {
@@ -156,6 +164,15 @@ Anonymous complaints can be verified on the Hedera network:
         hide: true
       }
     })
+    // Prometheus metrics endpoint for Grafana (via proxy)
+    .get("/api/metrics", ({ set }) => {
+      set.headers["content-type"] = "text/plain; charset=utf-8";
+      return getPrometheusMetrics();
+    }, {
+      detail: {
+        hide: true
+      }
+    })
     .listen(process.env.PORT || 8000);
 
   console.log(
@@ -165,9 +182,14 @@ Anonymous complaints can be verified on the Hedera network:
     `📚 Swagger docs available at http://${app.server?.hostname}:${app.server?.port}/swagger`
   );
 
-  // Auto-start the Hedera indexer
+  // Auto-start the indexers
   if (process.env.ENABLE_INDEXER !== "false") {
-    startIndexer();
+    if (process.env.ENABLE_HEDERA_INDEXER === "true") {
+      startHederaIndexer();
+    }
+    if (process.env.COSMOS_CHAIN_ID) {
+      startCosmosIndexer();
+    }
   }
 }
 

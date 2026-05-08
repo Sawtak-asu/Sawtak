@@ -27,6 +27,11 @@ service Query {
   rpc ListComplaint(QueryAllComplaintRequest) returns (QueryAllComplaintResponse) {
     option (google.api.http).get = "/sawtak/v1/complaint";
   }
+
+  // FilterComplaints queries complaints filtered by status, area, and/or category.
+  rpc FilterComplaints(QueryFilterComplaintsRequest) returns (QueryFilterComplaintsResponse) {
+    option (google.api.http).get = "/sawtak/v1/complaint/filter";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -60,4 +65,16 @@ message QueryAllComplaintRequest {
 message QueryAllComplaintResponse {
   repeated Complaint complaint = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryFilterComplaintsRequest defines the QueryFilterComplaintsRequest message.
+message QueryFilterComplaintsRequest {
+  string status = 1;
+  string area = 2;
+  string category = 3;
+}
+
+// QueryFilterComplaintsResponse defines the QueryFilterComplaintsResponse message.
+message QueryFilterComplaintsResponse {
+  repeated Complaint complaints = 1 [(gogoproto.nullable) = false];
 }

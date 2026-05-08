@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"context"
+	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/sayedibrahimQ/sawtak/x/poa/types"
 )
@@ -35,6 +38,17 @@ func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams
 		return nil, err
 	}
 
+	// ──────────────────────────────────────────────────────────────
+	// FIX: Emit event for auditability — UpdateParams
+	// ──────────────────────────────────────────────────────────────
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+		"poa_params_updated",
+		sdk.NewAttribute("authority", msg.Authority),
+		sdk.NewAttribute("admin", msg.Params.Admin),
+		sdk.NewAttribute("allowed_validators", strings.Join(msg.Params.AllowedValidators, ",")),
+	))
+
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
@@ -53,10 +67,29 @@ func (ms msgServer) UpdateAdmin(ctx context.Context, msg *types.MsgUpdateAdmin) 
 		return nil, types.ErrInvalidAdmin.Wrap("new admin address cannot be empty")
 	}
 
+	// ──────────────────────────────────────────────────────────────
+	// FIX: Validate new admin is a valid bech32 address to prevent
+	// irreversible transfer to an invalid/burned address.
+	// ──────────────────────────────────────────────────────────────
+	if _, err := sdk.AccAddressFromBech32(msg.NewAdmin); err != nil {
+		return nil, types.ErrInvalidAdmin.Wrapf("invalid new admin address: %s", err)
+	}
+
+	oldAdmin := params.Admin
 	params.Admin = msg.NewAdmin
 	if err := ms.k.Params.Set(ctx, params); err != nil {
 		return nil, err
 	}
+
+	// ──────────────────────────────────────────────────────────────
+	// FIX: Emit event for auditability — UpdateAdmin
+	// ──────────────────────────────────────────────────────────────
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+		"poa_admin_updated",
+		sdk.NewAttribute("old_admin", oldAdmin),
+		sdk.NewAttribute("new_admin", msg.NewAdmin),
+	))
 
 	return &types.MsgUpdateAdminResponse{}, nil
 }
@@ -73,10 +106,34 @@ func (ms msgServer) UpdateAllowedValidators(ctx context.Context, msg *types.MsgU
 		return nil, types.ErrUnauthorized.Wrapf("only the admin can update allowed validators; expected %s, got %s", params.Admin, msg.Authority)
 	}
 
+	// ──────────────────────────────────────────────────────────────
+	// FIX: Validate the new validator list before persisting to
+	// prevent invalid addresses or duplicates from entering state.
+	// ──────────────────────────────────────────────────────────────
+	updatedParams := types.Params{
+		Admin:             params.Admin,
+		AllowedValidators: msg.AllowedValidators,
+	}
+	if err := updatedParams.Validate(); err != nil {
+		return nil, err
+	}
+
+	oldValidators := strings.Join(params.AllowedValidators, ",")
 	params.AllowedValidators = msg.AllowedValidators
 	if err := ms.k.Params.Set(ctx, params); err != nil {
 		return nil, err
 	}
+
+	// ──────────────────────────────────────────────────────────────
+	// FIX: Emit event for auditability — UpdateAllowedValidators
+	// ──────────────────────────────────────────────────────────────
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+		"poa_allowed_validators_updated",
+		sdk.NewAttribute("authority", msg.Authority),
+		sdk.NewAttribute("old_validators", oldValidators),
+		sdk.NewAttribute("new_validators", strings.Join(msg.AllowedValidators, ",")),
+	))
 
 	return &types.MsgUpdateAllowedValidatorsResponse{}, nil
 }

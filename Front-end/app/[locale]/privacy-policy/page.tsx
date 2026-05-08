@@ -478,9 +478,9 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                     <div className="grid gap-4 not-prose">
                                         <div className="rounded-lg border border-border/50 bg-card/30 p-6">
-                                            <h3 className="font-medium text-lg mb-2">{t("thirdParties.hederaTitle")}</h3>
+                                            <h3 className="font-medium text-lg mb-2">{t("thirdParties.blockchainTitle")}</h3>
                                             <p className="text-sm text-muted-foreground">
-                                                {t("thirdParties.hederaDesc")}
+                                                {t("thirdParties.blockchainDesc")}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-border/50 bg-card/30 p-6">

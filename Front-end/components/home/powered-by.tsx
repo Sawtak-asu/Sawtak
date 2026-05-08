@@ -9,10 +9,10 @@ import { useTranslations } from "next-intl";
 
 const poweredByTech = [
     {
-        key: "hedera",
+        key: "sawtakChain",
         icon: Lock,
         iconColor: "text-purple-400",
-        link: "https://hedera.com"
+        link: "https://docs.cosmos.network"
     },
     {
         key: "bun",
@@ -275,7 +275,6 @@ function CircuitLines() {
         </svg>
     );
 }
-
 
 function TechCard({
     techKey,

@@ -1,0 +1,8 @@
+Issue Type,Summary,Description,Priority,Parent
+Story,Blockchain Service Replacement - Create SawtakCosmosService,As a backend developer I want to replace HederaService with SawtakCosmosService so complaint submissions work with our Cosmos SDK blockchain,High,SAW-148
+Story,Indexer Service Migration - Create CosmosIndexerService,As an indexer operator I want to replace HederaIndexerService with CosmosIndexerService so complaint data is indexed from our Cosmos blockchain,High,SAW-148
+Story,Prisma Schema Update,As a database admin I want to update the Prisma schema so indexedComplaint supports cosmos_hash fields,High,SAW-148
+Story,Service Injection Refactor,As a backend developer I want to update dependency injection so Cosmos services replace Hedera services,High,SAW-148
+Story,Route Documentation Update,As an API consumer I want updated endpoint documentation so I understand Cosmos-based responses,Medium,SAW-148
+Story,Testing Updates,As a QA engineer I want updated tests for Cosmos so I can verify the migration works,High,SAW-148
+Story,Hedera Deprecation,As a DevOps engineer I want to remove Hedera dependencies so the codebase is clean and only supports Cosmos,High,SAW-148

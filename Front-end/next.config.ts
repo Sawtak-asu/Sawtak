@@ -25,13 +25,25 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    // INTERNAL_API_URL: used server-side inside Docker (e.g. http://privacy-proxy:4000)
+    // NEXT_PUBLIC_API_URL: fallback for local dev outside Docker (e.g. http://localhost:4000)
+    const apiUrl =
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:4000";
     return [
       {
         source: "/api/:path*",
         destination: `${apiUrl}/api/:path*`,
       },
     ];
+  },
+
+  experimental: {
+    middlewareClientMaxBodySize: '50mb',
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
   },
 };
 

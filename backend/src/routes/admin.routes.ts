@@ -3,6 +3,9 @@ import { prisma } from "../db";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { HEDERA_CONFIG } from "../config/hedera.config";
 import { decrypt } from "../utils/crypto.utils";
+import { ComplaintStatusService } from "../services/complaint-status.service";
+
+const statusService = new ComplaintStatusService();
 
 export const adminRoutes = new Elysia({
   prefix: "/api/admin",
@@ -146,19 +149,19 @@ export const adminRoutes = new Elysia({
         evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
       }));
 
-      const anonymousFormatted = anonymous.map((c) => {
-        const formatted = {
-          id: c.hcs_hash,
-          title: c.title,
-          text: c.complaint_text,
-          category: c.category,
-          area: c.area,
-          status: c.status,
-          visibility: "public" as const, // Anonymous are always public
-          submissionMode: "anonymous" as const,
-          createdAt: c.consensus_timestamp.toISOString(),
-          incidentDate: c.incident_date?.toISOString(),
-          transactionId: c.hcs_hash,
+    const anonymousFormatted = anonymous.map((c) => {
+      const formatted = {
+        id: c.chain_hash,
+        title: c.title,
+        text: c.complaint_text,
+        category: c.category,
+        area: c.area,
+        status: c.status,
+        visibility: "public" as const, // Anonymous are always public
+        submissionMode: "anonymous" as const,
+        createdAt: c.consensus_timestamp.toISOString(),
+        incidentDate: c.incident_date?.toISOString(),
+        transactionId: c.chain_hash,
           encryptedAnonId: c.anonymous_identifier,
           trackingHash: c.tracking_hash || undefined,
           topicId: HEDERA_CONFIG.TOPIC_ID_COMPLAINTS,
@@ -325,7 +328,7 @@ export const adminRoutes = new Elysia({
         oldStatus = identified.status;
       } else {
         const indexed = await prisma.indexedComplaint.findUnique({
-          where: { hcs_hash: id },
+          where: { chain_hash: id },
         });
         if (indexed) {
           complaint = indexed;
@@ -371,7 +374,7 @@ export const adminRoutes = new Elysia({
           return { success: false, error: "Only reviewers or higher can start investigation" };
         }
       }
-      // Manager: investigating → resolved/closed/flagged
+      // Manager/Team Admin: investigating → resolved/closed/flagged
       else if ((status === "resolved" || status === "closed" || status === "flagged") && oldStatus === "investigating") {
         if (!isManager && !isTeamAdmin && !isPlatformAdmin) {
           set.status = 403;
@@ -381,6 +384,17 @@ export const adminRoutes = new Elysia({
           action = "flag";
         }
       }
+      // Manager/Team Admin: flagged → closed
+      else if (status === "closed" && (oldStatus === "flagged" || oldStatus === "flagged_inaccurate" || oldStatus === "flagged_legal")) {
+        if (!isManager && !isTeamAdmin && !isPlatformAdmin) {
+          set.status = 403;
+          return { success: false, error: "Only managers or higher can close flagged complaints" };
+        }
+        if (!note) {
+          set.status = 400;
+          return { success: false, error: "Comment is required when closing a flagged complaint" };
+        }
+      }
       // Platform Admin can do anything
       else if (!isPlatformAdmin) {
         // If none of the specific transitions match, only platform admin can proceed
@@ -388,7 +402,28 @@ export const adminRoutes = new Elysia({
         return { success: false, error: "Invalid status transition or insufficient permissions" };
       }
 
-      // Update the complaint status
+      // Broadcast status update to blockchain first
+      let txHash = "";
+      try {
+        const blockchainComplaintId = complaintType === "anonymous" && complaint.tracking_hash 
+          ? complaint.tracking_hash 
+          : (complaintType === "identified" && complaint.cosmos_tx_hash ? complaint.cosmos_tx_hash : id);
+
+        const result = await statusService.updateStatus({
+          complaintHash: blockchainComplaintId,
+          oldStatus: oldStatus,
+          newStatus: status,
+          publicNotes: note || "",
+          adminId: user?.userId || "admin",
+        });
+        txHash = result.transactionId;
+      } catch (err: any) {
+        console.error("[AdminRoutes] Failed to broadcast status update:", err.message);
+        set.status = 500;
+        return { success: false, error: `Failed to broadcast to blockchain: ${err.message}. Status update aborted.` };
+      }
+
+      // Update the complaint status in DB only if blockchain update succeeds
       if (complaintType === "identified") {
         await prisma.identifiedComplaint.update({
           where: { id },
@@ -396,7 +431,7 @@ export const adminRoutes = new Elysia({
         });
       } else {
         await prisma.indexedComplaint.update({
-          where: { hcs_hash: id },
+          where: { chain_hash: id },
           data: { status },
         });
       }
@@ -416,8 +451,8 @@ export const adminRoutes = new Elysia({
 
       return {
         success: true,
-        message: "Status updated",
-        data: { id, oldStatus, status, type: complaintType, action },
+        message: "Status updated" + (txHash ? " and broadcast to blockchain" : ""),
+        data: { id, oldStatus, status, type: complaintType, action, txHash },
       };
     } catch (error: any) {
       console.error("[AdminRoutes] Status update error:", error);
@@ -483,7 +518,7 @@ export const adminRoutes = new Elysia({
       if (identified) {
         complaint = identified;
       } else {
-        const indexed = await prisma.indexedComplaint.findUnique({ where: { hcs_hash: id } });
+        const indexed = await prisma.indexedComplaint.findUnique({ where: { chain_hash: id } });
         if (indexed) {
           complaint = indexed;
           complaintType = "anonymous";
@@ -495,7 +530,26 @@ export const adminRoutes = new Elysia({
         return { success: false, error: "Complaint not found" };
       }
 
-      // Create escalation record
+      // Broadcast status update to blockchain first
+      try {
+        const blockchainComplaintId = complaintType === "anonymous" && complaint.tracking_hash 
+          ? complaint.tracking_hash 
+          : (complaintType === "identified" && complaint.cosmos_tx_hash ? complaint.cosmos_tx_hash : id);
+
+        await statusService.updateStatus({
+          complaintHash: blockchainComplaintId,
+          oldStatus: complaint.status,
+          newStatus: "in_progress",
+          publicNotes: `Escalated with priority: ${priority}. ${note || ""}`,
+          adminId: user?.userId || "admin",
+        });
+      } catch (err: any) {
+        console.error("[AdminRoutes] Failed to broadcast escalation status:", err.message);
+        set.status = 500;
+        return { success: false, error: `Failed to broadcast escalation to blockchain: ${err.message}. Action aborted.` };
+      }
+
+      // Create escalation record only if blockchain succeeds
       const escalation = await prisma.escalation.create({
         data: {
           complaint_id: id,
@@ -515,7 +569,7 @@ export const adminRoutes = new Elysia({
         });
       } else {
         await prisma.indexedComplaint.update({
-          where: { hcs_hash: id },
+          where: { chain_hash: id },
           data: { status: "in_progress" },
         });
       }
@@ -956,7 +1010,7 @@ export const adminRoutes = new Elysia({
 
       // Check anonymous complaint
       const indexed = await prisma.indexedComplaint.findUnique({
-        where: { hcs_hash: id }
+        where: { chain_hash: id }
       });
 
       if (indexed) {
@@ -985,7 +1039,7 @@ export const adminRoutes = new Elysia({
               note: "This is an anonymous complaint. Only encrypted identifiers are available."
             },
             complaint: {
-              id: indexed.hcs_hash,
+              id: indexed.chain_hash,
               title: indexed.title,
               status: indexed.status,
               created_at: indexed.consensus_timestamp
@@ -1041,7 +1095,7 @@ export const adminRoutes = new Elysia({
       }
 
       // Find the complaint (must be anonymous/indexed)
-      const indexed = await prisma.indexedComplaint.findUnique({ where: { hcs_hash: id } });
+      const indexed = await prisma.indexedComplaint.findUnique({ where: { chain_hash: id } });
 
       if (!indexed) {
         set.status = 404;
@@ -1164,7 +1218,7 @@ export const adminRoutes = new Elysia({
       const complaintIds = requests.map(r => r.complaint_id);
       
       // Build complaint filter
-      const complaintWhere: any = { hcs_hash: { in: complaintIds } };
+      const complaintWhere: any = { chain_hash: { in: complaintIds } };
       
       // If filtering by entity, we need to filter complaints by directed_to
       if (entity) {
@@ -1183,9 +1237,9 @@ export const adminRoutes = new Elysia({
 
       const complaints = await prisma.indexedComplaint.findMany({
         where: complaintWhere,
-        select: { hcs_hash: true, title: true, status: true, directed_to: true }
+        select: { chain_hash: true, title: true, status: true, directed_to: true }
       });
-      const complaintMap = new Map(complaints.map(c => [c.hcs_hash, c]));
+      const complaintMap = new Map(complaints.map(c => [c.chain_hash, c]));
 
       // Filter requests to only those whose complaints match the entity filter
       let filteredRequests = requests;
@@ -1267,7 +1321,7 @@ export const adminRoutes = new Elysia({
 
       // Find the complaint
       const indexed = await prisma.indexedComplaint.findUnique({
-        where: { hcs_hash: request.complaint_id }
+        where: { chain_hash: request.complaint_id }
       });
 
       if (!indexed) {
@@ -1475,8 +1529,8 @@ export const adminRoutes = new Elysia({
 
       // Get complaint details
       const complaint = await prisma.indexedComplaint.findUnique({
-        where: { hcs_hash: request.complaint_id },
-        select: { hcs_hash: true, title: true, status: true, complaint_text: true, category: true }
+        where: { chain_hash: request.complaint_id },
+        select: { chain_hash: true, title: true, status: true, complaint_text: true, category: true }
       });
 
       return {
@@ -1532,10 +1586,10 @@ export const adminRoutes = new Elysia({
       // Fetch complaint titles
       const complaintIds = requests.map(r => r.complaint_id);
       const complaints = await prisma.indexedComplaint.findMany({
-        where: { hcs_hash: { in: complaintIds } },
-        select: { hcs_hash: true, title: true, status: true }
+        where: { chain_hash: { in: complaintIds } },
+        select: { chain_hash: true, title: true, status: true }
       });
-      const complaintMap = new Map(complaints.map(c => [c.hcs_hash, c]));
+      const complaintMap = new Map(complaints.map(c => [c.chain_hash, c]));
 
       const enrichedRequests = requests.map(r => ({
         ...r,
@@ -1691,7 +1745,7 @@ export const adminRoutes = new Elysia({
         // Get complaints matching entity
         const entityComplaints = await prisma.indexedComplaint.findMany({
           where: entityWhere,
-          select: { hcs_hash: true }
+          select: { chain_hash: true }
         });
         const identifiedEntityComplaints = await prisma.identifiedComplaint.findMany({
           where: entityWhere.AND ? { AND: entityWhere.AND } : {},
@@ -1699,7 +1753,7 @@ export const adminRoutes = new Elysia({
         });
 
         const complaintIds = [
-          ...entityComplaints.map(c => c.hcs_hash),
+          ...entityComplaints.map(c => c.chain_hash),
           ...identifiedEntityComplaints.map(c => c.id)
         ];
 

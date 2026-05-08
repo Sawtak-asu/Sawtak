@@ -1,22 +1,24 @@
 # ============================================
 # Sawtak - Development Database Only
 # ============================================
-# Usage: docker-compose -f docker/docker-compose.dev.yml up -d
+# Usage:
+#   Linux:   docker compose -f docker/docker-compose.dev.yml up -d
+#   Windows: docker compose -f docker/docker-compose.dev-windows.yml up -d
 # ============================================
+# Note: If Linux bridge networking fails, use docker-compose.dev-linux.yml instead
 
 services:
   postgres:
     image: postgres:15-alpine
     container_name: sawtak-postgres-dev
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sawtak
     volumes:
       - sawtak_postgres_dev:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d sawtak"]
       interval: 10s
@@ -27,8 +29,7 @@ services:
     image: redis:7-alpine
     container_name: sawtak-redis-dev
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    network_mode: host
     volumes:
       - sawtak_redis_dev:/data
     healthcheck:

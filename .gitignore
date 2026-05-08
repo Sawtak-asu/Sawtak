@@ -45,6 +45,9 @@ DEVELOPMENT.md
 docker/backups/
 *.sql
 
+# Backups
+backup/
+
 /docs
 /ignore
 
@@ -83,3 +86,4 @@ release/
 *.ign
 se.md
 wallets.md
+/.claude

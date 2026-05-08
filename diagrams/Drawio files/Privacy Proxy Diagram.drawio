@@ -1,0 +1,76 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+  <diagram name="Privacy Proxy Detailed" id="35166615-f9aa-4bb2-83dc-73b99a5f9769">
+    <mxGraphModel dx="1426" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#000000;" value="3. Privacy Proxy Data Flow (Elysia.js)" vertex="1">
+          <mxGeometry height="40" width="700" x="290" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0052cc;dashed=1;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontColor=#0052cc;" value="Privacy Proxy Application Server" vertex="1">
+          <mxGeometry height="450" width="900" x="230" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;" value="Client App" vertex="1">
+          <mxGeometry height="80" width="40" x="100" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="backend_ext" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0052cc;fontColor=#000000;strokeWidth=2;shadow=0;" value="Backend API" vertex="1">
+          <mxGeometry height="80" width="120" x="1180" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;" value="Redis Store" vertex="1">
+          <mxGeometry height="80" width="160" x="590" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="router" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Router Entry&#xa;(CORS / Parse)" vertex="1">
+          <mxGeometry height="60" width="120" x="330" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="session" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Session Resolver" vertex="1">
+          <mxGeometry height="60" width="120" x="490" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="ratelimit" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="Rate Limiter&#xa;(Token Bucket)" vertex="1">
+          <mxGeometry height="60" width="120" x="650" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="sanitizer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontColor=#000000;strokeWidth=2;shadow=0;" value="PII Sanitizer&#xa;(Strip Headers)" vertex="1">
+          <mxGeometry height="60" width="120" x="810" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="forwarder" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0052cc;fontColor=#000000;strokeWidth=2;shadow=0;" value="Upstream Forwarder" vertex="1">
+          <mxGeometry height="60" width="120" x="970" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="router" value="Raw Request">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="350" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="router" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="session" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="session" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="ratelimit" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="ratelimit" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="sanitizer" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="sanitizer" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="forwarder" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="forwarder" style="endArrow=block;html=1;rounded=1;strokeColor=#0052cc;strokeWidth=2;fontColor=#0052cc;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="backend_ext" value="Cleaned Payload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_r1" edge="1" parent="1" source="session" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="redis" value="Read/Write Session">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="350" />
+              <mxPoint x="630" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_r2" edge="1" parent="1" source="ratelimit" style="endArrow=block;html=1;rounded=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;edgeStyle=orthogonalEdgeStyle;endFill=1;" target="redis" value="Check Limits">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="710" y="560" />
+              <mxPoint x="710" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

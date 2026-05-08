@@ -2,10 +2,12 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, ResponseType }
 import { QueryParamsResponse } from "./types/sawtak/sawtak/v1/query";
 import { QueryGetComplaintResponse } from "./types/sawtak/sawtak/v1/query";
 import { QueryAllComplaintResponse } from "./types/sawtak/sawtak/v1/query";
+import { QueryFilterComplaintsResponse } from "./types/sawtak/sawtak/v1/query";
 
 import { QueryParamsRequest } from "./types/sawtak/sawtak/v1/query";
 import { QueryGetComplaintRequest } from "./types/sawtak/sawtak/v1/query";
 import { QueryAllComplaintRequest } from "./types/sawtak/sawtak/v1/query";
+import { QueryFilterComplaintsRequest } from "./types/sawtak/sawtak/v1/query";
 
 
 import type {SnakeCasedPropertiesDeep} from 'type-fest';
@@ -247,6 +249,25 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryAllComplaintResponse>>>({
       path: `/sawtak/v1/complaint`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+  
+  /**
+   * QueryFilterComplaints
+   *
+   * @tags Query
+   * @name queryFilterComplaints
+   * @request GET:/sayedibrahimQ/sawtak/sawtak/v1/filter_complaints/{status}/{area}/{category}
+   */
+  queryFilterComplaints = (status: string, area: string, category: string,
+    query?: Record<string, any>,
+    params: RequestParams = {},
+  ) =>
+    this.request<SnakeCasedPropertiesDeep<ChangeProtoToJSPrimitives<QueryFilterComplaintsResponse>>>({
+      path: `/sayedibrahimQ/sawtak/sawtak/v1/filter_complaints/${status}/${area}/${category}`,
       method: "GET",
       query: query,
       format: "json",

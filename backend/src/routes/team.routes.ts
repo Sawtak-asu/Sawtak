@@ -269,8 +269,18 @@ export const teamRoutes = new Elysia({
      * Delete a team - PLATFORM ADMIN ONLY
      */
     .delete("/:id", async ({ params, user, set }: any) => {
+        if (!user || !user.userId) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { role: true }
+        });
+
         // Only platform admins can delete teams
-        if (user?.role !== "platform_admin") {
+        if (!dbUser || dbUser.role !== "platform_admin") {
             set.status = 403;
             return { success: false, error: "Only platform admins can delete teams" };
         }
@@ -312,10 +322,26 @@ export const teamRoutes = new Elysia({
      * Add a member to a team with a role - PLATFORM ADMIN ONLY
      */
     .post("/:id/members", async ({ params, body, user, set }: any) => {
+        if (!user || !user.userId) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized: Invalid user context" };
+        }
+
+        // Fetch fresh user data from database (JWT might have stale role)
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { id: true, role: true }
+        });
+
+        if (!dbUser) {
+            set.status = 401;
+            return { success: false, error: "User not found" };
+        }
+
         // Only platform admins can manage team members
-        if (user?.role !== "platform_admin") {
+        if (dbUser.role !== "platform_admin") {
             set.status = 403;
-            return { success: false, error: "Only platform admins can manage team members" };
+            return { success: false, error: `Only platform admins can manage team members. Your role: '${dbUser.role}'` };
         }
 
         const { id } = params;
@@ -422,8 +448,18 @@ export const teamRoutes = new Elysia({
      * Remove a member from a team - PLATFORM ADMIN ONLY
      */
     .delete("/:id/members/:userId", async ({ params, user, set }: any) => {
+        if (!user || !user.userId) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { role: true }
+        });
+
         // Only platform admins can manage team members
-        if (user?.role !== "platform_admin") {
+        if (!dbUser || dbUser.role !== "platform_admin") {
             set.status = 403;
             return { success: false, error: "Only platform admins can manage team members" };
         }
@@ -487,8 +523,18 @@ export const teamRoutes = new Elysia({
      * Update a member's role in a team - PLATFORM ADMIN ONLY
      */
     .patch("/:id/members/:userId", async ({ params, body, user, set }: any) => {
+        if (!user || !user.userId) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { role: true }
+        });
+
         // Only platform admins can manage team members
-        if (user?.role !== "platform_admin") {
+        if (!dbUser || dbUser.role !== "platform_admin") {
             set.status = 403;
             return { success: false, error: "Only platform admins can manage team members" };
         }

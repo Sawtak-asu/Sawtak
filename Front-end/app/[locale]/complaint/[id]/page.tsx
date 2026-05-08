@@ -33,11 +33,12 @@ import {
     LogIn,
     AlertCircle,
     Clock,
-    Loader2
+    Loader2,
+    Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -49,8 +50,6 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { useTranslations, useLocale } from "next-intl";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface Complaint {
     id: string;
@@ -107,6 +106,10 @@ export default function ComplaintPage() {
     const [hasVoted, setHasVoted] = useState(false);
     const [isVoting, setIsVoting] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+    // Map of url → "image" | "video" | "unknown" for IPFS URLs without extension
+    const [mediaTypes, setMediaTypes] = useState<Record<string, "image" | "video" | "unknown">>({});
+    const probedRef = useRef<Set<string>>(new Set());
 
     // Complaint history state
     interface HistoryItem {
@@ -137,7 +140,7 @@ export default function ComplaintPage() {
         queryKey: ["complaint", complaintId],
         queryFn: async () => {
             // URL-encode the ID when sending to API to handle special characters
-            const res = await fetch(`${API_URL}/api/feed/${encodeURIComponent(complaintId)}`);
+            const res = await fetch(`/api/feed/${encodeURIComponent(complaintId)}`);
             const json = await res.json();
 
             if (!json.success) throw new Error(json.error);
@@ -160,7 +163,7 @@ export default function ComplaintPage() {
         if (!isAnonymous && isLoggedIn && token) {
             const checkVoteStatus = async () => {
                 try {
-                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                    const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -179,7 +182,7 @@ export default function ComplaintPage() {
             // For public complaints without auth, just get vote count
             const getVoteCount = async () => {
                 try {
-                    const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`);
+                    const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`);
                     const data = await res.json();
                     if (data.success) {
                         setLocalUpvotes(data.data.voteCount);
@@ -204,7 +207,7 @@ export default function ComplaintPage() {
                 if (token) headers.Authorization = `Bearer ${token}`;
 
                 const res = await fetch(
-                    `${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`,
+                    `/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`,
                     { headers }
                 );
                 if (res.ok) {
@@ -221,7 +224,6 @@ export default function ComplaintPage() {
         fetchHistory();
     }, [complaint, token]);
 
-
     const handleUpvote = useCallback(async () => {
         if (!complaint) return;
 
@@ -234,7 +236,7 @@ export default function ComplaintPage() {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -266,7 +268,7 @@ export default function ComplaintPage() {
         if (!token || !complaint) return;
         setIsUpdating(true);
         try {
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -330,12 +332,57 @@ export default function ComplaintPage() {
         return null;
     };
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isVideoUrl = (url: string) => /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = complaint ? [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean) : [];
+
+    // Probe Content-Type for IPFS URLs that have no recognisable extension
+    useEffect(() => {
+        const unknownUrls = allEvidence.filter(
+            (url) => !isImageUrl(url) && !isVideoUrl(url) && isIpfsUrl(url) && !probedRef.current.has(url)
+        );
+        if (unknownUrls.length === 0) return;
+
+        unknownUrls.forEach((url) => {
+            probedRef.current.add(url);
+            fetch(url, { method: "HEAD" })
+                .then((res) => {
+                    const ct = res.headers.get("content-type") ?? "";
+                    const kind: "image" | "video" | "unknown" = ct.startsWith("video/")
+                        ? "video"
+                        : ct.startsWith("image/")
+                        ? "image"
+                        : "unknown";
+                    setMediaTypes((prev) => ({ ...prev, [url]: kind }));
+                })
+                .catch(() => {
+                    setMediaTypes((prev) => ({ ...prev, [url]: "unknown" }));
+                });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allEvidence.join(",")]);
+
+    /** Returns true only when we are certain the URL is a video */
+    const resolveIsVideo = (url: string): boolean => {
+        if (isVideoUrl(url)) return true;
+        if (isImageUrl(url)) return false;
+        // IPFS URL without extension – use probed result
+        return mediaTypes[url] === "video";
+    };
 
     if (isLoading) {
         return (
@@ -488,26 +535,59 @@ export default function ComplaintPage() {
                                     allEvidence.length >= 4 && "grid-cols-2"
                                 )}>
                                     {allEvidence.slice(0, 4).map((url, i) => {
-                                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
+                                        const isVideo = resolveIsVideo(url);
+                                        const isImage = isImageUrl(url) || (isIpfsUrl(url) && !isVideo);
                                         const isLast = i === 3 && allEvidence.length > 4;
                                         const remaining = allEvidence.length - 4;
-
+ 
                                         return (
-                                            <a
+                                            <div
                                                 key={i}
-                                                href={url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
                                                 className={cn(
-                                                    "relative aspect-video bg-muted/50",
+                                                    "relative aspect-video bg-muted/50 overflow-hidden cursor-pointer group",
                                                     allEvidence.length === 3 && i === 0 && "row-span-2 aspect-square"
                                                 )}
+                                                onClick={() => {
+                                                    if (isVideo) {
+                                                        setActiveVideoUrl(url);
+                                                    } else {
+                                                        window.open(url, "_blank");
+                                                    }
+                                                }}
                                             >
-                                                {isImage ? (
+                                                {isVideo ? (
+                                                    <div className="relative w-full h-full">
+                                                        {activeVideoUrl === url ? (
+                                                            <video
+                                                                src={url}
+                                                                className="w-full h-full object-contain bg-black"
+                                                                controls
+                                                                autoPlay
+                                                                playsInline
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        ) : (
+                                                            <>
+                                                                <video
+                                                                    src={`${url}#t=0.1`}
+                                                                    className="w-full h-full object-cover"
+                                                                    preload="metadata"
+                                                                    muted
+                                                                />
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                                    <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                                                                        <Play className="h-8 w-8 fill-white" />
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ) : isImage ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
                                                     <img
                                                         src={url}
                                                         alt={`Evidence ${i + 1}`}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                                         loading="lazy"
                                                     />
                                                 ) : (
@@ -520,7 +600,7 @@ export default function ComplaintPage() {
                                                         <span className="text-2xl font-bold text-white">+{remaining}</span>
                                                     </div>
                                                 )}
-                                            </a>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -728,7 +808,7 @@ export default function ComplaintPage() {
                                                 </div>
                                                 {item.note && (
                                                     <p className="text-base mt-2 bg-background p-3 rounded border text-muted-foreground italic">
-                                                        "{item.note}"
+                                                        &quot;{item.note}&quot;
                                                     </p>
                                                 )}
                                             </div>
@@ -740,6 +820,7 @@ export default function ComplaintPage() {
                     )}
                 </div>
             </div>
+ 
         </GridBackground>
     );
 }

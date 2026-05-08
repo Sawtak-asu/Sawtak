@@ -1,0 +1,269 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0" pages="4">
+  <diagram id="erd_page" name="1. Entity-Relationship (ERD)">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="erd_title" value="&lt;b&gt;Entity-Relationship Diagram (ERD)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="20" width="400" height="30" as="geometry" />
+        </mxCell>
+        <!-- Tables -->
+        <mxCell id="t_users" value="&lt;b&gt;Users&lt;/b&gt;&lt;hr&gt;- id (PK)&lt;br&gt;- email&lt;br&gt;- password_hash&lt;br&gt;- anonymous_identifier&lt;br&gt;- role&lt;br&gt;- created_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_identified" value="&lt;b&gt;Identified Complaints&lt;/b&gt;&lt;hr&gt;- id (PK)&lt;br&gt;- user_id (FK)&lt;br&gt;- title / description&lt;br&gt;- category&lt;br&gt;- status&lt;br&gt;- directed_to" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="350" y="100" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_tracking" value="&lt;b&gt;Anonymous Tracking&lt;/b&gt;&lt;hr&gt;- id (PK)&lt;br&gt;- user_id (FK)&lt;br&gt;- tracking_hash (UNIQUE)&lt;br&gt;- encrypted_payload&lt;br&gt;- created_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_indexed" value="&lt;b&gt;Indexed Complaints&lt;/b&gt;&lt;hr&gt;- hash (PK)&lt;br&gt;- title / description&lt;br&gt;- category&lt;br&gt;- status&lt;br&gt;- sender_pseudonym&lt;br&gt;- ipfs_cid" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="350" y="320" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_audit" value="&lt;b&gt;Admin Audit Logs&lt;/b&gt;&lt;hr&gt;- id (PK)&lt;br&gt;- admin_id (FK)&lt;br&gt;- action&lt;br&gt;- target_type / id&lt;br&gt;- timestamp" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="650" y="100" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_reveal" value="&lt;b&gt;Identity Reveal Requests&lt;/b&gt;&lt;hr&gt;- id (PK)&lt;br&gt;- complaint_id&lt;br&gt;- requested_by (FK)&lt;br&gt;- approved_by (FK)&lt;br&gt;- status / reason" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="650" y="320" width="200" height="150" as="geometry" />
+        </mxCell>
+        <!-- Edges -->
+        <mxCell id="e1" value="1 : N" style="endArrow=classic;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#000000;strokeWidth=2;" edge="1" parent="1" source="t_users" target="t_identified">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="1 : 1" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#000000;strokeWidth=2;" edge="1" parent="1" source="t_users" target="t_tracking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="1 : N" style="endArrow=classic;html=1;exitX=1;exitY=0.25;entryX=0;entryY=0.5;strokeColor=#000000;strokeWidth=2;" edge="1" parent="1" source="t_users" target="t_audit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="137" />
+              <mxPoint x="300" y="60" />
+              <mxPoint x="600" y="60" />
+              <mxPoint x="600" y="175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="1 : N" style="endArrow=classic;html=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;strokeColor=#000000;strokeWidth=2;" edge="1" parent="1" source="t_users" target="t_reveal">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="212" />
+              <mxPoint x="320" y="290" />
+              <mxPoint x="600" y="290" />
+              <mxPoint x="600" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="use_case_page" name="2. Use Case Diagram">
+    <mxGraphModel dx="874" dy="580" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0_uc" />
+        <mxCell id="1_uc" parent="0_uc" />
+        <mxCell id="uc_title" parent="1_uc" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" value="&lt;b&gt;Use Case Diagram&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="400" x="50" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="sys_bound" parent="1_uc" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" value="Sawtak Platform" vertex="1">
+          <mxGeometry height="650" width="400" x="250" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_submit_anon" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Submit Anonymous Complaint" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_submit_iden" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Submit Identified Complaint" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_feed" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="View Public Feed &amp; Vote" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_dashboard" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="View Admin Dashboard" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_req_reveal" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Request Identity Reveal" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_app_reveal" parent="sys_bound" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Approve Identity Reveal (Decrypt)" vertex="1">
+          <mxGeometry height="60" width="200" x="100" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="a_whistleblower" parent="1_uc" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Whistleblower" vertex="1">
+          <mxGeometry height="80" width="40" x="100" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="a_team_admin" parent="1_uc" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Team Admin" vertex="1">
+          <mxGeometry height="80" width="40" x="100" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="a_platform_admin" parent="1_uc" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Platform Admin" vertex="1">
+          <mxGeometry height="80" width="40" x="100" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="a_public" parent="1_uc" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="Public User" vertex="1">
+          <mxGeometry height="80" width="40" x="750" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="eu1" edge="1" parent="1_uc" source="a_whistleblower" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_submit_anon">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu2" edge="1" parent="1_uc" source="a_whistleblower" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_submit_iden">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu3" edge="1" parent="1_uc" source="a_whistleblower" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_feed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu4" edge="1" parent="1_uc" source="a_public" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_feed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu5" edge="1" parent="1_uc" source="a_team_admin" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_dashboard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu6" edge="1" parent="1_uc" source="a_team_admin" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_req_reveal">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu7" edge="1" parent="1_uc" source="a_platform_admin" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_dashboard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eu8" edge="1" parent="1_uc" source="a_platform_admin" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=2;" target="uc_app_reveal">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dep_page" name="3. Deployment">
+    <mxGraphModel dx="932" dy="619" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0_dep" />
+        <mxCell id="1_dep" parent="0_dep" />
+        <mxCell id="dep_title" parent="1_dep" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" value="&lt;b&gt;Deployment &amp; Infrastructure Diagram&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="400" x="50" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n_client" parent="1_dep" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;Client Device&lt;/b&gt;&lt;br&gt;(Browser / Mobile)" vertex="1">
+          <mxGeometry height="90" width="140" x="50" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_proxy" parent="1_dep" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;Privacy Proxy Server&lt;/b&gt;&lt;br&gt;Port 443" vertex="1">
+          <mxGeometry height="90" width="160" x="250" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_docker" parent="1_dep" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;startSize=30;" value="Docker Host (sawtak-network)" vertex="1">
+          <mxGeometry height="500" width="500" x="460" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n_front" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;Frontend&lt;/b&gt;&lt;br&gt;Next.js (3000)" vertex="1">
+          <mxGeometry height="80" width="140" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_back" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;Backend API&lt;/b&gt;&lt;br&gt;Bun/Elysia (8000)" vertex="1">
+          <mxGeometry height="80" width="140" x="220" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_db" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;(5432)" vertex="1">
+          <mxGeometry height="80" width="140" x="30" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="n_redis" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;Redis Cache&lt;/b&gt;&lt;br&gt;(6379)" vertex="1">
+          <mxGeometry height="80" width="140" x="220" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="n_cosmos" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;Sawtak Cosmos Node&lt;/b&gt;&lt;br&gt;(26657)" vertex="1">
+          <mxGeometry height="100" width="200" x="120" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="n_monitor" parent="n_docker" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="&lt;b&gt;Monitoring&lt;/b&gt;&lt;br&gt;(Prometheus/Grafana)" vertex="1">
+          <mxGeometry height="100" width="140" x="340" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="n_ipfs" parent="1_dep" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;" value="&lt;b&gt;IPFS Network&lt;/b&gt;&lt;br&gt;Storage" vertex="1">
+          <mxGeometry height="100" width="160" x="240" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="ed1" edge="1" parent="1_dep" source="n_client" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_proxy" value="HTTPS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed2" edge="1" parent="1_dep" source="n_proxy" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_back" value="Sanitized HTTPS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed3" edge="1" parent="1_dep" source="n_front" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_back" value="API Call">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed4" edge="1" parent="1_dep" source="n_back" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_db" value="TCP">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed5" edge="1" parent="1_dep" source="n_back" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_redis" value="TCP">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed6" edge="1" parent="1_dep" source="n_back" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_cosmos" value="gRPC">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed7" edge="1" parent="1_dep" source="n_back" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="n_ipfs" value="HTTP API">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="state_page" name="4. State Machine (Complaint Lifecycle)">
+    <mxGraphModel dx="699" dy="464" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0_sm" />
+        <mxCell id="1_sm" parent="0_sm" />
+        <mxCell id="sm_title" parent="1_sm" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" value="&lt;b&gt;State Machine Diagram (Complaint Lifecycle)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="500" x="50" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="s_start" parent="1_sm" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="20" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="s_pending" parent="1_sm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;fontStyle=1" value="Pending" vertex="1">
+          <mxGeometry height="60" width="120" x="160" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="s_review" parent="1_sm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;fontStyle=1" value="Under Review" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="s_action" parent="1_sm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0052cc;strokeWidth=2;fontStyle=1" value="Action Taken" vertex="1">
+          <mxGeometry height="60" width="120" x="620" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="s_resolved" parent="1_sm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontStyle=1" value="Resolved" vertex="1">
+          <mxGeometry height="60" width="120" x="750" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="s_rejected" parent="1_sm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;fontStyle=1" value="Rejected" vertex="1">
+          <mxGeometry height="60" width="120" x="750" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="s_end_outer" parent="1_sm" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="950" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="s_end_inner" parent="1_sm" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="960" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="es1" edge="1" parent="1_sm" source="s_start" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="s_pending" value="Submit Complaint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es2" edge="1" parent="1_sm" source="s_pending" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="s_review" value="Admin Assigns">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es3" edge="1" parent="1_sm" source="s_review" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;" target="s_action" value="Investigation Complete">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es4" edge="1" parent="1_sm" source="s_action" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" target="s_resolved" value="Resolution Confirmed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es5" edge="1" parent="1_sm" source="s_pending" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" target="s_rejected" value="Invalid / Spam">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="340" />
+              <mxPoint x="810" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="es6" edge="1" parent="1_sm" source="s_review" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" target="s_rejected" value="Cannot Resolve">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="es7" edge="1" parent="1_sm" source="s_resolved" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" target="s_end_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="es8" edge="1" parent="1_sm" source="s_rejected" style="endArrow=classic;html=1;strokeColor=#000000;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" target="s_end_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

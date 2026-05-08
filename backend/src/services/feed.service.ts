@@ -216,22 +216,22 @@ export class FeedService {
       evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
     }));
 
-    const anonymousFormatted: FeedComplaint[] = finalAnonymous.map((c) => ({
-      id: c.hcs_hash,
-      title: c.title,
-      text: c.complaint_text,
-      category: c.category,
-      area: c.area,
-      directedTo: c.directed_to as DirectedTo,
-      incidentDate: c.incident_date.toISOString(),
-      createdAt: c.consensus_timestamp.toISOString(),
-      status: c.status,
-      submissionMode: "anonymous" as const,
-      transactionId: c.hcs_hash,
-      evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
-      encryptedAnonId: c.anonymous_identifier, // Include anonymous identifier for admin
-      trackingHash: c.tracking_hash || undefined, // Include tracking hash
-    }));
+const anonymousFormatted: FeedComplaint[] = finalAnonymous.map((c) => ({
+  id: c.chain_hash,
+  title: c.title,
+  text: c.complaint_text,
+  category: c.category,
+  area: c.area,
+  directedTo: c.directed_to as DirectedTo,
+  incidentDate: c.incident_date.toISOString(),
+  createdAt: c.consensus_timestamp.toISOString(),
+  status: c.status,
+  submissionMode: "anonymous" as const,
+  transactionId: c.chain_hash,
+  evidenceCids: c.evidence_cids ? (c.evidence_cids as string[]) : [],
+  encryptedAnonId: c.anonymous_identifier, // Include anonymous identifier for admin
+  trackingHash: c.tracking_hash || undefined, // Include tracking hash
+}));
 
     // Merge and sort
     let allComplaints = [...identifiedFormatted, ...anonymousFormatted];
@@ -384,29 +384,29 @@ export class FeedService {
       };
     }
 
-    // Try anonymous/indexed
-    const anonymous = await prisma.indexedComplaint.findUnique({
-      where: { hcs_hash: id },
-    });
+  // Try anonymous/indexed
+  const anonymous = await prisma.indexedComplaint.findUnique({
+    where: { chain_hash: id },
+  });
 
-    if (anonymous) {
-      return {
-        id: anonymous.hcs_hash,
-        title: anonymous.title,
-        text: anonymous.complaint_text,
-        category: anonymous.category,
-        area: anonymous.area,
-        directedTo: anonymous.directed_to as DirectedTo,
-        incidentDate: anonymous.incident_date.toISOString(),
-        createdAt: anonymous.consensus_timestamp.toISOString(),
-        status: anonymous.status,
-        submissionMode: "anonymous",
-        transactionId: anonymous.hcs_hash,
-        evidenceCids: anonymous.evidence_cids ? (anonymous.evidence_cids as string[]) : [],
-        encryptedAnonId: anonymous.anonymous_identifier,
-        trackingHash: anonymous.tracking_hash || undefined,
-      };
-    }
+  if (anonymous) {
+    return {
+      id: anonymous.chain_hash,
+      title: anonymous.title,
+      text: anonymous.complaint_text,
+      category: anonymous.category,
+      area: anonymous.area,
+      directedTo: anonymous.directed_to as DirectedTo,
+      incidentDate: anonymous.incident_date.toISOString(),
+      createdAt: anonymous.consensus_timestamp.toISOString(),
+      status: anonymous.status,
+      submissionMode: "anonymous",
+      transactionId: anonymous.chain_hash,
+      evidenceCids: anonymous.evidence_cids ? (anonymous.evidence_cids as string[]) : [],
+      encryptedAnonId: anonymous.anonymous_identifier,
+      trackingHash: anonymous.tracking_hash || undefined,
+    };
+  }
 
     return null;
   }

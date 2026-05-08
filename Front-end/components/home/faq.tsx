@@ -18,7 +18,7 @@ export function FAQ() {
     const t = useTranslations("FAQ");
 
     return (
-        <section dir="ltr" className="py-24 relative bg-background">
+        <section dir="ltr" className="py-24 relative">
             <div className="mx-auto max-w-4xl px-6">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
@@ -34,7 +34,7 @@ export function FAQ() {
                         <motion.div
                             key={index}
                             initial={false}
-                            animate={{ backgroundColor: openIndex === index ? "var(--muted)" : "transparent" }}
+                            animate={{ backgroundColor: openIndex === index ? "var(--muted)" : "var(--background)" }}
                             onClick={() => setOpenIndex(openIndex === index ? null : index)}
                             className={cn(
                                 "group border border-border rounded-2xl overflow-hidden cursor-pointer transition-colors hover:border-primary/30",

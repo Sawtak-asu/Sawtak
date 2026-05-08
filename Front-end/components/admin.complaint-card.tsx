@@ -29,8 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export interface Complaint {
     id: string;
     title: string;
@@ -107,7 +105,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         }
         setIsRequestingReveal(true);
         try {
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/request-identity-reveal`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/request-identity-reveal`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -155,7 +153,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         const fetchHistory = async () => {
             setIsLoadingHistory(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`, {
+                const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/history`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -178,7 +176,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
         const checkVoteStatus = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/vote/status?complaintId=${complaint.id}`, {
+                const res = await fetch(`/api/vote/status?complaintId=${complaint.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -196,15 +194,25 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         checkVoteStatus();
     }, [complaint.id, token, isLoggedIn, canUpvote]);
 
+    const ipfsGateway = "https://gateway.pinata.cloud/ipfs";
+    const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+    const isIpfsUrl = (url: string) => url.includes("/ipfs/") || url.startsWith("ipfs://");
+    const toIpfsGatewayUrl = (cid: string) => {
+        if (!cid) return "";
+        if (cid.startsWith("http://") || cid.startsWith("https://")) return cid;
+        if (cid.startsWith("ipfs://")) return `${ipfsGateway}/${cid.replace("ipfs://", "")}`;
+        return `${ipfsGateway}/${cid}`;
+    };
+
     // Evidence handling
     const allEvidence: string[] = [
         ...(complaint.evidenceUrls || []),
         ...(complaint.evidence || []),
-        ...(complaint.evidenceCids || []).map(cid => `https://w3s.link/ipfs/${cid}`)
+        ...(complaint.evidenceCids || []).map(toIpfsGatewayUrl),
     ].filter(Boolean);
 
     // Filter for images only for preview
-    const imageEvidence = allEvidence.filter(url => /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url));
+    const imageEvidence = allEvidence.filter((url) => isImageUrl(url) || isIpfsUrl(url));
 
     const handleUpvote = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -219,7 +227,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
         setIsVoting(true);
 
         try {
-            const res = await fetch(`${API_URL}/api/vote`, {
+            const res = await fetch(`/api/vote`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -258,7 +266,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 toast.error("You must be logged in to perform this action");
                 return;
             }
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -306,7 +314,7 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                 toast.error("You must be logged in to perform this action");
                 return;
             }
-            const res = await fetch(`${API_URL}/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
+            const res = await fetch(`/api/admin/complaints/${encodeURIComponent(complaint.id)}/status`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -362,10 +370,23 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
     // Get translated status
     const getStatusName = (status: string) => {
+        // Fallback for UI if exact string isn't found
+        if (!status) return status;
+
         try {
+            // First try exact match
             return tStatuses(status);
         } catch {
-            return status;
+            // Try to map or return as is if translation throws
+            try {
+                // Mapping common status variations
+                if (status.includes("flagged")) return tStatuses("flagged");
+                if (status === "pending") return tStatuses("submitted");
+                if (status === "under_investigation") return tStatuses("investigating");
+                return status; // Return as is if still fails
+            } catch {
+                return status;
+            }
         }
     };
 
@@ -515,21 +536,25 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
                     <div className="space-y-4 py-2">
                         <RadioGroup value={managerActionType} onValueChange={(v) => setManagerActionType(v as "resolved" | "closed" | "flagged")}>
-                            <div className="flex items-center space-x-2 border border-green-500/30 p-3 rounded-md cursor-pointer hover:bg-green-500/10" onClick={() => setManagerActionType("resolved")}>
-                                <RadioGroupItem value="resolved" id="m-resolved" />
-                                <Label htmlFor="m-resolved" className="cursor-pointer font-medium text-green-600 dark:text-green-400">Resolved</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Mark as successfully addressed</span>
-                            </div>
+                            {(!complaint.status?.includes("flagged")) && (
+                                <div className="flex items-center space-x-2 border border-green-500/30 p-3 rounded-md cursor-pointer hover:bg-green-500/10" onClick={() => setManagerActionType("resolved")}>
+                                    <RadioGroupItem value="resolved" id="m-resolved" />
+                                    <Label htmlFor="m-resolved" className="cursor-pointer font-medium text-green-600 dark:text-green-400">Resolved</Label>
+                                    <span className="text-xs text-muted-foreground ml-auto">Mark as successfully addressed</span>
+                                </div>
+                            )}
                             <div className="flex items-center space-x-2 border border-slate-500/30 p-3 rounded-md cursor-pointer hover:bg-slate-500/10" onClick={() => setManagerActionType("closed")}>
                                 <RadioGroupItem value="closed" id="m-closed" />
                                 <Label htmlFor="m-closed" className="cursor-pointer font-medium text-slate-600 dark:text-slate-400">Closed</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Close without resolution</span>
+                                <span className="text-xs text-muted-foreground ml-auto">Close without resolution / Mark invalid</span>
                             </div>
-                            <div className="flex items-center space-x-2 border border-amber-500/30 p-3 rounded-md cursor-pointer hover:bg-amber-500/10" onClick={() => setManagerActionType("flagged")}>
-                                <RadioGroupItem value="flagged" id="m-flagged" />
-                                <Label htmlFor="m-flagged" className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">Flagged</Label>
-                                <span className="text-xs text-muted-foreground ml-auto">Flag for further review</span>
-                            </div>
+                            {(!complaint.status?.includes("flagged")) && (
+                                <div className="flex items-center space-x-2 border border-amber-500/30 p-3 rounded-md cursor-pointer hover:bg-amber-500/10" onClick={() => setManagerActionType("flagged")}>
+                                    <RadioGroupItem value="flagged" id="m-flagged" />
+                                    <Label htmlFor="m-flagged" className="cursor-pointer font-medium text-amber-600 dark:text-amber-400">Flagged</Label>
+                                    <span className="text-xs text-muted-foreground ml-auto">Flag for further review</span>
+                                </div>
+                            )}
                         </RadioGroup>
 
                         <div className="space-y-2">
@@ -775,11 +800,26 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
                                     </Button>
                                 )}
 
+                                {/* Team Admin/Manager close flagged complaint button */}
+                                {(selectedTeamRole === "team_admin" || selectedTeamRole === "manager") && complaint.status?.includes("flagged") && (
+                                    <Button
+                                        size="sm"
+                                        className="h-8 px-3 ml-auto bg-slate-500/10 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20 border border-slate-500/20 mr-2"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setManagerActionType("closed");
+                                            setManagerDialogOpen(true);
+                                        }}
+                                    >
+                                        Close Complaint
+                                    </Button>
+                                )}
+
                                 {/* Request Identity Reveal Button (Team Admin Only, Flagged Anonymous Complaints) */}
                                 {(selectedTeamRole === "team_admin") && isAnonymous && complaint.status?.includes("flagged") && (
                                     <Button
                                         size="sm"
-                                        className="h-8 px-3 ml-auto bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
+                                        className="h-8 px-3 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setRevealReason("");

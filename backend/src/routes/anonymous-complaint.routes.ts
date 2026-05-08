@@ -55,7 +55,7 @@ export const anonymousComplaintRoutes = new Elysia({
     }),
     detail: {
       summary: "Submit Anonymous Complaint",
-      description: `Submit an anonymous complaint that gets recorded on the Hedera blockchain. 
+      description: `Submit an anonymous complaint that gets recorded on the Cosmos blockchain. 
       
 **Privacy Guarantees:**
 - No IP logging
@@ -77,10 +77,9 @@ export const anonymousComplaintRoutes = new Elysia({
                   data: {
                     type: "object",
                     properties: {
-                      transactionId: { type: "string", description: "HCS transaction ID" },
+                      transactionHash: { type: "string", description: "Cosmos transaction hash" },
                       trackingCode: { type: "string", description: "SAWTAK-XXXXXXXX format tracking code" },
-                      consensusTimestamp: { type: "string", description: "Blockchain consensus timestamp" },
-                      topicId: { type: "string", description: "HCS topic ID for verification" }
+                      height: { type: "number", description: "Block height" }
                     }
                   },
                   message: { type: "string" }

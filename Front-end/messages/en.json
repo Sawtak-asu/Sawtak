@@ -34,7 +34,7 @@
     "cta1": "File a Complaint",
     "cta2": "View Public Feed",
     "indicator1": "256-bit Encrypted",
-    "indicator2": "Hedera Blockchain",
+    "indicator2": "Sawtak Blockchain",
     "indicator3": "Anonymous"
   },
   "Aim": {
@@ -48,7 +48,7 @@
       },
       "truth": {
         "title": "Immutable Truth",
-        "description": "By leveraging the Hedera Hashgraph, we guarantee that once a record is submitted, it cannot be altered or deleted by anyone, including us."
+        "description": "By leveraging our own Sawtak Blockchain (built on Cosmos SDK & Tendermint), we guarantee that once a record is submitted, it cannot be altered or deleted by anyone, including us."
       },
       "transparency": {
         "title": "Transparency First",
@@ -125,7 +125,7 @@
     "include2": "Date and location details",
     "include3": "Supporting evidence if available",
     "commitment": "Our Commitment",
-    "commitmentText": "Sawtak uses Hedera Hashgraph to ensure your complaint is permanently recorded and immutable. Whether you choose to be anonymous or identified, your voice is protected.",
+    "commitmentText": "Sawtak uses its own custom blockchain (built on Cosmos SDK & Tendermint) to ensure your complaint is permanently recorded and immutable. Whether you choose to be anonymous or identified, your voice is protected.",
     "privacyTitle": "Privacy",
     "anonymousMode": "Anonymous mode:",
     "anonymousModeText": "Your identity is encrypted and stored on the blockchain. You'll receive a tracking code.",
@@ -153,10 +153,17 @@
     "helpText2": "For anonymous complaints, we cannot recover your tracking code as it's not linked to any account. For identified complaints, please contact support.",
     "newComplaintCta": "Need to file a new complaint?"
   },
-  "Status": {
-    "submitted": "Pending Review",
-    "investigating": "Under Investigation",
+  "Statuses": {
+    "submitted": "Submitted",
+    "pending": "Pending",
+    "in_progress": "In Progress",
+    "investigating": "Investigating",
+    "under_investigation": "Under Investigation",
     "resolved": "Resolved",
+    "closed": "Closed",
+    "flagged": "Flagged",
+    "flagged_inaccurate": "Flagged Inaccurate",
+    "flagged_legal": "Flagged Legal",
     "dismissed": "Dismissed"
   },
   "LanguageSwitcher": {
@@ -174,9 +181,9 @@
     "title2": "tech",
     "badge": "Powered By",
     "tech": {
-      "hedera": {
-        "name": "Hedera Hashgraph",
-        "description": "Enterprise-grade public distributed ledger technology. Immutable record-keeping with 10,000+ TPS and carbon-negative operations."
+      "sawtakChain": {
+        "name": "Sawtak Blockchain",
+        "description": "Our own custom blockchain built on Cosmos SDK & Tendermint. Fully sovereign, immutable record-keeping with fast finality and Byzantine fault tolerance."
       },
       "bun": {
         "name": "Bun & Elysia",
@@ -200,6 +207,36 @@
       }
     }
   },
+  "ComplaintFlow": {
+    "badge": "THE REDACTION JOURNEY",
+    "title1": "How Your Complaint",
+    "titleHighlight": "Travels Safely",
+    "subtitle": "Watch your complaint transform into a fully anonymous record. Each security layer strips away identifying data — by the time it reaches the blockchain, only the complaint remains.",
+    "mockComplaintText": "The public service office at district 7 has been systematically delaying permit applications without justification. This has been ongoing for 3 months affecting multiple residents...",
+    "checkpoints": {
+      "browser": {
+        "title": "Your Browser",
+        "desc": "HTTPS encrypted. Submission initiated. No metadata logged locally.",
+        "redacts": "INITIATES SECURE SUBMISSION"
+      },
+      "proxy": {
+        "title": "Privacy Proxy",
+        "desc": "Acts as a VPN/anonymizer. Strips all identifying headers before forwarding.",
+        "redacts": "REDACTS: IP ADDRESS, USER AGENT, DEVICE ID"
+      },
+      "backend": {
+        "title": "Secure Backend",
+        "desc": "AES-256 encryption applied. Content and identity are separated into isolated stores.",
+        "redacts": "REDACTS: LOCATION, TIMESTAMP"
+      },
+      "blockchain": {
+        "title": "Sawtak Blockchain",
+        "desc": "Cryptographic hash published on-chain. Identity permanently separated from record.",
+        "redacts": "REDACTS: IDENTITY — STAMPS: ANONYMOUS"
+      }
+    },
+    "privacyNote": "At no point does any single layer hold both your identity and your complaint content. The pipeline is designed so that full correlation is technically impossible."
+  },
   "FAQ": {
     "title": "Addressing Your",
     "titleHighlight": "Fears",
@@ -211,7 +248,7 @@
       },
       "hacked": {
         "question": "What if the database gets hacked?",
-        "answer": "Your anonymous report isn't just in a database—it's hashed on the Hedera public ledger. Even if our servers are compromised, the cryptographic proof of your report exists independently on the blockchain and cannot be altered or deleted."
+        "answer": "Your anonymous report isn't just in a database—it's hashed on the Sawtak Blockchain. Even if our servers are compromised, the cryptographic proof of your report exists independently on our sovereign blockchain and cannot be altered or deleted."
       },
       "defamation": {
         "question": "Can I be sued for defamation?",
@@ -250,9 +287,9 @@
     "category": "Category",
     "categoryPlaceholder": "Select a category",
     "directTitle": "Direct Your Complaint",
-    "directDescription": "Optionally specify which government entity this complaint is directed to. This helps route your complaint to the appropriate administrators.",
+    "directDescription": "Specify which government entity this complaint is directed to. This ensures your complaint is routed to the correct authorities for investigation.",
     "directedTo": "Directed To",
-    "directedToPlaceholder": "Select target (optional)",
+    "directedToPlaceholder": "Select target",
     "directedToDescription": "Select whether you want to direct this to a ministry, governorate, or specific center",
     "notSpecified": "Not Specified",
     "ministry": "Ministry",
@@ -270,6 +307,9 @@
     "evidenceTitle": "Supporting Evidence",
     "evidenceDescription": "Upload any files that support your complaint.",
     "evidenceLabel": "Evidence (Optional, Multiple Files)",
+    "browse": "Browse",
+    "dragAndDropTitle": "Drag and drop files here",
+    "dragAndDropSubtitle": "or click to browse from your device",
     "evidenceHint": "You can select multiple files at once (images, videos, documents)",
     "submitting": "Submitting...",
     "submit": "Submit Complaint",
@@ -279,12 +319,27 @@
     "copied": "Copied!",
     "importantWarning": "⚠️ Important: Write this down!",
     "trackingHint": "You can use this code at /track to check your complaint status. Your identity is not linked to this code.",
-    "savedCode": "I've Saved My Code"
+    "savedCode": "I've Saved My Code",
+    "aiValidating": "Reviewing your complaint...",
+    "aiValidatingDesc": "Our AI is checking your complaint for authenticity before submission. This takes a few seconds.",
+    "aiSpamWarningTitle": "Complaint Not Accepted",
+    "aiSpamWarningDesc": "Our AI has determined this complaint does not appear to be a genuine grievance. The platform is intended for serious complaints about real misconduct. Spam, advertisements, and test submissions are not permitted.",
+    "aiSpamWarningHint": "If you believe this is a mistake, please ensure your complaint clearly describes the actual incident with enough detail.",
+    "aiSpamDismiss": "Edit My Complaint",
+    "aiValidationErrorTitle": "AI Service Unavailable",
+    "aiValidationErrorDesc": "We encountered a problem while reviewing your complaint. Our AI service is currently overloaded (Rate Limited) or unavailable.",
+    "aiValidationErrorHint": "Please wait a few seconds and try submitting again. This typically happens when the system is under heavy load.",
+    "aiValidationDismiss": "Close",
+    "anonymousSubmitted": "Complaint submitted anonymously! Save your tracking code.",
+    "identifiedSubmitted": "Complaint submitted successfully!",
+    "submitFailed": "Failed to submit complaint. Please try again.",
+    "uploadFailed": "Failed to upload evidence files.",
+    "loginRequired": "Please log in to submit a complaint."
   },
   "Docs": {
     "sidebarTitle": "Documentation",
-    "hcsTopicTitle": "HCS Topic ID",
-    "hcsTopicHint": "Use this ID to verify messages on any Hedera explorer.",
+    "blockchainIdTitle": "Blockchain Chain ID",
+    "blockchainIdHint": "Use this ID to verify transactions on the Sawtak Blockchain explorer.",
     "pageTitle": "Sawtak Documentation",
     "pageSubtitle": "Learn about the architecture, security, and philosophy behind the Sawtak whistleblowing platform.",
     "onThisPage": "On this page",
@@ -301,13 +356,13 @@
       "anonymity": "absolute anonymity",
       "with": "with",
       "accountability": "actionable accountability",
-      "description": "Unlike traditional reporting tools, Sawtak leverages the Hedera Hashgraph network to create an immutable, public audit trail of anonymous complaints. This ensures that once a complaint is filed, it cannot be deleted or altered by anyone—not even system administrators."
+      "description": "Unlike traditional reporting tools, Sawtak leverages its own sovereign blockchain network (built on Cosmos SDK) to create an immutable, public audit trail of anonymous complaints. This ensures that once a complaint is filed, it cannot be deleted or altered by anyone—not even system administrators."
     },
     "architecture": {
       "anonymousTitle": "Anonymous Flow",
       "anonymousStep1": "User submits complaint. Identity is stripped immediately on the client side.",
       "anonymousStep2": "Data is sent to our privacy proxy, which hashes the content.",
-      "anonymousStep3": "The hash and metadata are published to the Hedera Consensus Service (HCS).",
+      "anonymousStep3": "The hash and metadata are published to the Sawtak Blockchain via our custom consensus module.",
       "anonymousStep4": "The complaint appears in the public feed, verified by the blockchain timestamp.",
       "identifiedTitle": "Identified Flow",
       "identifiedStep1": "User logs in and submits with \"Identified\" mode.",
@@ -325,27 +380,27 @@
     },
     "blockchain": {
       "title": "Why Blockchain?",
-      "description": "We use the Hedera Consensus Service (HCS) as a public notary. When you submit an anonymous complaint, we publish a cryptographic hash of your message to a public \"Topic\" on Hedera.",
-      "exampleTitle": "Example HCS Message",
-      "proof": "This proves that the complaint existed at that specific time and has not been altered since. Anyone can verify this by checking the topic on a Hedera explorer like"
+      "description": "We use the Sawtak Blockchain as a public notary. When you submit an anonymous complaint, we publish a cryptographic hash of your message to a public transaction on our sovereign chain.",
+      "exampleTitle": "Example Blockchain Transaction",
+      "proof": "This proves that the complaint existed at that specific time and has not been altered since. Anyone can verify this by checking the transaction on the Sawtak Blockchain explorer."
     },
     "moderation": {
       "title": "Trust & Moderation",
       "intro": "While blockchain provides immutability, we recognize that not all content belongs in the public feed. Sawtak implements a transparent moderation system that balances free speech with responsible content management—without ever deleting blockchain records.",
       "immutablePrinciple": "The Immutability Principle",
-      "immutableDescription": "Flagged complaints are hidden from the public feed, but they are NEVER deleted from the blockchain. Anyone can still verify a flagged complaint exists by checking its transaction hash on Hedera. This means moderation is transparent and reversible, while the original record remains forever tamper-proof.",
+      "immutableDescription": "Flagged complaints are hidden from the public feed, but they are NEVER deleted from the blockchain. Anyone can still verify a flagged complaint exists by checking its transaction hash on the Sawtak Blockchain. This means moderation is transparent and reversible, while the original record remains forever tamper-proof.",
       "adminFlaggingTitle": "Admin Flagging",
       "adminFlaggingIntro": "Trained administrators can flag content that violates platform guidelines. Here's how it works:",
       "adminStep1": "Admin reviews a complaint and determines it violates guidelines (spam, fake, illegal content, etc.).",
       "adminStep2": "Admin flags the complaint with a reason. The complaint is hidden from the public feed.",
       "adminStep3": "The flag action and reason are logged in an immutable admin audit trail.",
       "adminStep4": "Users can still find the complaint via its blockchain hash—proving it existed and was flagged, not deleted.",
-      "communityTitle": "Community Moderation (Coming Soon)",
-      "communityIntro": "In the spirit of transparency, we're building a community-driven moderation system inspired by X's Community Notes:",
-      "communityStep1": "Community members can submit \"notes\" on complaints they believe are misleading or fake.",
-      "communityStep2": "Other users vote on whether the note is helpful or accurate.",
-      "communityStep3": "Notes with sufficient helpful votes are displayed alongside the complaint.",
-      "communityStep4": "This creates a crowdsourced fact-checking layer that doesn't require central censorship.",
+      "officialResponseTitle": "Official Response",
+      "officialResponseIntro": "Every complaint submitted to Sawtak is routed to the relevant authority for review. Once an investigation is conducted, an official response is issued:",
+      "officialResponseStep1": "The complaint is assigned to the appropriate governmental or organizational department.",
+      "officialResponseStep2": "Authorized investigators review the evidence and conduct an internal audit.",
+      "officialResponseStep3": "An official response is drafted, detailing the findings and actions taken.",
+      "officialResponseStep4": "This response is published directly on the platform, linked to the original complaint for public accountability.",
       "transparencyTitle": "Our Transparency Guarantee",
       "transparencyDescription": "Every moderation action is logged and auditable. We publish regular transparency reports showing how many complaints were flagged, for what reasons, and how many were later unflagged. The blockchain ensures we cannot hide our moderation decisions."
     },
@@ -450,7 +505,7 @@
       "evidenceDesc": "Evidence files uploaded to IPFS are encrypted and may persist on the network indefinitely due to the decentralized nature of IPFS. However, without the decryption key, these files are inaccessible."
     },
     "blockchain": {
-      "intro": "Sawtak uses the Hedera Consensus Service (HCS) to create an immutable audit trail of anonymous complaints.",
+      "intro": "Sawtak uses its own sovereign Sawtak Blockchain to create an immutable audit trail of anonymous complaints.",
       "publishedTitle": "What is published to the blockchain:",
       "published1": "A cryptographic hash of the complaint content (not the content itself)",
       "published2": "Category of the complaint (e.g., corruption, harassment)",
@@ -475,8 +530,8 @@
     },
     "thirdParties": {
       "intro": "We work with a limited number of third-party services essential to platform operation:",
-      "hederaTitle": "Hedera Hashgraph",
-      "hederaDesc": "Public blockchain network for recording complaint hashes. Data published is intentionally public for verification purposes.",
+      "blockchainTitle": "Sawtak Blockchain",
+      "blockchainDesc": "Our own sovereign blockchain network (Cosmos SDK + Tendermint) for recording complaint hashes. Fully decentralized and built for the platform.",
       "storageTitle": "Cloudflare R2 / IPFS",
       "storageDesc": "Encrypted evidence storage. Files are encrypted before upload; the storage provider cannot access the content.",
       "authTitle": "Authentication Providers",

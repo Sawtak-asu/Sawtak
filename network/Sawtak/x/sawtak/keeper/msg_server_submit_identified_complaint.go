@@ -7,8 +7,6 @@ import (
 	"github.com/sayedibrahimQ/sawtak/x/sawtak/types"
 )
 
-
-
 func (k msgServer) SubmitIdentifiedComplaint(goCtx context.Context, msg *types.MsgSubmitIdentifiedComplaint) (*types.MsgSubmitIdentifiedComplaintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -38,6 +36,21 @@ func (k msgServer) SubmitIdentifiedComplaint(goCtx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
+
+	// 4. Emit event for indexer
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"sawtak.sawtak.v1.EventSubmitIdentifiedComplaint",
+			sdk.NewAttribute("tracking_id", msg.TrackingId),
+			sdk.NewAttribute("title", msg.Title),
+			sdk.NewAttribute("text", msg.Text),
+			sdk.NewAttribute("category", msg.Category),
+			sdk.NewAttribute("area", msg.Area),
+			sdk.NewAttribute("directed_to", msg.DirectedTo),
+			sdk.NewAttribute("incident_date", msg.IncidentDate),
+			sdk.NewAttribute("evidence", msg.Evidence),
+		),
+	})
 
 	return &types.MsgSubmitIdentifiedComplaintResponse{}, nil
 }

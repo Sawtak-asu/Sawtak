@@ -17,8 +17,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Eye, FileCheck, Users, Mail, Loader2 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export default function MyTeamPage() {
     const { token } = useAuth();
     const { selectedTeam } = useAdmin();
@@ -31,7 +29,7 @@ export default function MyTeamPage() {
         queryKey: ["admin-team-members", selectedTeam?.id],
         queryFn: async () => {
             if (!selectedTeam?.id) throw new Error("No team selected");
-            const res = await fetch(`${API_URL}/api/admin/teams/${selectedTeam.id}`, {
+            const res = await fetch(`/api/admin/teams/${selectedTeam.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch team details");

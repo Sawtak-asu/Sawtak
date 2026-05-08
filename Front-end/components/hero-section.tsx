@@ -63,7 +63,7 @@ export default function HeroSection() {
                 <div className="hidden sm:block h-4 w-px bg-border" />
                 <Link href="/docs#blockchain" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
                   <div className="h-2 w-2 rounded-full bg-blue-500 group-hover/indicator:scale-125 transition-transform" />
-                  <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">Hedera Blockchain</span>
+                  <span className="underline decoration-dotted underline-offset-4 decoration-muted-foreground/50 hover:decoration-blue-500">Sawtak Blockchain</span>
                 </Link>
                 <div className="hidden sm:block h-4 w-px bg-border" />
                 <Link href="/docs#overview" className="flex items-center gap-2 hover:text-foreground transition-colors group/indicator">
@@ -82,7 +82,7 @@ export default function HeroSection() {
               {[
                 { value: "100%", label: "Anonymous", icon: Lock },
                 { value: "256-bit", label: "Encryption", icon: Shield },
-                { value: "Hedera", label: "Blockchain", icon: BarChart3 },
+                { value: "Sawtak", label: "Blockchain", icon: BarChart3 },
                 { value: "24/7", label: "Available", icon: Eye },
               ].map((stat, i) => (
                 <div 
@@ -120,7 +120,7 @@ export default function HeroSection() {
                 {
                   icon: Shield,
                   title: "Blockchain Immutability",
-                  description: "Anonymous complaints are recorded on Hedera's distributed ledger, creating an immutable and tamper-proof audit trail.",
+                  description: "Anonymous complaints are recorded on Sawtak's decentralized ledger, creating an immutable and tamper-proof audit trail.",
                 },
                 {
                   icon: Eye,
