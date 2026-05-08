@@ -18,14 +18,8 @@ export class ProxyRateLimiter {
       port: config.redisPort,
       password: config.redisPassword,
       maxRetriesPerRequest: 3,
-      retryStrategy: (times) => {
-        if (times > 5) {
-          console.error("[ProxyRedis] Max retries reached, giving up");
-          return null; // Stop retrying
-        }
-        const delay = Math.min(times * 100, 2000);
-        return delay;
-      },
+      connectTimeout: 10_000,
+      retryStrategy: () => null,
       lazyConnect: true,
     });
 
@@ -41,7 +35,12 @@ export class ProxyRateLimiter {
 
   async connect(): Promise<boolean> {
     try {
-      await this.redis.connect();
+      await Promise.race([
+        this.redis.connect(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Redis connection timed out")), 3000)
+        ),
+      ]);
       await this.redis.ping();
       console.log("[ProxyRedis] ✅ Rate Limiter connected to Redis");
       return true;
@@ -222,9 +221,7 @@ export class ProxyRateLimiter {
   }
   
   async disconnect() {
-    if (this.isReady) {
-      await this.redis.quit();
-    }
+    this.redis.disconnect();
   }
 }
 
