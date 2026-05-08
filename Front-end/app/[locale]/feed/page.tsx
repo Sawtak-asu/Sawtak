@@ -142,7 +142,6 @@ export default function FeedPage() {
 
     // Flatten all pages into a single array
     const allComplaints = data?.pages.flatMap(page => page.data?.complaints || []) || [];
-    console.log("allComplaints: ", allComplaints);
     // Filter props shared between sidebar and mobile sheet
     const filterProps = {
         search,

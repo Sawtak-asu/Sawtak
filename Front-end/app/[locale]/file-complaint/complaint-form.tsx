@@ -248,7 +248,6 @@ export function ComplaintForm() {
       const data = await response.json();
       const verdict: string = data.verdict;
 
-      console.log(`[ComplaintForm] AI verdict: ${verdict}`);
       return verdict;
     } catch (err) {
       console.error("[ComplaintForm] AI validation error:", err);
