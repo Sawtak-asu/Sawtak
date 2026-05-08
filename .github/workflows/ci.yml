@@ -1,293 +1,199 @@
-# ============================================
-# Sawtak - GitHub Actions CI/CD Pipeline
-# ============================================
-
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   pull_request:
-    branches: [main]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches: [main, staging]
 
 jobs:
-  # ==========================================
-  # Build & Test Backend
-  # ==========================================
-  backend:
-    name: Backend Build & Test
+  route-layer:
+    name: Route-Layer Tests
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ./backend
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Install & test backend
+        working-directory: ./backend
+        run: |
+          bun install
+          bunx prisma generate
+          bun test --path-ignore-patterns='**/integration/**'
 
-      - name: Generate Prisma Client
-        run: bunx prisma generate
+      - name: Install & test privacy-proxy
+        working-directory: ./privacy-proxy
+        run: |
+          bun install
+          bun test
 
-      - name: Type check
-        run: bunx tsc --noEmit
-        continue-on-error: true
-
-      - name: Run tests
-        run: bun test
-        continue-on-error: true
-
-  # ==========================================
-  # Build & Test Frontend
-  # ==========================================
   frontend:
-    name: Frontend Build & Test
+    name: Frontend Build
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: ./Front-end
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint
-        run: bun run lint
+      - run: bun install
+      - run: bun run lint
         continue-on-error: true
-
-      - name: Build
-        run: bun run build
+      - run: bun run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: placeholder
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:4000' }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_HAWEYA_URL: ${{ vars.NEXT_PUBLIC_HAWEYA_URL || 'http://localhost:3030' }}
+          NEXT_PUBLIC_HAWEYA_CLIENT_ID: ${{ vars.NEXT_PUBLIC_HAWEYA_CLIENT_ID || 'sawtak_client' }}
+          INTERNAL_API_URL: http://localhost:4000
 
-  # ==========================================
-  # Build & Test Haweya (Mock OAuth)
-  # ==========================================
   haweya:
-    name: Haweya Build & Test
+    name: Haweya Build
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: ./haweya
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bunx prisma generate
+      - run: bunx tsc --noEmit
+        continue-on-error: true
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [route-layer, frontend, haweya]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sawtak
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Install dependencies
+      - name: Install backend deps
+        working-directory: ./backend
+        run: |
+          bun install
+          bunx prisma generate
+
+      - name: Install ts-client deps
+        working-directory: ./network/Sawtak/ts-client
         run: bun install
 
-      - name: Generate Prisma Client
-        run: bunx prisma generate
-
-      - name: Type check
-        run: bunx tsc --noEmit
-        continue-on-error: true
-
-  # ==========================================
-  # Build & Test Privacy Proxy
-  # ==========================================
-  proxy:
-    name: Privacy Proxy Build & Test
-    runs-on: ubuntu-latest
-    
-    defaults:
-      run:
+      - name: Install proxy deps
         working-directory: ./privacy-proxy
+        run: bun install
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Push database schema
+        working-directory: ./backend
+        run: bunx prisma db push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sawtak?schema=public
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Start backend
+        working-directory: ./backend
+        run: |
+          bun run src/server.ts &
+          echo "BACKEND_PID=$!" >> $GITHUB_ENV
+        env:
+          NODE_ENV: development
+          PORT: 8000
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sawtak?schema=public
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PROXY_SECRET: ${{ secrets.PROXY_SECRET }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          REQUIRE_PROXY_AUTH: "true"
+          ENABLE_HEDERA_INDEXER: "false"
+          ENABLE_COSMOS_INDEXER: "true"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          COSMOS_CHAIN_ID: ${{ secrets.COSMOS_CHAIN_ID }}
+          COSMOS_BACKEND_MNEMONIC: ${{ secrets.COSMOS_BACKEND_MNEMONIC }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Start privacy proxy
+        working-directory: ./privacy-proxy
+        run: |
+          bun run src/server.ts &
+          echo "PROXY_PID=$!" >> $GITHUB_ENV
+        env:
+          NODE_ENV: development
+          PROXY_PORT: 4000
+          BACKEND_INTERNAL_URL: http://localhost:8000
+          PROXY_SECRET: ${{ secrets.PROXY_SECRET }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
 
-      - name: Type check
-        run: bunx tsc --noEmit
-        continue-on-error: true
+      - name: Wait for proxy
+        run: |
+          echo "Waiting for proxy..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4000/health > /dev/null && echo "Proxy ready" && break
+            if [ "$i" -eq 30 ]; then echo "Timeout waiting for proxy" && exit 1; fi
+            sleep 2
+          done
 
-  # ==========================================
-  # Build Docker Images
-  # ==========================================
-  docker:
-    name: Build Docker Images
-    runs-on: ubuntu-latest
-    needs: [backend, frontend, haweya, proxy]
-    if: github.ref == 'refs/heads/main'
-    
-    permissions:
-      contents: read
-      packages: write
+      - name: Wait for backend via proxy
+        run: |
+          echo "Waiting for backend..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4000/api/health > /dev/null && echo "Backend ready" && break
+            if [ "$i" -eq 30 ]; then echo "Timeout waiting for backend" && exit 1; fi
+            sleep 2
+          done
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Run integration tests
+        working-directory: ./backend
+        run: bun test tests/integration
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (backend)
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (frontend)
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./Front-end
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-            NEXT_PUBLIC_HAWEYA_URL=${{ secrets.NEXT_PUBLIC_HAWEYA_URL }}
-            NEXT_PUBLIC_HAWEYA_CLIENT_ID=${{ secrets.NEXT_PUBLIC_HAWEYA_CLIENT_ID }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (haweya)
-        id: meta-haweya
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-haweya
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push haweya
-        uses: docker/build-push-action@v5
-        with:
-          context: ./haweya
-          push: true
-          tags: ${{ steps.meta-haweya.outputs.tags }}
-          labels: ${{ steps.meta-haweya.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (privacy-proxy)
-        id: meta-proxy
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proxy
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push privacy-proxy
-        uses: docker/build-push-action@v5
-        with:
-          context: ./privacy-proxy
-          push: true
-          tags: ${{ steps.meta-proxy.outputs.tags }}
-          labels: ${{ steps.meta-proxy.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (chain-node)
-        id: meta-chain
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-chain
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest
-
-      - name: Build and push chain-node
-        uses: docker/build-push-action@v5
-        with:
-          context: ./network/Sawtak
-          push: true
-          tags: ${{ steps.meta-chain.outputs.tags }}
-          labels: ${{ steps.meta-chain.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ==========================================
-  # Deploy (Optional - uncomment to enable)
-  # ==========================================
-  # deploy:
-  #   name: Deploy to Production
-  #   runs-on: ubuntu-latest
-  #   needs: [docker]
-  #   if: github.ref == 'refs/heads/main'
-  #   
-  #   steps:
-  #     - name: Deploy via SSH
-  #       uses: appleboy/ssh-action@master
-  #       with:
-  #         host: ${{ secrets.DEPLOY_HOST }}
-  #         username: ${{ secrets.DEPLOY_USER }}
-  #         key: ${{ secrets.DEPLOY_KEY }}
-  #         script: |
-  #           cd /opt/sawtak
-  #           docker-compose -f docker-compose.prod.yml pull
-  #           docker-compose -f docker-compose.prod.yml up -d
+      - name: Teardown
+        if: always()
+        run: |
+          kill ${{ env.BACKEND_PID }} 2>/dev/null || true
+          kill ${{ env.PROXY_PID }} 2>/dev/null || true
