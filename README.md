@@ -14,7 +14,7 @@ A secure platform that lets citizens anonymously report misconduct and corruptio
 
 Sawtak is split across four network trust zones — no component outside its zone can talk directly to components in a more trusted zone.
 
-```text
+
                                     PUBLIC INTERNET
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  ┌───────────┐  ┌──────────┐  ┌───────────┐  ┌──────────────────────────────┐   │
