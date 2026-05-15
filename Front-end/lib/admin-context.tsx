@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 // Team member role within a team
@@ -58,6 +58,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [teamMemberships, setTeamMemberships] = useState<TeamMembership[]>([]);
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const fetchedRef = useRef(false);
 
     // Determine user's global role
     const userRole: UserRole = user?.role === "platform_admin" ? "platform_admin" : "user";
@@ -93,13 +94,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                     const storedTeamId = typeof window !== 'undefined' ? localStorage.getItem("admin_selected_team_id") : null;
 
                     if (storedTeamId && memberships.some(m => m.team.id === storedTeamId)) {
-                        // Use stored preference if valid
-                        if (selectedTeamId !== storedTeamId) {
-                            setSelectedTeamId(storedTeamId);
-                        }
-                    } else if (!selectedTeamId) {
-                        // Default to first team
-                        setSelectedTeamId(memberships[0].team.id);
+                        setSelectedTeamId((prev) => prev !== storedTeamId ? storedTeamId : prev);
+                    } else {
+                        setSelectedTeamId((prev) => prev ? prev : memberships[0].team.id);
                     }
                 }
             }
@@ -108,15 +105,17 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setIsLoading(false);
         }
-    }, [token, isPlatformAdmin, selectedTeamId]);
+    }, [token, isPlatformAdmin]);
 
     useEffect(() => {
-        if (isLoggedIn) {
+        if (isLoggedIn && !fetchedRef.current) {
+            fetchedRef.current = true;
             fetchTeamMemberships();
-        } else {
+        } else if (!isLoggedIn) {
+            fetchedRef.current = false;
             setTeamMemberships([]);
             setSelectedTeamId(null);
-            setIsLoading(false);
+            setIsLoading(true);
         }
     }, [isLoggedIn, fetchTeamMemberships]);
 

@@ -5,7 +5,11 @@
     "dev": "bun run --watch src/server.ts",
     "test": "bun test",
     "build": "bun build src/server.ts --outdir dist --target bun",
-    "start": "bun run src/server.ts"
+    "start": "bun run src/server.ts",
+    "db:seed": "bun run prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",

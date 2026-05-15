@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "bun run --hot backend/src/index.ts",
     "start": "bun run backend/src/index.ts",
-    "build": "echo 'No build step needed for Bun runtime'"
+    "build": "echo 'No build step needed for Bun runtime'",
+    "db:seed": "bun run prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
   },
   "dependencies": {
     "elysia": "^1.0.0",

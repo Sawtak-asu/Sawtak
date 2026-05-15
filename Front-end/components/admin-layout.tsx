@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { useAdmin } from "@/lib/admin-context"
@@ -29,19 +29,20 @@ export function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutProps) {
     const { user, isLoggedIn, isLoading: authLoading } = useAuth()
     const { isAdmin, isLoading: adminLoading } = useAdmin()
     const router = useRouter()
+    const redirectFired = useRef(false)
 
     const isLoading = authLoading || adminLoading
 
-    // Protect admin routes
+    // Protect admin routes — only check once after all loading is done
     useEffect(() => {
-        if (!isLoading) {
-            // Check if user has any admin access (platform_admin or team member)
-            const hasAccess = user?.role === "platform_admin" || user?.role === "admin" || isAdmin
-            if (!isLoggedIn || !hasAccess) {
-                router.replace("/")
-            }
+        if (isLoading || redirectFired.current) return
+
+        const hasAccess = user?.role === "platform_admin" || user?.role === "admin" || isAdmin
+        if (!isLoggedIn || !hasAccess) {
+            redirectFired.current = true
+            router.replace("/")
         }
-    }, [isLoading, isLoggedIn, user, isAdmin, router])
+    }, [isLoading])
 
     if (isLoading) {
         return (
