@@ -108,7 +108,7 @@ const app = new Elysia()
     }
     
     // Not logged in, redirect to login page with OAuth params
-    const loginUrl = `http://localhost:3030/login.html?client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope || "")}&state=${encodeURIComponent(state || "")}`;
+    const loginUrl = `/login.html?client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope || "")}&state=${encodeURIComponent(state || "")}`;
     return Response.redirect(loginUrl, 302);
   }, {
     query: t.Object({
@@ -181,7 +181,7 @@ const app = new Elysia()
       name: user.name,
       picture: user.picture || null,
       national_id: user.nationalId,
-      iss: `http://localhost:${PORT}`,
+      iss: process.env.PUBLIC_URL || `http://localhost:${PORT}`,
       aud: client_id,
       type: "id_token",
     });
