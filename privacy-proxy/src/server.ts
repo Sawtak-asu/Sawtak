@@ -37,7 +37,9 @@ proxyRateLimiter.connect();
 const app = new Elysia()
   .use(
     cors({
-      origin: config.nodeEnv === "production" ? config.frontendUrl : true,
+      origin: config.nodeEnv === "production"
+        ? [config.frontendUrl, "capacitor://localhost", "http://localhost"]
+        : true,
       credentials: true,
       allowedHeaders: [
         "Content-Type",
