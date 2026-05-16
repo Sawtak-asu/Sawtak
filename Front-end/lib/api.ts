@@ -4,16 +4,12 @@
  * In web, Next.js rewrites handle /api/* automatically.
  */
 export function getApiBase(): string {
-  // Check if we are running inside Capacitor
-  const isCapacitor = typeof window !== 'undefined' && (window as any).Capacitor;
-  
-  if (isCapacitor) {
-    // Mobile must use the absolute URL from environment
-    return process.env.NEXT_PUBLIC_API_URL || "";
-  }
-  
-  // Web should use relative path to leverage Next.js rewrites
-  return ""; 
+  return process.env.NEXT_PUBLIC_API_URL || "";
+}
+
+export function getSiteBase(): string {
+  if (typeof window === 'undefined') return "";
+  return process.env.NEXT_PUBLIC_API_URL || window.location.origin;
 }
 
 export function apiUrl(path: string): string {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { isMobileApp } from "@/lib/is-mobile";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, getSiteBase } from "@/lib/api";
 import { Browser } from "@capacitor/browser";
 import { App } from "@capacitor/app";
 
@@ -83,7 +83,8 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
         });
       } else {
         // Web flow: use existing popup logic
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
+        const siteBase = getSiteBase();
+        const redirectUri = `${siteBase}/auth/google/callback`;
         googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
 
         const width = 500;
@@ -104,7 +105,8 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
         }
 
         const handleMessage = async (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
+          const allowedOrigins = [window.location.origin, getSiteBase()].filter(Boolean);
+          if (!allowedOrigins.includes(event.origin)) return;
           if (event.data.type === "google-oauth-success") {
             window.removeEventListener("message", handleMessage);
             const { token, user } = event.data;

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { apiUrl } from "@/lib/api";
 
 // Team member role within a team
 export type TeamRole = "reviewer" | "manager" | "team_admin";
@@ -80,7 +81,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const res = await fetch(`/api/admin/teams/my-teams`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/my-teams`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

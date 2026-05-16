@@ -31,6 +31,7 @@ import { Loader2, Check, X, Clock, User, FileText, Key, AlertTriangle, Eye, EyeO
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { MINISTRIES, GOVERNORATES } from "@/lib/egypt-locations";
+import { apiUrl } from "@/lib/api";
 
 interface RevealRequest {
     id: string;
@@ -94,18 +95,12 @@ function RevealRequestsContent() {
     // Build entity options
     const entityOptions = useMemo(() => {
         const options: { value: string; label: string }[] = [
-            { value: "all", label: "All Entities" }
+            { value: "all", label: t("allEntities") || "All Entities" }
         ];
         MINISTRIES.forEach(m => options.push({ value: m.id, label: m.name }));
         GOVERNORATES.forEach(g => options.push({ value: g.id, label: g.name }));
         return options;
-    }, []);
-
-    // Redirect if not platform admin
-    if (!isPlatformAdmin) {
-        router.push("/admin");
-        return null;
-    }
+    }, [t]);
 
     // Fetch requests
     const { data, isLoading, refetch } = useQuery({
@@ -117,7 +112,7 @@ function RevealRequestsContent() {
             if (entityFilter && entityFilter !== "all") params.set("entity", entityFilter);
             params.set("limit", "50");
 
-            const res = await fetch(`/api/admin/identity-reveal-requests?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/identity-reveal-requests?${params}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch reveal requests");
@@ -126,13 +121,11 @@ function RevealRequestsContent() {
         enabled: !!token && isPlatformAdmin,
     });
 
-    const requests: RevealRequest[] = data?.data?.requests || [];
-
     // Approve mutation
     const approveMutation = useMutation({
         mutationFn: async () => {
             if (!selectedRequest) return;
-            const res = await fetch(`/api/admin/identity-reveal-requests/${selectedRequest.id}/approve`, {
+            const res = await fetch(apiUrl(`/api/admin/identity-reveal-requests/${selectedRequest.id}/approve`), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -161,7 +154,7 @@ function RevealRequestsContent() {
     const rejectMutation = useMutation({
         mutationFn: async () => {
             if (!selectedRequest) return;
-            const res = await fetch(`/api/admin/identity-reveal-requests/${selectedRequest.id}/reject`, {
+            const res = await fetch(apiUrl(`/api/admin/identity-reveal-requests/${selectedRequest.id}/reject`), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -186,6 +179,14 @@ function RevealRequestsContent() {
         },
         onError: (err: Error) => toast.error(err.message)
     });
+
+    // Redirect if not platform admin
+    if (!isPlatformAdmin) {
+        router.push("/admin");
+        return null;
+    }
+
+    const requests: RevealRequest[] = data?.data?.requests || [];
 
     const handleApprove = (request: RevealRequest) => {
         setSelectedRequest(request);

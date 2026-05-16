@@ -77,6 +77,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { apiUrl } from "@/lib/api";
 
 interface TeamMember {
     id: string;
@@ -129,7 +130,7 @@ export default function TeamDetailClient({ params }: { params: { id: string; loc
     const { data: teamData, isLoading, isError, refetch } = useQuery({
         queryKey: ["admin-team", teamId],
         queryFn: async () => {
-            const res = await fetch(`/api/admin/teams/${teamId}`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/${teamId}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch team");
@@ -146,7 +147,7 @@ export default function TeamDetailClient({ params }: { params: { id: string; loc
             if (userSearch) params.set("search", userSearch);
             params.set("limit", "5");
             params.set("excludeRole", "platform_admin"); // Don't show platform admins
-            const res = await fetch(`/api/admin/users?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/users?${params}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to search users");
@@ -160,7 +161,7 @@ export default function TeamDetailClient({ params }: { params: { id: string; loc
     // Add member mutation
     const addMemberMutation = useMutation({
         mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-            const res = await fetch(`/api/admin/teams/${teamId}/members`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/${teamId}/members`), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -189,7 +190,7 @@ export default function TeamDetailClient({ params }: { params: { id: string; loc
     // Remove member mutation
     const removeMemberMutation = useMutation({
         mutationFn: async (userId: string) => {
-            const res = await fetch(`/api/admin/teams/${teamId}/members/${userId}`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/${teamId}/members/${userId}`), {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -213,7 +214,7 @@ export default function TeamDetailClient({ params }: { params: { id: string; loc
     // Update member role mutation
     const updateMemberRoleMutation = useMutation({
         mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-            const res = await fetch(`/api/admin/teams/${teamId}/members/${userId}`, {
+            const res = await fetch(apiUrl(`/api/admin/teams/${teamId}/members/${userId}`), {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,

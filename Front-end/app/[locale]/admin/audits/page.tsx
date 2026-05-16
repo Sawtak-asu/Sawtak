@@ -23,6 +23,7 @@ import { ar, enUS } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { MINISTRIES, GOVERNORATES } from "@/lib/egypt-locations";
+import { apiUrl } from "@/lib/api";
 
 interface AuditEntry {
     id: string;
@@ -72,6 +73,7 @@ function AuditsContent() {
     const router = useRouter();
     const t = useTranslations("Admin.audits");
     const tr = useTranslations("Admin.revealRequests");
+    const tp = useTranslations("Admin.pagination");
 
     const [searchQuery, setSearchQuery] = useState("");
     const [actionFilter, setActionFilter] = useState("all");
@@ -91,7 +93,7 @@ function AuditsContent() {
         MINISTRIES.forEach(m => options.push({ value: m.id, label: m.name }));
         GOVERNORATES.forEach(g => options.push({ value: g.id, label: g.name }));
         return options;
-    }, []);
+    }, [t]);
 
     // Fetch audits
     const { data, isLoading, isFetching } = useQuery({
@@ -104,7 +106,7 @@ function AuditsContent() {
             params.set("page", String(page));
             params.set("limit", "50");
 
-            const res = await fetch(`/api/admin/audits?${params}`, {
+            const res = await fetch(apiUrl(`/api/admin/audits?${params}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) {
@@ -366,17 +368,17 @@ function AuditsContent() {
                                     disabled={page === 1}
                                     className="px-3 py-1 text-sm border rounded disabled:opacity-50"
                                 >
-                                    {useTranslations("Admin.pagination")("previous")}
+                                    {tp("previous")}
                                 </button>
                                 <span className="px-3 py-1 text-sm text-muted-foreground">
-                                    {useTranslations("Admin.pagination")("pageOf", { page, total: pagination.totalPages })}
+                                    {tp("pageOf", { page, total: pagination.totalPages })}
                                 </span>
                                 <button
                                     onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                                     disabled={page === pagination.totalPages}
                                     className="px-3 py-1 text-sm border rounded disabled:opacity-50"
                                 >
-                                    {useTranslations("Admin.pagination")("next")}
+                                    {tp("next")}
                                 </button>
                             </div>
                         )}

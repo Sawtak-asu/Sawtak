@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { apiUrl, getSiteBase } from "@/lib/api";
 
 function CallbackContent() {
   const searchParams = useSearchParams();
@@ -18,7 +19,7 @@ function CallbackContent() {
       if (error) {
         setStatus("error");
         setMessage(`Authentication failed: ${error}`);
-        window.opener?.postMessage({ type: "google-oauth-error", error }, window.location.origin);
+        window.opener?.postMessage({ type: "google-oauth-error", error }, "*");
         setTimeout(() => window.close(), 2000);
         return;
       }
@@ -28,7 +29,7 @@ function CallbackContent() {
       if (state && state !== savedState) {
         setStatus("error");
         setMessage("Invalid state parameter. Please try again.");
-        window.opener?.postMessage({ type: "google-oauth-error", error: "Invalid state" }, window.location.origin);
+        window.opener?.postMessage({ type: "google-oauth-error", error: "Invalid state" }, "*");
         setTimeout(() => window.close(), 2000);
         return;
       }
@@ -36,16 +37,17 @@ function CallbackContent() {
       if (!code) {
         setStatus("error");
         setMessage("No authorization code received.");
-        window.opener?.postMessage({ type: "google-oauth-error", error: "No code" }, window.location.origin);
+        window.opener?.postMessage({ type: "google-oauth-error", error: "No code" }, "*");
         setTimeout(() => window.close(), 2000);
         return;
       }
 
       try {
         // Exchange code for tokens via our backend
-                const redirectUri = `${window.location.origin}/auth/google/callback`;
+        const siteBase = getSiteBase();
+        const redirectUri = `${siteBase}/auth/google/callback`;
 
-        const response = await fetch(`/api/auth/google/callback`, {
+        const response = await fetch(apiUrl(`/api/auth/google/callback`), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -69,7 +71,7 @@ function CallbackContent() {
               token: data.data.token, 
               user: data.data.user 
             }, 
-            window.location.origin
+            "*"
           );
           
           // Close popup after short delay
@@ -77,14 +79,14 @@ function CallbackContent() {
         } else {
           setStatus("error");
           setMessage(data.error || "Authentication failed");
-          window.opener?.postMessage({ type: "google-oauth-error", error: data.error }, window.location.origin);
+          window.opener?.postMessage({ type: "google-oauth-error", error: data.error }, "*");
           setTimeout(() => window.close(), 2000);
         }
       } catch (err) {
         console.error("Callback error:", err);
         setStatus("error");
         setMessage("An error occurred during authentication.");
-        window.opener?.postMessage({ type: "google-oauth-error", error: "Network error" }, window.location.origin);
+        window.opener?.postMessage({ type: "google-oauth-error", error: "Network error" }, "*");
         setTimeout(() => window.close(), 2000);
       }
     };

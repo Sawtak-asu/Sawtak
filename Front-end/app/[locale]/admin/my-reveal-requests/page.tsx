@@ -11,6 +11,7 @@ import { Loader2, Check, X, Clock, FileText, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
+import { apiUrl } from "@/lib/api";
 
 interface RevealRequest {
     id: string;
@@ -55,7 +56,7 @@ function MyRevealRequestsContent() {
     const { data, isLoading } = useQuery({
         queryKey: ["my-reveal-requests"],
         queryFn: async () => {
-            const res = await fetch(`/api/admin/my-reveal-requests?limit=50`, {
+            const res = await fetch(apiUrl(`/api/admin/my-reveal-requests?limit=50`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error("Failed to fetch your reveal requests");
