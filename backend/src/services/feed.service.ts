@@ -216,7 +216,7 @@ export class FeedService {
       evidenceUrls: c.evidence_urls ? (c.evidence_urls as string[]) : [],
     }));
 
-const anonymousFormatted: FeedComplaint[] = finalAnonymous.map((c) => ({
+const anonymousFormatted: FeedComplaint[] = (finalAnonymous as any[]).map((c) => ({
   id: c.chain_hash,
   title: c.title,
   text: c.complaint_text,
@@ -385,8 +385,13 @@ const anonymousFormatted: FeedComplaint[] = finalAnonymous.map((c) => ({
     }
 
   // Try anonymous/indexed
-  const anonymous = await prisma.indexedComplaint.findUnique({
-    where: { chain_hash: id },
+  const anonymous = await (prisma.indexedComplaint as any).findFirst({
+    where: { 
+      chain_hash: {
+        equals: id,
+        mode: 'insensitive'
+      }
+    },
   });
 
   if (anonymous) {

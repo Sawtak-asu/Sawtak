@@ -42,15 +42,15 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
       googleAuthUrl.searchParams.set("prompt", "select_account");
 
       if (isMobileApp()) {
-        // Mobile flow: use custom scheme and native browser
-        const redirectUri = "sawtak://auth/google/callback";
+        const siteBase = process.env.NEXT_PUBLIC_SITE_URL || "https://sawtak.wearemasons.com";
+        const redirectUri = `${siteBase}/auth/google/callback`;
         googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
 
         await Browser.open({ url: googleAuthUrl.toString() });
 
-        // Handle redirect back to app
+        // Handle redirect back to app via App Link
         const listener = await App.addListener("appUrlOpen", async ({ url }) => {
-          if (url.includes("sawtak://auth/google/callback")) {
+          if (url.includes("/auth/google/callback")) {
             await Browser.close();
             listener.remove();
             

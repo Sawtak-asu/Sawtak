@@ -43,15 +43,15 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       haweyaAuthUrl.searchParams.set("state", state);
 
       if (isMobileApp()) {
-        // Mobile flow: use custom scheme and native browser
-        const redirectUri = "sawtak://auth/haweya/callback";
+        const siteBase = process.env.NEXT_PUBLIC_SITE_URL || "https://sawtak.wearemasons.com";
+        const redirectUri = `${siteBase}/auth/haweya/callback`;
         haweyaAuthUrl.searchParams.set("redirect_uri", redirectUri);
 
         await Browser.open({ url: haweyaAuthUrl.toString() });
 
-        // Handle redirect back to app
+        // Handle redirect back to app via App Link
         const listener = await App.addListener("appUrlOpen", async ({ url }) => {
-          if (url.includes("sawtak://auth/haweya/callback")) {
+          if (url.includes("/auth/haweya/callback")) {
             await Browser.close();
             listener.remove();
             
@@ -69,7 +69,11 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
             const response = await fetch(apiUrl("/api/auth/haweya/callback"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ code, state: returnedState }),
+              body: JSON.stringify({ 
+              code, 
+              state: returnedState,
+              redirect_uri: redirectUri 
+            }),
             });
 
             const data = await response.json();

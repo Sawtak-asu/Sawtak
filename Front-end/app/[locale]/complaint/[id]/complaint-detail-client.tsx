@@ -291,7 +291,10 @@ export default function ComplaintDetailClient({ params }: { params: { id: string
     };
 
     const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
+        if (!complaint) return;
+        const base = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin) : "";
+        const fullUrl = base + "/complaint/" + encodeURIComponent(complaint.id);
+        navigator.clipboard.writeText(fullUrl);
         toast.success(tCard("linkCopied"));
     };
 

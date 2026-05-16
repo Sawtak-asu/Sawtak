@@ -8,7 +8,9 @@ export function getApiBase(): string {
 }
 
 export function getSiteBase(): string {
-  if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_SITE_URL || "";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) return siteUrl;
+  if (typeof window === 'undefined') return "";
   return window.location.origin;
 }
 

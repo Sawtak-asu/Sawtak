@@ -8,6 +8,7 @@ export function generateStaticParams() {
     }));
 }
 
-export default function ComplaintPage({ params }: { params: { id: string; locale: string } }) {
-    return <ComplaintDetailClient params={params} />;
+export default async function ComplaintPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
+    const resolvedParams = await params;
+    return <ComplaintDetailClient params={resolvedParams} />;
 }

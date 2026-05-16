@@ -206,7 +206,8 @@ export function ComplaintCard({ complaint }: ComplaintCardProps) {
 
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
-        navigator.clipboard.writeText(window.location.origin + "/complaint/" + encodeURIComponent(complaint.id));
+        const base = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin) : "";
+        navigator.clipboard.writeText(base + "/complaint/" + encodeURIComponent(complaint.id));
         toast.success(t("linkCopied"));
     };
 
