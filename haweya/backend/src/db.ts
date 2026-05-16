@@ -189,22 +189,45 @@ export async function validateRedirectUri(clientId: string, redirectUri: string)
   return client?.redirect_uris.includes(redirectUri) ?? false;
 }
 
-// Seed default client if not exists
+// Seed default client if not exists or if it needs updates for new redirect URIs
 export async function seedDefaultClient(): Promise<void> {
   const existing = await prisma.haweyaClient.findUnique({ where: { client_id: "sawtak_client" } });
+  
+  const defaultUris = [
+    "http://localhost:3000/auth/haweya/callback",
+    "http://localhost:8000/api/auth/haweya/callback",
+    "https://sawtak.wearemasons.com/auth/haweya/callback"
+  ];
+  
+  const envUris = process.env.ALLOWED_REDIRECT_URIS 
+    ? process.env.ALLOWED_REDIRECT_URIS.split(",").map(u => u.trim()) 
+    : [];
+    
+  const redirectUris = Array.from(new Set([...defaultUris, ...envUris]));
+
   if (!existing) {
     await prisma.haweyaClient.create({
       data: {
         client_id: "sawtak_client",
         client_secret: "sawtak_secret",
         name: "Sawtak Platform",
-        redirect_uris: [
-          "http://localhost:3000/auth/haweya/callback",
-          "http://localhost:8000/api/auth/haweya/callback",
-        ],
+        redirect_uris: redirectUris,
       },
     });
     console.log("✅ Seeded default Haweya OAuth client: sawtak_client");
+  } else {
+    // Check if we need to add new redirect URIs
+    const currentUris = existing.redirect_uris;
+    const hasNewUris = redirectUris.some(uri => !currentUris.includes(uri));
+    
+    if (hasNewUris) {
+      const updatedUris = Array.from(new Set([...currentUris, ...redirectUris]));
+      await prisma.haweyaClient.update({
+        where: { client_id: "sawtak_client" },
+        data: { redirect_uris: updatedUris }
+      });
+      console.log("✅ Updated Haweya OAuth client redirect URIs");
+    }
   }
 }
 

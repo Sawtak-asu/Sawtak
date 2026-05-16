@@ -8,7 +8,7 @@ export function getApiBase(): string {
 }
 
 export function getSiteBase(): string {
-  if (typeof window === 'undefined') return "";
+  if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_API_URL || "";
   return process.env.NEXT_PUBLIC_API_URL || window.location.origin;
 }
 
