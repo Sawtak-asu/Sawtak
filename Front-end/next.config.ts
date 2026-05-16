@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
         hostname: "*.r2.dev",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 
