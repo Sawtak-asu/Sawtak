@@ -610,6 +610,7 @@
       "filterEntity": "Filter by entity",
       "filterStatus": "Filter by status",
       "allRequests": "All Requests",
+      "allEntities": "All Entities",
       "pending": "Pending",
       "approved": "Approved",
       "rejected": "Rejected",
@@ -836,6 +837,12 @@
   "Statuses": {
     "submitted": "Pending",
     "pending": "Pending",
+    "investigating": "Investigating",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed"
+  },
+  "Status": {
+    "submitted": "Submitted",
     "investigating": "Investigating",
     "resolved": "Resolved",
     "dismissed": "Dismissed"

@@ -609,6 +609,7 @@
             "filterEntity": "تصفية حسب الجهة",
             "filterStatus": "تصفية حسب الحالة",
             "allRequests": "جميع الطلبات",
+            "allEntities": "جميع الجهات",
             "pending": "قيد الانتظار",
             "approved": "تمت الموافقة",
             "rejected": "مرفوضة",
@@ -839,6 +840,12 @@
         "closed": "مغلقة",
         "resolved": "تم الحل",
         "flagged": "مُعلَّمة",
+        "dismissed": "مرفوضة"
+    },
+    "Status": {
+        "submitted": "تم التقديم",
+        "investigating": "قيد التحقيق",
+        "resolved": "تم الحل",
         "dismissed": "مرفوضة"
     },
     "SubmissionModes": {

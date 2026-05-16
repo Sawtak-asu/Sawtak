@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.sawtak.app",
+    "sha256_cert_fingerprints": ["DB:5B:C2:4A:12:BA:F5:94:10:6F:F4:54:D7:22:60:52:9B:D1:75:DB:4A:FF:5C:4F:15:54:98:00:72:FB:8D:FA"]
+  }
+}]

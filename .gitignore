@@ -9,6 +9,7 @@ bun.lockb
 .env
 .env.local
 .env.*.local
+.env.prod
 !.env.example
 
 # Build outputs
@@ -34,9 +35,11 @@ npm-debug.log*
 postgres_data/
 redis_data/
 
-# Ignore secrets
+# Secrets
 *.pem
 *.key
+*.jks
+*.keystore
 
 # Internal docs
 DEVELOPMENT.md
