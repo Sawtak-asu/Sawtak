@@ -7,7 +7,7 @@
 
 export const config = {
   /** Port the proxy listens on */
-  port: parseInt(process.env.PROXY_PORT || "4000", 10),
+  port: parseInt(process.env.PORT || process.env.PROXY_PORT || "4000", 10),
 
   /** Internal backend URL (never exposed to public) */
   backendUrl: process.env.BACKEND_INTERNAL_URL || "http://localhost:8000",
