@@ -10,12 +10,19 @@ function CallbackContent() {
   const [message, setMessage] = useState("Processing sign-in...");
 
   useEffect(() => {
+    // Mobile flow: the button's appUrlOpen listener handles the exchange.
+    // This page is only for the web popup flow (window.opener exists).
+    if (typeof window !== "undefined" && !window.opener) {
+      setStatus("success");
+      setMessage("Login successful! Please return to the app.");
+      return;
+    }
+
     const handleCallback = async () => {
       const code = searchParams.get("code");
       const state = searchParams.get("state");
       const error = searchParams.get("error");
 
-      // Check for errors from Haweya
       if (error) {
         setStatus("error");
         setMessage(`Authentication failed: ${error}`);
@@ -24,7 +31,6 @@ function CallbackContent() {
         return;
       }
 
-      // Verify state matches (CSRF protection)
       const savedState = sessionStorage.getItem("haweya_oauth_state");
       if (state && state !== savedState) {
         setStatus("error");
@@ -43,20 +49,13 @@ function CallbackContent() {
       }
 
       try {
-        // Exchange code for tokens via our backend
-        //         const apiUrl = "http://localhost:8000";
         const siteBase = getSiteBase();
         const redirectUri = `${siteBase}/auth/haweya/callback`;
 
         const response = await fetch(apiUrl(`/api/auth/haweya/callback`), {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code,
-            redirect_uri: redirectUri,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, redirect_uri: redirectUri }),
         });
 
         const data = await response.json();
@@ -64,18 +63,10 @@ function CallbackContent() {
         if (data.success) {
           setStatus("success");
           setMessage("Sign-in successful! Closing...");
-
-          // Send success message to parent window
           window.opener?.postMessage(
-            {
-              type: "haweya-oauth-success",
-              token: data.data.token,
-              user: data.data.user
-            },
+            { type: "haweya-oauth-success", token: data.data.token, user: data.data.user },
             "*"
           );
-
-          // Close popup after short delay
           setTimeout(() => window.close(), 1000);
         } else {
           setStatus("error");

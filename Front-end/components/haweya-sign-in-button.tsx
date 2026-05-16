@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { isMobileApp } from "@/lib/is-mobile";
-import { apiUrl, getSiteBase } from "@/lib/api";
+import { getSiteBase } from "@/lib/api";
 import { Browser } from "@capacitor/browser";
 import { App } from "@capacitor/app";
 
@@ -20,21 +20,91 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations("Auth");
 
+  useEffect(() => {
+    if (!isMobileApp()) return;
+
+    let processing = false;
+
+    const listener = App.addListener("appUrlOpen", async ({ url }) => {
+      if (!url.includes("/auth/haweya/callback")) return;
+      if (processing) return;
+      processing = true;
+
+      await Browser.close();
+
+      const urlObj = new URL(url);
+      const code = urlObj.searchParams.get("code");
+      const error = urlObj.searchParams.get("error");
+
+      if (error) {
+        toast.error(`Haweya error: ${error}`);
+        setIsLoading(false);
+        processing = false;
+        return;
+      }
+
+      if (!code) {
+        toast.error("No code received");
+        setIsLoading(false);
+        processing = false;
+        return;
+      }
+
+      try {
+        const redirectUri = "https://sawtak.wearemasons.com/auth/haweya/callback";
+        const response = await fetch(
+          "https://privacy-proxy-layer-production.up.railway.app/api/auth/haweya/callback",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, redirect_uri: redirectUri }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          const token = data.data?.token;
+          const user = data.data?.user;
+          if (!token) {
+            toast.error("No token received from server");
+            return;
+          }
+          login(token, user);
+          const name = user?.name ?? user?.email ?? "User";
+          toast.success(`Welcome, ${name}`);
+          // Force reload so auth context picks up the token
+          setTimeout(() => window.location.href = "/en", 500);
+        } else {
+          toast.error(data.error || "Authentication failed");
+        }
+      } catch (err) {
+        toast.error(`Auth failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+
+      setIsLoading(false);
+      processing = false;
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [login]);
+
   const handleHaweyaLogin = async () => {
     const haweyaUrl = process.env.NEXT_PUBLIC_HAWEYA_URL;
     const clientId = process.env.NEXT_PUBLIC_HAWEYA_CLIENT_ID;
 
     if (!haweyaUrl || !clientId) {
       toast.error(t("notConfigured", { provider: "Haweya" }));
-      console.error("Missing NEXT_PUBLIC_HAWEYA_URL or NEXT_PUBLIC_HAWEYA_CLIENT_ID");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const state = crypto.randomUUID(); // CSRF protection
-      sessionStorage.setItem("haweya_oauth_state", state);
+      const state = crypto.randomUUID();
+      localStorage.setItem("haweya_oauth_state", state);
 
       const haweyaAuthUrl = new URL(`${haweyaUrl}/oauth/authorize`);
       haweyaAuthUrl.searchParams.set("client_id", clientId);
@@ -43,51 +113,10 @@ export function HaweyaSignInButton({ className }: HaweyaSignInButtonProps) {
       haweyaAuthUrl.searchParams.set("state", state);
 
       if (isMobileApp()) {
-        const siteBase = process.env.NEXT_PUBLIC_SITE_URL || "https://sawtak.wearemasons.com";
-        const redirectUri = `${siteBase}/auth/haweya/callback`;
+        const redirectUri = "https://sawtak.wearemasons.com/auth/haweya/callback";
         haweyaAuthUrl.searchParams.set("redirect_uri", redirectUri);
-
         await Browser.open({ url: haweyaAuthUrl.toString() });
-
-        // Handle redirect back to app via App Link
-        const listener = await App.addListener("appUrlOpen", async ({ url }) => {
-          if (url.includes("/auth/haweya/callback")) {
-            await Browser.close();
-            listener.remove();
-            
-            const params = new URL(url).searchParams;
-            const code = params.get("code");
-            const returnedState = params.get("state");
-
-            if (returnedState !== state) {
-              toast.error(t("signInFailed", { provider: "Haweya" }));
-              setIsLoading(false);
-              return;
-            }
-
-            // Call backend callback
-            const response = await fetch(apiUrl("/api/auth/haweya/callback"), {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-              code, 
-              state: returnedState,
-              redirect_uri: redirectUri 
-            }),
-            });
-
-            const data = await response.json();
-            if (data.success) {
-              login(data.token, data.user);
-              toast.success(t("welcome", { name: data.user.name || data.user.email }));
-            } else {
-              toast.error(data.error || t("signInFailed", { provider: "Haweya" }));
-            }
-            setIsLoading(false);
-          }
-        });
       } else {
-        // Web flow: use existing popup logic
         const siteBase = getSiteBase();
         const redirectUri = `${siteBase}/auth/haweya/callback`;
         haweyaAuthUrl.searchParams.set("redirect_uri", redirectUri);
