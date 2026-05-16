@@ -38,7 +38,7 @@ const app = new Elysia()
   .use(
     cors({
       origin: config.nodeEnv === "production"
-        ? [config.frontendUrl, "capacitor://localhost", "http://localhost"]
+        ? [config.frontendUrl, "capacitor://localhost", "http://localhost", "https://localhost"]
         : true,
       credentials: true,
       allowedHeaders: [
