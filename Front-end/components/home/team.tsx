@@ -58,26 +58,28 @@ export function Team() {
                     </p>
                 </div>
 
-                <div className="flex justify-center items-center gap-8 md:gap-40">
+                <div className="flex flex-col gap-6 md:flex-row md:justify-center md:items-center md:gap-40">
                     {team.map((member) => (
-                        <div key={member.name} className="group relative text-center">
-                            <div className="mx-auto mb-6 h-32 w-32 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
+                        <div key={member.name} className="group relative flex items-center gap-4 text-left w-full max-w-sm mx-auto md:flex-col md:text-center md:w-auto md:max-w-none md:gap-0">
+                            <div className="flex-shrink-0 h-20 w-20 md:h-32 md:w-32 md:mx-auto md:mb-6 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
                                 <div className="h-full w-full flex items-center justify-center bg-secondary/50">
                                     <Image src={member.image} alt={member.name} width={1000} height={1000} />
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold">{member.name}</h3>
-                            <p className="text-sm text-primary mb-2">{member.role}</p>
+                            <div className="flex flex-col items-start md:items-center">
+                                <h3 className="text-lg font-semibold">{member.name}</h3>
+                                <p className="text-sm text-primary mb-2">{member.role}</p>
 
-                            <div className="flex justify-center">
-                                <Link
-                                    href={`https://github.com/${member.github}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
-                                >
-                                    <span className="flex w-fit items-center gap-2 px-2"><Github className="h-5 w-5" />| {member.github}</span>
-                                </Link>
+                                <div className="flex justify-start md:justify-center">
+                                    <Link
+                                        href={`https://github.com/${member.github}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-1.5 md:p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    >
+                                        <span className="flex w-fit items-center gap-2 px-2 text-xs md:text-sm"><Github className="h-4 w-4 md:h-5 md:w-5" />| {member.github}</span>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -90,24 +92,26 @@ export function Team() {
                         </h2>
                     </div>
                     {professor.map((professor) => (
-                        <div key={professor.name} className="group relative text-center">
-                            <div className="mx-auto mb-6 h-32 w-32 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
+                        <div key={professor.name} className="group relative flex items-center gap-4 text-left w-full max-w-sm mx-auto md:flex-col md:text-center md:w-auto md:max-w-none md:gap-0">
+                            <div className="flex-shrink-0 h-20 w-20 md:h-32 md:w-32 md:mx-auto md:mb-6 rounded-full overflow-hidden bg-muted border-2 border-border group-hover:border-primary transition-colors">
                                 <div className="h-full w-full flex items-center justify-center bg-secondary/50">
                                     <Image src={professor.image} alt={professor.name} width={1000} height={1000} />
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold">{professor.name}</h3>
-                            <p className="text-sm text-primary mb-2">{professor.role}</p>
+                            <div className="flex flex-col items-start md:items-center">
+                                <h3 className="text-lg font-semibold">{professor.name}</h3>
+                                <p className="text-sm text-primary mb-2">{professor.role}</p>
 
-                            <div className="flex justify-center">
-                                <Link
-                                    href={`https://github.com/${professor.github}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
-                                >
-                                    <span className="flex w-fit items-center gap-2 px-2"><Github className="h-5 w-5" />| {professor.github}</span>
-                                </Link>
+                                <div className="flex justify-start md:justify-center">
+                                    <Link
+                                        href={`https://github.com/${professor.github}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-1.5 md:p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    >
+                                        <span className="flex w-fit items-center gap-2 px-2 text-xs md:text-sm"><Github className="h-4 w-4 md:h-5 md:w-5" />| {professor.github}</span>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     ))}
